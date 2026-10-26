@@ -54,9 +54,30 @@ class JourneyFSM:
         - Case B: Matches duress_pin_hash -> Returns the EXACT SAME safe response to client,
                   while secretly transitioning state to RED and awakening The Way Swarm!
         """
-        result = await session.execute(select(Journey).where(Journey.journey_id == journey_id))
-        journey = result.scalar_one_or_none()
-        if not journey or journey.status not in ["GREEN", "AMBER", "RED"]:
+        # Resolve journey by ID or fallback to latest active journey
+        journey = None
+        if journey_id and journey_id != "active_journey":
+            result = await session.execute(select(Journey).where(Journey.journey_id == journey_id))
+            journey = result.scalar_one_or_none()
+
+        if not journey:
+            # Fall back to newest active journey
+            result = await session.execute(
+                select(Journey)
+                .where(Journey.status.in_(["GREEN", "AMBER", "RED"]))
+                .order_by(Journey.started_at.desc())
+                .limit(1)
+            )
+            journey = result.scalar_one_or_none()
+
+        if not journey:
+            # Fall back to newest journey overall
+            result = await session.execute(
+                select(Journey).order_by(Journey.started_at.desc()).limit(1)
+            )
+            journey = result.scalar_one_or_none()
+
+        if not journey:
             return False, {"error": "Active journey not found"}
 
         user_result = await session.execute(select(User).where(User.user_id == journey.user_id))
@@ -64,13 +85,26 @@ class JourneyFSM:
         if not user:
             return False, {"error": "User not found"}
 
-        # 1. Verify Standard PIN
+        # 1. Verify Standard PIN (Safe Arrival / Disarm)
         if SecurityCrypto.verify_pin(pin, user.standard_pin_hash):
             journey.status = "SAFE_COMPLETED"
             journey.ended_at = datetime.now(timezone.utc)
+
+            # Resolve any active incident
+            inc_res = await session.execute(
+                select(Incident).where(
+                    Incident.journey_id == journey.journey_id,
+                    Incident.resolution_status == "ACTIVE"
+                )
+            )
+            for inc in inc_res.scalars().all():
+                inc.resolution_status = "RESOLVED_SAFE"
+                inc.resolved_at = datetime.now(timezone.utc)
+
             await session.commit()
             return True, {
                 "status": "SAFE_COMPLETED",
+                "journey_id": journey.journey_id,
                 "ui_action": "SHOW_HOME_SCREEN",
                 "message": "Journey safely ended with Standard PIN."
             }
@@ -88,6 +122,7 @@ class JourneyFSM:
             # Return DECEPTIVE peaceful response to citizen phone so kidnapper suspects nothing
             return True, {
                 "status": "SAFE_COMPLETED",
+                "journey_id": journey.journey_id,
                 "ui_action": "SHOW_HOME_SCREEN",
                 "message": "Journey completed safely."
             }
@@ -103,8 +138,21 @@ class JourneyFSM:
         on_panic_trigger_swarm=None
     ) -> Incident:
         """Escalates journey to RED alert immediately (2nd Tap or G-Force spike)."""
-        result = await session.execute(select(Journey).where(Journey.journey_id == journey_id))
-        journey = result.scalar_one_or_none()
+        journey = None
+        if journey_id and journey_id != "active_journey":
+            result = await session.execute(select(Journey).where(Journey.journey_id == journey_id))
+            journey = result.scalar_one_or_none()
+
+        if not journey:
+            # Fall back to newest active journey
+            result = await session.execute(
+                select(Journey)
+                .where(Journey.status.in_(["GREEN", "AMBER"]))
+                .order_by(Journey.started_at.desc())
+                .limit(1)
+            )
+            journey = result.scalar_one_or_none()
+
         if not journey:
             # Create ad-hoc journey if user panics directly from IDLE
             user_res = await session.execute(select(User).limit(1))
@@ -139,6 +187,9 @@ class JourneyFSM:
             )
             session.add(incident)
             await session.flush()
+        else:
+            incident.resolution_status = "ACTIVE"
+            incident.resolved_at = None
 
         await session.commit()
 

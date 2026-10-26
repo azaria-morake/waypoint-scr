@@ -6,6 +6,7 @@ tactical Computer-Aided Dispatch (CAD) payloads and radio voice broadcasts using
 import time
 from typing import Dict, Any, List
 from pydantic import BaseModel, Field
+from app.config import settings
 from app.way_swarm.llm import llm_client
 
 # ============================================================================
@@ -97,6 +98,7 @@ class DispatchRoutingAgent:
         structured_output = await llm_client.generate_structured(
             system_prompt=DISPATCH_CAD_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            model=settings.MODEL_DISPATCH,
             response_model=DispatchCadOutput
         )
 

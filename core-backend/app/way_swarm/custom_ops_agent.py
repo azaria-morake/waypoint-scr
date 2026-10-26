@@ -6,6 +6,7 @@ with system prompts and metered voice-minute billing.
 import time
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
+from app.config import settings
 from app.way_swarm.llm import llm_client
 
 # ============================================================================
@@ -76,6 +77,7 @@ class CustomB2BOpsAgent:
         structured_output = await llm_client.generate_structured(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
+            model=settings.MODEL_CUSTOM_OPS,
             response_model=CustomTaskExecutionOutput
         )
 

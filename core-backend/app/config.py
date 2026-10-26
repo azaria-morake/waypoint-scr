@@ -4,6 +4,9 @@ Waypoint Secure - Environment & System Configuration
 import os
 from pydantic_settings import BaseSettings
 
+BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SQLITE_DB_PATH: str = os.path.join(BASE_DIR, "waypoint_secure.db")
+
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     PORT: int = 8000
@@ -14,7 +17,7 @@ class Settings(BaseSettings):
         "DATABASE_URL",
         "postgresql+asyncpg://waypoint:waypoint_secure_password_2026@localhost:5432/waypoint_secure"
     )
-    FALLBACK_SQLITE_URL: str = "sqlite+aiosqlite:///./waypoint_secure.db"
+    FALLBACK_SQLITE_URL: str = f"sqlite+aiosqlite:///{SQLITE_DB_PATH}"
 
     # Redis
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -32,9 +35,15 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
-    # LLM keys
+    # LLM keys & Multi-Agent Model Routing
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
+    # Distributed Models per Swarm Agent (bypasses per-model rate limits)
+    MODEL_TELEMETRY: str = os.getenv("MODEL_TELEMETRY", "gemini-3.5-flash-lite")
+    MODEL_NOK_RECON: str = os.getenv("MODEL_NOK_RECON", "gemini-3-flash-preview")
+    MODEL_DISPATCH: str = os.getenv("MODEL_DISPATCH", "gemini-flash-lite-latest")
+    MODEL_CUSTOM_OPS: str = os.getenv("MODEL_CUSTOM_OPS", "gemini-3.1-flash-lite")
 
     class Config:
         env_file = ".env"

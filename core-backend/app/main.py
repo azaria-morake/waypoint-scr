@@ -17,7 +17,7 @@ from app.models import Journey, User, Organization, BoloProfile, Incident
 from app.way_swarm.supervisor import WaySwarmSupervisor
 
 # Routers
-from app.routers import citizen_api, telemetry_ws, command_ws, b2b_ops_api, webhooks
+from app.routers import citizen_api, telemetry_ws, command_ws, b2b_ops_api, webhooks, recon_chat_api
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,17 +45,32 @@ async def trigger_swarm_for_journey(journey_id: str, trigger_source: str = "SECO
             u_res = await session.execute(select(User).where(User.user_id == journey.user_id))
             user = u_res.scalar_one_or_none()
 
-            o_res = await session.execute(select(Organization).limit(1))
+            o_res = await session.execute(
+                select(Organization).where(Organization.subscription_tier == "TIER_2_PRO").limit(1)
+            )
             org = o_res.scalar_one_or_none()
+            if not org:
+                o_res = await session.execute(select(Organization).limit(1))
+                org = o_res.scalar_one_or_none()
 
             b_res = await session.execute(select(BoloProfile).where(BoloProfile.user_id == journey.user_id))
             bolo = b_res.scalar_one_or_none()
 
             inc_res = await session.execute(select(Incident).where(Incident.journey_id == journey_id))
             incident = inc_res.scalar_one_or_none()
+            if not incident:
+                incident = Incident(
+                    journey_id=journey_id,
+                    trigger_source=trigger_source,
+                    movement_state="CALCULATING"
+                )
+                session.add(incident)
+                await session.commit()
+            else:
+                await session.commit()
 
             tier = org.subscription_tier if org else "TIER_2_PRO"
-            incident_id = incident.incident_id if incident else f"inc_{journey_id[:8]}"
+            incident_id = incident.incident_id
 
             swarm_state = {
                 "incident_id": incident_id,
@@ -108,9 +123,11 @@ async def lifespan(app: FastAPI):
 
     # Wire event hooks
     telemetry_ws.set_dashboard_broadcast_hook(command_ws.hub.broadcast)
+    telemetry_ws.set_swarm_trigger_hook(trigger_swarm_for_journey)
     b2b_ops_api.set_dashboard_broadcast_hook(command_ws.hub.broadcast)
     citizen_api.set_swarm_trigger_hook(trigger_swarm_for_journey)
     webhooks.set_swarm_trigger_hook(trigger_swarm_for_journey)
+    recon_chat_api.set_dashboard_broadcast_hook(command_ws.hub.broadcast)
     logger.info("Waypoint Secure Core Backend online and fully wired.")
     yield
     logger.info("Shutting down Waypoint Secure Core Backend.")
@@ -137,6 +154,7 @@ app.include_router(telemetry_ws.router)
 app.include_router(command_ws.router)
 app.include_router(b2b_ops_api.router)
 app.include_router(webhooks.router)
+app.include_router(recon_chat_api.router)
 
 @app.get("/health", tags=["System"])
 async def health_check():

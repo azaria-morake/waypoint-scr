@@ -1,10 +1,11 @@
 """
-Waypoint Secure - The Way Swarm LLM Client & Inference Engine
-Handles LLM initialization (Gemini 1.5/2.0 Flash & OpenAI GPT-4o-mini)
-with support for real API execution and zero-failure structured schema parsing.
+Waypoint Secure - The Way Swarm LLM Client & Multi-Model Inference Engine
+Direct REST client for Google Gemini models and OpenAI models with strict JSON validation.
+NO synthetic/fabricated fallback: calls real LLM APIs and fails loudly on API errors or quota limits.
 """
 import os
 import json
+import asyncio
 import logging
 from typing import Dict, Any, Optional, Type
 from pydantic import BaseModel
@@ -15,175 +16,167 @@ logger = logging.getLogger("waypoint.llm")
 
 class WaypointLLMClient:
     """
-    Central LLM Client for all 5 agents in The Way Swarm.
-    - If GEMINI_API_KEY is present: connects to Gemini models (gemini-1.5-flash)
-    - If OPENAI_API_KEY is present: connects to OpenAI models (gpt-4o-mini)
-    - If running offline / no key: runs the embedded high-precision Waypoint Inference Engine
+    Central LLM Client for all agents in The Way Swarm.
+    - Connects directly to Google Generative Language REST API for Gemini models.
+    - Supports distinct models per agent (MODEL_TELEMETRY, MODEL_NOK_RECON, MODEL_DISPATCH, MODEL_CUSTOM_OPS).
+    - If OPENAI_API_KEY is present: supports OpenAI models (gpt-4o-mini).
+    - Fails loudly with full error traces if the API returns an error or quota is exceeded.
     """
-    def __init__(self, default_model: str = "gemini-1.5-flash"):
+    def __init__(self):
         self.gemini_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
         self.openai_key = settings.OPENAI_API_KEY or os.getenv("OPENAI_API_KEY", "")
-        self.default_model = default_model
-        self.client = None
-        self.provider = "OFFLINE_SIMULATOR"
 
         if self.gemini_key:
-            try:
-                from openai import AsyncOpenAI
-                self.client = AsyncOpenAI(
-                    api_key=self.gemini_key,
-                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-                )
-                self.provider = "GEMINI"
-                self.model = "gemini-1.5-flash"
-                logger.info("Waypoint LLM Client initialized with Google Gemini (gemini-1.5-flash)")
-            except Exception as e:
-                logger.warning(f"Could not initialize Gemini OpenAI bridge: {e}")
-
+            logger.info("Waypoint LLM Client initialized with Google Gemini REST API.")
         elif self.openai_key:
-            try:
-                from openai import AsyncOpenAI
-                self.client = AsyncOpenAI(api_key=self.openai_key)
-                self.provider = "OPENAI"
-                self.model = "gpt-4o-mini"
-                logger.info("Waypoint LLM Client initialized with OpenAI (gpt-4o-mini)")
-            except Exception as e:
-                logger.warning(f"Could not initialize OpenAI client: {e}")
+            logger.info("Waypoint LLM Client initialized with OpenAI.")
         else:
-            logger.info("No active GEMINI_API_KEY or OPENAI_API_KEY found. Utilizing Waypoint Autonomous Inference Engine.")
+            logger.warning("No active GEMINI_API_KEY or OPENAI_API_KEY found in environment.")
 
     async def generate_structured(
         self,
         system_prompt: str,
         user_prompt: str,
+        model: Optional[str] = None,
         response_model: Optional[Type[BaseModel]] = None,
-        temperature: float = 0.2
+        response_schema: Optional[Any] = None,
+        temperature: float = 0.2,
+        **kwargs
     ) -> Dict[str, Any]:
         """
         Executes prompt through active LLM (Gemini or OpenAI) with JSON schema enforcement.
-        Falls back smoothly to autonomous inference engine if API key is not active.
+        Raises RuntimeError on API failure, rate-limiting, or invalid JSON.
         """
-        if self.client and self.provider in ["GEMINI", "OPENAI"]:
-            try:
-                logger.info(f"Dispatching prompt to {self.provider} [{self.model}]...")
-                messages = [
-                    {"role": "system", "content": system_prompt + "\nYou MUST return valid RFC-8259 JSON only."},
-                    {"role": "user", "content": user_prompt}
-                ]
+        target_model = model or settings.MODEL_TELEMETRY
 
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
+        if self.gemini_key:
+            # Multi-model fallback sequence to eliminate any transient 503 / 404 / spike
+            models_to_try = [
+                target_model,
+                "gemini-flash-lite-latest",
+                "gemini-3.5-flash-lite",
+                "gemini-3-flash-preview"
+            ]
+            seen = set()
+            candidate_models = [m for m in models_to_try if m and not (m in seen or seen.add(m))]
+
+            last_err = None
+            for cand_model in candidate_models:
+                try:
+                    logger.info(f"Dispatching structured prompt to Google Gemini [{cand_model}]...")
+                    parsed = await self._call_gemini_rest(
+                        model=cand_model,
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                        temperature=temperature
+                    )
+                    logger.info(f"Successfully received valid structured response from Gemini [{cand_model}]")
+                    return parsed
+                except Exception as e:
+                    logger.warning(f"Gemini call on [{cand_model}] failed: {e}. Trying next available model...")
+                    last_err = e
+
+            raise RuntimeError(f"All Google Gemini models failed. Last error: {last_err}")
+
+        elif self.openai_key:
+            try:
+                from openai import AsyncOpenAI
+                client = AsyncOpenAI(api_key=self.openai_key)
+                response = await client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt + "\nYou MUST return valid RFC-8259 JSON only."},
+                        {"role": "user", "content": user_prompt}
+                    ],
                     temperature=temperature,
                     response_format={"type": "json_object"}
                 )
-
                 content = response.choices[0].message.content
-                parsed = json.loads(content)
-                logger.info(f"Successfully received and parsed structured response from {self.provider}")
-                return parsed
-
+                return json.loads(content)
             except Exception as e:
-                logger.warning(f"{self.provider} API call failed or timed out ({e}). Executing prompt with Waypoint Autonomous Engine.")
+                logger.error(f"OpenAI API call failed: {e}")
+                raise RuntimeError(f"OpenAI API call failed: {e}")
 
-        # Autonomous Engine Execution
-        return self._execute_autonomous_prompt(system_prompt, user_prompt, response_model)
+        else:
+            raise RuntimeError(
+                "No active LLM API key configured. Please set GEMINI_API_KEY in your .env file."
+            )
 
-    def _execute_autonomous_prompt(
+    async def _call_gemini_rest(
         self,
+        model: str,
         system_prompt: str,
         user_prompt: str,
-        response_model: Optional[Type[BaseModel]] = None
+        temperature: float = 0.2,
+        timeout: float = 35.0
     ) -> Dict[str, Any]:
         """
-        Synthesizes structured operational outputs directly aligned with prompt instructions
-        and South African Gauteng spatial/kinematics parameters.
+        Direct HTTP/2 REST call to Google's Generative Language API with JSON mode.
+        Fails loudly on HTTP errors, timeouts, or JSON parsing issues.
         """
-        lower_sys = system_prompt.lower()
-        lower_usr = user_prompt.lower()
-
-        # Agent 3: NOK Recon
-        if "next-of-kin" in lower_sys or "nok" in lower_sys or "clothing" in lower_sys:
-            return {
-                "upper_body": "Oversized bright yellow denim jacket, white crewneck tee",
-                "lower_body": "Black high-waisted athletic tights",
-                "footwear": "White running shoes with reflective pink trim",
-                "hair_and_features": "Long box braids tied in high ponytail, gold hoop earrings",
-                "companion_or_vehicle": "Silver Toyota Corolla or VW Polo spotted nearby",
-                "confidence_score": 0.96,
-                "synthesized_attire_summary": "Yellow high-visibility puffer jacket, black athletic tights, white running shoes with reflective pink trim",
-                "transcript": [
-                    {"sender": "Waypoint Swarm AI", "text": "🚨 URGENT: Thandiwe triggered an emergency alert near Alberton. What was she wearing when she left?"},
-                    {"sender": "Zanele (Sister)", "text": "Oh god!! She went running in her yellow puffer jacket and black athletic tights!"},
-                    {"sender": "Waypoint Swarm AI", "text": "Thank you Zanele. Fox Tactical responders are converging on her location now. Stay by your phone."}
-                ]
-            }
-
-        # Agent 1: Telemetry & Spatial Kinematics
-        elif "telemetry" in lower_sys or "kinematics" in lower_sys or "off-ramp" in lower_sys:
-            # Extract speed and g_force from user prompt if present
-            speed = 78.0
-            g_force = 3.8
-            return {
-                "movement_classification": "STRUGGLE_DETECTED_HIGH_SPEED_ABDUCTION",
-                "risk_level": "CRITICAL_LEVEL_1",
-                "kinematics_summary": f"Classified high-speed movement ({speed} km/h). G-Force spike ({g_force}G) confirms struggle.",
-                "predicted_intercept_nodes": [
-                    {
-                        "name": "Node Alpha: N12 East / Voortrekker Road Off-Ramp",
-                        "lat": -26.2620,
-                        "lng": 28.1210,
-                        "estimated_arrival_seconds": 110,
-                        "confidence_score": 0.94,
-                        "tactical_recommendation": "Primary highway bottleneck. Recommend 2 armed response vehicles pinch off eastbound on-ramp."
-                    },
-                    {
-                        "name": "Node Bravo: R59 Sybrand van Niekerk / Swartkoppies Rd",
-                        "lat": -26.2750,
-                        "lng": 28.1180,
-                        "estimated_arrival_seconds": 225,
-                        "confidence_score": 0.88,
-                        "tactical_recommendation": "Secondary southward escape vector towards Meyerton/Vereeniging."
-                    },
-                    {
-                        "name": "Node Charlie: Reading Interchange / Ring Road",
-                        "lat": -26.2510,
-                        "lng": 28.1340,
-                        "estimated_arrival_seconds": 340,
-                        "confidence_score": 0.82,
-                        "tactical_recommendation": "High-speed junction connecting to N3 North corridor."
-                    }
-                ]
-            }
-
-        # Agent 4: CAD & Tactical Dispatch
-        elif "cad" in lower_sys or "dispatch" in lower_sys or "routing" in lower_sys:
-            return {
-                "incident_code": "ALPHA_RED_ABDUCTION_INTERCEPT",
-                "priority": "LEVEL_1_CRITICAL",
-                "assigned_unit": "Fox Security Unit 14 (Tactical Armed)",
-                "assigned_intercept_node": "Node Alpha: N12 East / Voortrekker Road Off-Ramp",
-                "distance_km": 1.2,
-                "eta_minutes": 2.2,
-                "cad_radio_voice_script": "ALL UNITS: FOX-14 & SAPS FLYING SQUAD. CODE RED ABDUCTION IN PROGRESS. TARGET: THANDIWE NDLOVU, 165CM, WEARING YELLOW PUFFER JACKET & BLACK TIGHTS. CONVERGE ON N12 VOORTREKKER EASTBOUND OFF-RAMP IMMEDIATELY.",
-                "cad_mdt_payload": {
-                    "victim_name": "Thandiwe Ndlovu",
-                    "height": "165 cm",
-                    "build": "Slender Athletic",
-                    "verified_clothing": "Yellow high-visibility puffer jacket, black athletic tights",
-                    "intercept_target": "N12 / Voortrekker Off-ramp",
-                    "routing_waypoint": [-26.2620, 28.1210]
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
+        payload = {
+            "systemInstruction": {
+                "parts": [{"text": system_prompt}]
+            },
+            "contents": [
+                {
+                    "parts": [{"text": user_prompt}]
                 }
+            ],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": temperature
             }
+        }
 
-        # Agent 5 / B2B Commercial Operations
-        else:
-            return {
-                "status_result": "VERIFIED_SAFE",
-                "action_taken": "Automated voice check-in executed with client callback verification.",
-                "details": "Client responded to automated security inquiry. Passphrase verified.",
-                "voice_minutes_billed": 2.0
-            }
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                try:
+                    res = await client.post(url, json=payload)
+                except httpx.TimeoutException as e:
+                    if attempt < max_retries:
+                        await asyncio.sleep(1.5)
+                        continue
+                    raise RuntimeError(f"Gemini API timed out after {timeout}s on model [{model}]: {e}")
+                except Exception as e:
+                    raise RuntimeError(f"Network error contacting Gemini API on model [{model}]: {e}")
 
-# Global LLM instance
+                if res.status_code == 200:
+                    try:
+                        data = res.json()
+                        candidates = data.get("candidates", [])
+                        if not candidates:
+                            raise RuntimeError(f"Gemini [{model}] returned 0 candidates. Response: {data}")
+                        text = candidates[0]["content"]["parts"][0]["text"].strip()
+                        if text.startswith("```"):
+                            lines = text.splitlines()
+                            if lines[0].startswith("```"):
+                                lines = lines[1:]
+                            if lines and lines[-1].startswith("```"):
+                                lines = lines[:-1]
+                            text = "\n".join(lines).strip()
+                        return json.loads(text)
+                    except json.JSONDecodeError as jde:
+                        raise RuntimeError(f"Gemini [{model}] returned malformed JSON: {jde}\nRaw text: {text}")
+                elif res.status_code == 503:
+                    if attempt < max_retries:
+                        logger.warning(f"Gemini [{model}] 503 High Demand spike. Retrying in 1.5s (attempt {attempt}/{max_retries})...")
+                        import asyncio
+                        await asyncio.sleep(1.5)
+                        continue
+                    raise RuntimeError(
+                        f"Gemini [{model}] HTTP 503 (High Demand Spikes). Details: {res.text}"
+                    )
+                elif res.status_code == 429:
+                    raise RuntimeError(
+                        f"Gemini [{model}] HTTP 429 (Rate Limit / Quota Exceeded). Details: {res.text}"
+                    )
+                else:
+                    raise RuntimeError(
+                        f"Gemini [{model}] HTTP {res.status_code} Error: {res.text}"
+                    )
+
+# Global LLM client instance
 llm_client = WaypointLLMClient()

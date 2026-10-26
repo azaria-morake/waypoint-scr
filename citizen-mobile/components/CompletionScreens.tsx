@@ -27,9 +27,19 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
           Your journey has been marked as completed. All emergency contacts have been notified that you arrived safely.
         </p>
 
-        {/* Deceptive silent indicator for reviewer / tester only */}
-        {isDeceptiveDuress && (
-          <div className="mt-8 bg-red-50 border border-red-200 text-red-800 rounded-2xl p-3.5 text-xs text-left max-w-xs shadow-sm">
+        {/* Safe Arrival Dashboard Sync Confirmation */}
+        {!isDeceptiveDuress ? (
+          <div className="mt-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-3.5 text-xs text-left max-w-xs shadow-sm">
+            <div className="flex items-center space-x-1.5 font-bold text-emerald-700 mb-1">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>COMMAND DASHBOARD NOTIFIED</span>
+            </div>
+            <p className="text-[11px] text-emerald-600 leading-snug">
+              Tactical control room confirmed safe arrival. Emergency alert stood down, siren silenced, and POPIA privacy shield restored.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 bg-red-50 border border-red-200 text-red-800 rounded-2xl p-3.5 text-xs text-left max-w-xs shadow-sm">
             <div className="flex items-center space-x-1.5 font-bold text-red-700 mb-1">
               <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
               <span>DURESS SILENT PROTOCOL ACTIVE</span>
@@ -40,7 +50,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({
           </div>
         )}
 
-        <div className="w-full max-w-xs bg-white rounded-2xl p-4 mt-8 border border-slate-200/80 shadow-sm text-left">
+        <div className="w-full max-w-xs bg-white rounded-2xl p-4 mt-6 border border-slate-200/80 shadow-sm text-left">
           <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100">
             <span className="text-slate-500">Destination</span>
             <span className="font-semibold text-slate-800">Sandton City Mall</span>

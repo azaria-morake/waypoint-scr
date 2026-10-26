@@ -33,7 +33,7 @@ class Journey(Base):
 class TelemetryPing(Base):
     __tablename__ = "telemetry_pings"
 
-    ping_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    ping_id = Column(Integer().with_variant(BigInteger, "postgresql"), primary_key=True, autoincrement=True)
     journey_id = Column(String(36), ForeignKey("journeys.journey_id", ondelete="CASCADE"), nullable=False, index=True)
     lat = Column(Float, nullable=False)
     lng = Column(Float, nullable=False)

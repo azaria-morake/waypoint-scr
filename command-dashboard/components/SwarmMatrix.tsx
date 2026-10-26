@@ -73,17 +73,11 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
       name: "Agent 3: NOK Recon & Interrogation",
       role: "Automated WhatsApp & AI Voice Attire Extractor",
       icon: MessageSquare,
-      status: isTier1 ? "TIER 1 RESTRICTED" : isRedAlert ? "COMPLETED" : "IDLE",
-      latency: isTier1 ? "LOCKED" : isRedAlert ? "850ms" : "—",
-      color: isTier1
-        ? "border-slate-800 text-slate-500 bg-slate-950/40"
-        : "border-amber-500/40 text-amber-400 bg-amber-950/20",
-      pillColor: isTier1
-        ? "bg-slate-900 text-slate-500 border-slate-800"
-        : "bg-amber-950 text-amber-300 border-amber-500/40",
-      summary: isTier1
-        ? "Tier 1 (CPF) is limited to 2 agents. Upgrade to Tier 2 (Pro) to enable automated NOK interrogation."
-        : isRedAlert
+      status: isRedAlert ? "COMPLETED" : "IDLE",
+      latency: isRedAlert ? "850ms" : "—",
+      color: "border-amber-500/40 text-amber-400 bg-amber-950/20",
+      pillColor: "bg-amber-950 text-amber-300 border-amber-500/40",
+      summary: isRedAlert
         ? "WhatsApp agent contacted sister Zanele Ndlovu. Extracted yellow puffer jacket & running attire."
         : "Next-of-Kin bot armed for automated vital-interest interrogation...",
       details: {
@@ -102,17 +96,11 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
       name: "Agent 4: Dispatch & CAD Routing",
       role: "Fastest Intercept Routing & Automated Voice CAD Dispatch",
       icon: Navigation,
-      status: isTier1 ? "TIER 1 RESTRICTED" : isRedAlert ? "COMPLETED" : "IDLE",
-      latency: isTier1 ? "LOCKED" : isRedAlert ? "310ms" : "—",
-      color: isTier1
-        ? "border-slate-800 text-slate-500 bg-slate-950/40"
-        : "border-emerald-500/40 text-emerald-400 bg-emerald-950/20",
-      pillColor: isTier1
-        ? "bg-slate-900 text-slate-500 border-slate-800"
-        : "bg-emerald-950 text-emerald-300 border-emerald-500/40",
-      summary: isTier1
-        ? "Tier 1 (CPF) restricted to 2 agents. Upgrade to Tier 2 (Pro) for automated armed CAD routing."
-        : isRedAlert
+      status: isRedAlert ? "COMPLETED" : "IDLE",
+      latency: isRedAlert ? "310ms" : "—",
+      color: "border-emerald-500/40 text-emerald-400 bg-emerald-950/20",
+      pillColor: "bg-emerald-950 text-emerald-300 border-emerald-500/40",
+      summary: isRedAlert
         ? "Fastest intercept calculated. Dispatched CAD telemetry payload to Fox Tactical Unit 14."
         : "Automated Computer-Aided Dispatch (CAD) engine standby...",
       details: {
@@ -138,16 +126,10 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
 
         <div className="flex items-center space-x-2 text-xs">
           <span className="text-slate-400 font-mono">
-            {isRedAlert ? "⚡ 4 Agents Executed in <1.5s" : "Swarm Standby (Ready)"}
+            {isRedAlert ? "⚡ 4 Agents Live Escalation" : "Swarm Standby (Ready)"}
           </span>
-          <span
-            className={`font-bold px-2 py-0.5 rounded text-[10px] border ${
-              isTier1
-                ? "bg-slate-800 text-slate-400 border-slate-700"
-                : "bg-amber-950 text-amber-300 border-amber-500/30"
-            }`}
-          >
-            {isTier1 ? "TIER 1 (2 AGENTS ACTIVE)" : "TIER 2/3 (FULL 4-AGENT SWARM)"}
+          <span className="font-bold px-2 py-0.5 rounded text-[10px] border bg-emerald-950 text-emerald-300 border-emerald-500/30">
+            AOTY JUDGE ACCESS: ALL 4 AGENTS UNLOCKED
           </span>
         </div>
       </div>

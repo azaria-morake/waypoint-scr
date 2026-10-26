@@ -1,203 +1,226 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
+import "leaflet/dist/leaflet.css";
 import { Navigation, ShieldAlert, Car, Radio } from "lucide-react";
 
 interface MapCanvasProps {
   mode: "SETUP" | "ACTIVE" | "RED";
-  progress?: number; // 0 to 1
-  responderProgress?: number; // 0 to 1
+  progress?: number;
+  responderProgress?: number;
   telemetrySpeed?: number;
 }
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({
   mode,
-  progress = 0.35,
+  progress = 0.4,
   responderProgress = 0.65,
   telemetrySpeed = 78,
 }) => {
-  // Road coordinates mapped to SVG canvas 400x480
-  // Point A (Alberton): (80, 420)
-  // Point B (Sandton): (320, 60)
-  // Route curve: (80, 420) -> (140, 310) [Voortrekker] -> (190, 240) [N12 Junction] -> (240, 150) [M1 Corridor] -> (320, 60) [Sandton]
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersLayerRef = useRef<any>(null);
 
-  const routePath = "M 80,420 C 120,330 160,260 210,210 C 260,160 280,110 320,60";
+  // Real Gauteng corridor: 14 8th Ave, Alberton North -> Alberton City Mall, Voortrekker Rd
+  const originCoords: [number, number] = [-26.2585, 28.1215];
+  const destCoords: [number, number] = [-26.2625, 28.1228];
 
-  // Calculate current user position along bezier curve approximately
-  const t = Math.min(Math.max(progress, 0.05), 0.95);
-  // Quadratic/Cubic bezier interpolation approximation
-  const userX = 80 + t * 240 + Math.sin(t * Math.PI) * 20;
-  const userY = 420 - t * 360;
+  const corridorRoute: [number, number][] = [
+    [-26.2585, 28.1215], // Departure: 8th Ave
+    [-26.2602, 28.1220], // Hendrik Potgieter St
+    [-26.2625, 28.1228], // Voortrekker Rd
+    [-26.2650, 28.1235], // Approach
+    [-26.2678, 28.1245], // N12 on-ramp
+  ];
 
-  // Responder position converging from base (360, 360) towards user
-  const rt = Math.min(Math.max(responderProgress, 0), 1);
-  const respX = 360 - rt * (360 - userX);
-  const respY = 360 - rt * (360 - userY);
+  // Interpolate user current GPS point along the real corridor
+  const currentIndex = Math.min(
+    Math.floor(progress * corridorRoute.length),
+    corridorRoute.length - 1
+  );
+  const currentCoords = corridorRoute[currentIndex];
+
+  useEffect(() => {
+    let isMounted = true;
+    const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || "cb1_4v5a_1_3ddf73d20da14b7be5f09ab5";
+
+    import("leaflet").then((L) => {
+      if (!isMounted || !mapContainerRef.current) return;
+
+      // Clean up previous instance if already present
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+
+      // Clear any lingering _leaflet_id from React StrictMode double invocation
+      const container = mapContainerRef.current;
+      if ((container as any)._leaflet_id != null) {
+        delete (container as any)._leaflet_id;
+      }
+
+      const map = L.map(container, {
+        center: currentCoords,
+        zoom: 15,
+        zoomControl: false,
+      });
+
+      // Primary: CartoDB Voyager clean mobile road tiles with API key
+      const cartoUrl = cartoKey
+        ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoKey}`
+        : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+
+      const cartoLayer = L.tileLayer(cartoUrl, {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      });
+
+      const osmFallback = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution: "&copy; OpenStreetMap contributors",
+          maxZoom: 19,
+        }
+      );
+
+      cartoLayer.on("tileerror", () => {
+        if (!map.hasLayer(osmFallback)) {
+          osmFallback.addTo(map);
+        }
+      });
+
+      cartoLayer.addTo(map);
+
+      const markersGroup = L.layerGroup().addTo(map);
+      markersLayerRef.current = markersGroup;
+      mapInstanceRef.current = map;
+
+      // Draw real road polyline
+      L.polyline(corridorRoute, {
+        color: mode === "RED" ? "#ef4444" : "#10b981",
+        weight: 5,
+        opacity: 0.85,
+        dashArray: mode === "RED" ? "6, 6" : undefined,
+      }).addTo(map);
+
+      renderMarkers(L, map, markersGroup);
+
+      // Invalidate size after layout settles to guarantee tiles render
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 200);
+    });
+
+    return () => {
+      isMounted = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersLayerRef.current) return;
+    import("leaflet").then((L) => {
+      renderMarkers(L, mapInstanceRef.current, markersLayerRef.current);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.panTo(currentCoords, { animate: true });
+      }
+    });
+  }, [mode, progress, currentCoords]);
+
+  const renderMarkers = (L: any, map: any, group: any) => {
+    group.clearLayers();
+
+    // 1. Origin Marker
+    const originIcon = L.divIcon({
+      html: `<div class="w-6 h-6 bg-slate-900 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white shadow-md font-bold">
+               A
+             </div>`,
+      className: "custom-origin-icon",
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+    L.marker(originCoords, { icon: originIcon })
+      .bindPopup("<b>Departure</b><br/>14 8th Avenue, Alberton North")
+      .addTo(group);
+
+    // 2. Destination Marker
+    const destIcon = L.divIcon({
+      html: `<div class="w-6 h-6 bg-emerald-600 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white shadow-md font-bold">
+               B
+             </div>`,
+      className: "custom-dest-icon",
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+    L.marker(destCoords, { icon: destIcon })
+      .bindPopup("<b>Destination</b><br/>Alberton City Mall, Voortrekker Rd")
+      .addTo(group);
+
+    // 3. User Live Marker
+    const userMarkerHtml =
+      mode === "RED"
+        ? `<div class="relative flex items-center justify-center">
+             <span class="absolute inline-flex h-9 w-9 animate-ping rounded-full bg-red-500 opacity-75"></span>
+             <div class="relative flex items-center justify-center w-7 h-7 bg-red-600 rounded-full border-2 border-white shadow-lg text-white font-bold text-xs">
+               SOS
+             </div>
+           </div>`
+        : `<div class="relative flex items-center justify-center">
+             <span class="absolute inline-flex h-8 w-8 animate-pulse rounded-full bg-emerald-500 opacity-60"></span>
+             <div class="relative flex items-center justify-center w-6 h-6 bg-emerald-500 rounded-full border-2 border-white shadow-md text-white font-bold text-xs">
+               ▲
+             </div>
+           </div>`;
+
+    const userIcon = L.divIcon({
+      html: userMarkerHtml,
+      className: "custom-user-live",
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+    L.marker(currentCoords, { icon: userIcon })
+      .bindPopup(`<b>You (Live GPS)</b><br/>Speed: ${telemetrySpeed} km/h`)
+      .addTo(group);
+
+    // 4. Converging Responder (in RED mode)
+    if (mode === "RED") {
+      const respCoords: [number, number] = [-26.2628, 28.1205];
+      const respIcon = L.divIcon({
+        html: `<div class="flex items-center justify-center w-7 h-7 bg-amber-500 rounded-full border-2 border-white shadow-lg text-white text-xs animate-bounce">
+                 🚓
+               </div>`,
+        className: "custom-resp-live",
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      L.marker(respCoords, { icon: respIcon })
+        .bindPopup("<b>Fox Security Unit 14</b><br/>Converging - ETA 2.2 min")
+        .addTo(group);
+    }
+  };
 
   return (
-    <div className="relative w-full h-full min-h-[380px] bg-[#eef2f5] overflow-hidden select-none">
-      {/* Subtle Map Grid & Suburban Road Network */}
-      <svg
-        className="absolute inset-0 w-full h-full"
-        viewBox="0 0 400 480"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <defs>
-          <linearGradient id="routeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="50%" stopColor="#059669" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
+    <div className="relative w-full h-full min-h-[380px] bg-slate-100 overflow-hidden select-none">
+      {/* Real OpenStreetMap Leaflet Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-          <linearGradient id="dangerRouteGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#b91c1c" />
-          </linearGradient>
-
-          <pattern id="cityGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-          </pattern>
-        </defs>
-
-        {/* Map Background with suburban grid */}
-        <rect width="100%" height="100%" fill="#f1f5f9" />
-        <rect width="100%" height="100%" fill="url(#cityGrid)" />
-
-        {/* Secondary street arterial lines */}
-        <path d="M 0,160 L 400,160" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6,4" />
-        <path d="M 0,310 L 400,310" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6,4" />
-        <path d="M 160,0 L 160,480" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6,4" />
-        <path d="M 280,0 L 280,480" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="6,4" />
-
-        {/* Green Belt / Parks */}
-        <path
-          d="M 20,40 Q 60,30 90,70 T 70,120 T 10,90 Z"
-          fill="#dcfce7"
-          stroke="#bbf7d0"
-          strokeWidth="1"
-        />
-        <path
-          d="M 260,280 Q 320,260 360,310 T 320,380 T 250,330 Z"
-          fill="#dcfce7"
-          stroke="#bbf7d0"
-          strokeWidth="1"
-        />
-
-        {/* Major Highway Route (N12 / M1 Corridor) */}
-        <path
-          d={routePath}
-          fill="none"
-          stroke="#94a3b8"
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d={routePath}
-          fill="none"
-          stroke="#ffffff"
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Active Journey Route Highlight */}
-        <path
-          d={routePath}
-          fill="none"
-          stroke={mode === "RED" ? "url(#dangerRouteGradient)" : "url(#routeGradient)"}
-          strokeWidth="6"
-          strokeDasharray={mode === "RED" ? "12,6" : "none"}
-          className={mode === "RED" ? "animate-pulse" : ""}
-          strokeLinecap="round"
-        />
-
-        {/* Point A: Alberton Origin */}
-        <g transform="translate(80, 420)">
-          <circle r="12" fill="#0f172a" />
-          <circle r="6" fill="#ffffff" />
-          <text x="-25" y="24" fontSize="10" fontWeight="bold" fill="#334155">
-            Point A (Alberton)
-          </text>
-        </g>
-
-        {/* Point B: Sandton Destination */}
-        <g transform="translate(320, 60)">
-          <circle r="12" fill="#2563eb" />
-          <circle r="5" fill="#ffffff" />
-          <text x="-40" y="-14" fontSize="10" fontWeight="bold" fill="#1e3a8a">
-            Point B (Sandton)
-          </text>
-        </g>
-
-        {/* Off-ramp predicted intercept nodes in RED mode */}
-        {mode === "RED" && (
-          <>
-            {/* Voortrekker Off-ramp */}
-            <g transform="translate(140, 310)">
-              <circle r="16" fill="rgba(239, 68, 68, 0.2)" className="animate-ping" />
-              <circle r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
-              <text x="10" y="-4" fontSize="9" fontWeight="bold" fill="#991b1b">
-                Node 1: N12 / Voortrekker
-              </text>
-            </g>
-
-            {/* R59 Intercept */}
-            <g transform="translate(190, 240)">
-              <circle r="6" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
-              <text x="10" y="4" fontSize="9" fontWeight="bold" fill="#b45309">
-                Node 2: R59 Reading Interchange
-              </text>
-            </g>
-
-            {/* Converging Responder Unit */}
-            <g transform={`translate(${respX}, ${respY})`}>
-              <circle r="18" fill="rgba(37, 99, 235, 0.25)" className="animate-pulse" />
-              <circle r="11" fill="#1d4ed8" stroke="#ffffff" strokeWidth="2" />
-              <Car size={13} className="text-white -translate-x-[6.5px] -translate-y-[6.5px]" />
-              <text x="14" y="4" fontSize="9" fontWeight="bold" fill="#1e40af">
-                Fox Unit 14 (3.2 km)
-              </text>
-            </g>
-          </>
-        )}
-
-        {/* Current Citizen User Marker */}
-        <g transform={`translate(${userX}, ${userY})`}>
-          <circle
-            r={mode === "RED" ? "22" : "18"}
-            fill={mode === "RED" ? "rgba(239, 68, 68, 0.3)" : "rgba(16, 185, 129, 0.3)"}
-            className="animate-ping"
-          />
-          <circle
-            r="12"
-            fill={mode === "RED" ? "#dc2626" : "#10b981"}
-            stroke="#ffffff"
-            strokeWidth="3"
-          />
-          <text
-            x="-16"
-            y="-16"
-            fontSize="10"
-            fontWeight="bold"
-            fill={mode === "RED" ? "#b91c1c" : "#065f46"}
-          >
-            {mode === "RED" ? "SOS" : "You"}
-          </text>
-        </g>
-      </svg>
-
-      {/* Floating Speed & GPS Badge */}
-      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-slate-200 text-xs font-semibold text-slate-700 flex items-center space-x-1.5">
-        <span className={`w-2 h-2 rounded-full ${mode === "RED" ? "bg-red-500 animate-ping" : "bg-emerald-500"}`} />
-        <span>{telemetrySpeed} km/h</span>
-        <span className="text-slate-400">•</span>
-        <span>140° SE</span>
+      {/* Floating Speed & Status Badge */}
+      <div className="absolute top-3 left-3 z-[1000] bg-slate-900/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700 shadow-md flex items-center space-x-2 text-xs">
+        <div className={`w-2 h-2 rounded-full ${mode === "RED" ? "bg-red-500 animate-ping" : "bg-emerald-400 animate-pulse"}`} />
+        <span className="font-mono text-white text-[11px] font-semibold">
+          {mode === "RED" ? "TACTICAL ARMED CONVERGENCE" : `GPS: Alberton North (${telemetrySpeed} km/h)`}
+        </span>
       </div>
 
-      {/* Live Road Indicator */}
-      <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-slate-200 text-[11px] font-medium text-slate-600">
-        N12 Southbound Corridor
+      <div className="absolute bottom-3 right-3 z-[1000] bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] text-slate-600 font-mono border border-slate-200 shadow-sm">
+        OpenStreetMap • Real GIS
       </div>
     </div>
   );

@@ -27,15 +27,28 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
     return R * c
 
+from sqlalchemy import event
+
 # Decide database URL (check fallback)
 DATABASE_URL = settings.FALLBACK_SQLITE_URL
 IS_SQLITE = True
 
+connect_args = {"timeout": 30} if IS_SQLITE else {}
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    future=True
+    future=True,
+    connect_args=connect_args
 )
+
+if IS_SQLITE:
+    @event.listens_for(engine.sync_engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=30000")
+        cursor.close()
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

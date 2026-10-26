@@ -85,9 +85,15 @@ async def update_org_tier(org_id: str, req: TierUpdateRequest, db: AsyncSession 
 @router.get("/dashboard/state")
 async def get_dashboard_state(db: AsyncSession = Depends(get_db)):
     """Returns complete state snapshot for Command Center."""
-    j_res = await db.execute(select(Journey).order_by(Journey.started_at.desc()).limit(1))
+    j_res = await db.execute(
+        select(Journey).where(Journey.status == "RED").order_by(Journey.started_at.desc()).limit(1)
+    )
     journey = j_res.scalar_one_or_none()
-    is_red = journey and journey.status == "RED"
+    if not journey:
+        j_res = await db.execute(select(Journey).order_by(Journey.started_at.desc()).limit(1))
+        journey = j_res.scalar_one_or_none()
+
+    is_red = journey is not None and journey.status == "RED"
 
     r_res = await db.execute(select(Responder))
     responders = [

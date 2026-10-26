@@ -6,6 +6,7 @@ spatial LLM reasoning across Gauteng highway networks to calculate predicted int
 import time
 from typing import Dict, Any, List
 from pydantic import BaseModel, Field
+from app.config import settings
 from app.way_swarm.llm import llm_client
 
 # ============================================================================
@@ -91,6 +92,7 @@ class TelemetryAgent:
         structured_output = await llm_client.generate_structured(
             system_prompt=TELEMETRY_KINEMATICS_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            model=settings.MODEL_TELEMETRY,
             response_model=TelemetrySpatialOutput
         )
 

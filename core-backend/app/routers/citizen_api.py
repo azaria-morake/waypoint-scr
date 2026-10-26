@@ -2,12 +2,13 @@
 Waypoint Secure - Citizen REST API Router
 Handles Citizen onboarding, BOLO profile, Two-Tap journey lifecycle, and Dual-PIN verification.
 """
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
-from app.models import User, BoloProfile, EmergencyContact, Journey
+from app.models import User, BoloProfile, EmergencyContact, Journey, Incident
 from app.schemas import (
     UserCreate,
     UserLogin,
@@ -104,6 +105,20 @@ async def start_green_journey(req: JourneyStartRequest, db: AsyncSession = Depen
     )
     await db.commit()
     await db.refresh(journey)
+
+    try:
+        from app.routers import command_ws
+        await command_ws.hub.broadcast({
+            "type": "JOURNEY_STARTED",
+            "journey_id": journey.journey_id,
+            "citizen_name": user.full_name if user else "Thandiwe Ndlovu",
+            "status": "GREEN",
+            "destination": journey.destination_name,
+            "message": "Thandiwe has activated a journey. Currently safe. Open chat interface if you want me to run any tasks on the journey."
+        })
+    except Exception as e:
+        pass
+
     return journey
 
 @router.post("/journeys/{journey_id}/panic")
@@ -117,6 +132,21 @@ async def trigger_panic_tap_two(journey_id: str, db: AsyncSession = Depends(get_
         trigger_source="SECOND_TAP",
         on_panic_trigger_swarm=swarm_trigger_hook
     )
+
+    try:
+        from app.routers import command_ws
+        await command_ws.hub.broadcast({
+            "type": "JOURNEY_RED_ALERT",
+            "journey_id": journey_id,
+            "incident_id": incident.incident_id,
+            "trigger_source": "SECOND_TAP",
+            "status": "RED",
+            "citizen_name": "Thandiwe Ndlovu",
+            "message": "🚨 Emergency: Thandiwe has triggered a Red Alert! Immediate operator intervention required. Click to engage BOLO Young."
+        })
+    except Exception as e:
+        pass
+
     return {
         "success": True,
         "status": "RED",
@@ -146,13 +176,40 @@ async def disarm_journey_dual_pin(
     if not success:
         raise HTTPException(status_code=400, detail=res.get("error", "Disarm failed"))
 
+    # When standard safe PIN is used, notify command room dashboard to clear alert
+    if req.pin != "9999":
+        from app.routers import command_ws
+        await command_ws.hub.broadcast({
+            "type": "JOURNEY_DISARMED",
+            "journey_id": journey_id,
+            "status": "SAFE_COMPLETED",
+            "message": "Citizen entered Standard PIN. Journey ended safely."
+        })
+
     return res
 
 @router.post("/journeys/reset")
 async def reset_demo_state(db: AsyncSession = Depends(get_db)):
     """Resets active journey to IDLE for demo loops."""
+    now = datetime.now(timezone.utc)
     result = await db.execute(select(Journey).where(Journey.status.in_(["GREEN", "AMBER", "RED"])))
     for j in result.scalars().all():
         j.status = "SAFE_COMPLETED"
+        j.ended_at = now
+
+    # Also resolve all active incidents
+    inc_res = await db.execute(select(Incident).where(Incident.resolution_status == "ACTIVE"))
+    for inc in inc_res.scalars().all():
+        inc.resolution_status = "RESOLVED_SAFE"
+        inc.resolved_at = now
+
     await db.commit()
+
+    from app.routers import command_ws
+    await command_ws.hub.broadcast({
+        "type": "JOURNEY_RESET",
+        "status": "IDLE",
+        "message": "Demo state reset to IDLE."
+    })
+
     return {"status": "RESET_TO_IDLE", "message": "Demo reset safely."}

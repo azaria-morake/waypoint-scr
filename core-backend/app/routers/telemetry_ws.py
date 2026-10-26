@@ -13,10 +13,15 @@ router = APIRouter(tags=["Telemetry WebSocket"])
 
 # Hook to broadcast telemetry out to Command Dashboard
 dashboard_broadcast_hook = None
+swarm_trigger_hook = None
 
 def set_dashboard_broadcast_hook(hook):
     global dashboard_broadcast_hook
     dashboard_broadcast_hook = hook
+
+def set_swarm_trigger_hook(hook):
+    global swarm_trigger_hook
+    swarm_trigger_hook = hook
 
 @router.websocket("/ws/telemetry/{journey_id}")
 async def telemetry_ingest_websocket(websocket: WebSocket, journey_id: str):
@@ -45,7 +50,8 @@ async def telemetry_ingest_websocket(websocket: WebSocket, journey_id: str):
                         heading_deg=heading,
                         g_force=g_force,
                         battery=battery,
-                        channel="WSS"
+                        channel="WSS",
+                        on_anomaly_trigger=swarm_trigger_hook
                     )
 
                 # Broadcast to Command Dashboard in real time

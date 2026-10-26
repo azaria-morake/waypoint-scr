@@ -7,6 +7,7 @@ import time
 import json
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
+from app.config import settings
 from app.way_swarm.llm import llm_client
 
 # ============================================================================
@@ -97,6 +98,7 @@ class NextOfKinReconAgent:
         structured_output = await llm_client.generate_structured(
             system_prompt=NOK_RECON_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            model=settings.MODEL_NOK_RECON,
             response_model=NokExtractedAttire
         )
 

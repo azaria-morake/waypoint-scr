@@ -73,7 +73,7 @@ class WaySwarmSupervisor:
             justification="POPIA Act No. 4 of 2013, Section 11(1)(d): Emergency Life Threat"
         )
         session.add(audit_entry)
-        await session.flush()
+        await session.commit()  # Release DB transaction lock before running long network LLM calls
 
         if broadcast_callback:
             await broadcast_callback({
@@ -85,31 +85,28 @@ class WaySwarmSupervisor:
                 "message": f"🔓 POPIA ZERO-KNOWLEDGE SHIELD UNLOCKED: KMS Key Released ({audit_entry.justification})"
             })
 
-        # 2. Parallel Agent Execution with Tier Gating
-        tasks = []
+        # 2. Parallel Agent Execution with Subscription Tier Gating
+        tasks = [
+            self.telemetry_agent.execute(state, broadcast_callback),
+            self.proximity_agent.execute(state, broadcast_callback),
+        ]
 
-        # Tier 1+ Agents (Always active)
-        tasks.append(self.telemetry_agent.execute(state, broadcast_callback))
-        tasks.append(self.proximity_agent.execute(state, broadcast_callback))
-
-        # Tier 2+ and Tier 3 Agents (Gated)
         if tier in ["TIER_2_PRO", "TIER_3_GOV"]:
             tasks.append(self.nok_agent.execute(state, broadcast_callback))
             tasks.append(self.dispatch_agent.execute(state, broadcast_callback))
         else:
-            # Emit locked notices for CPF Tier 1
             if broadcast_callback:
                 await broadcast_callback({
                     "type": "AGENT_STEP",
                     "agent": "Next_Of_Kin_Recon_Agent",
                     "status": "LOCKED",
-                    "message": "🔒 [TIER 1 CPF RESTRICTION] Next-of-Kin Recon AI Agent locked. Upgrade to Tier 2 (Pro) to enable automated voice attire interrogation."
+                    "message": "🔒 [TIER 1 CPF RESTRICTION] Next-of-Kin Recon AI Agent restricted to Tier 2/3 enterprise subscribers."
                 })
                 await broadcast_callback({
                     "type": "AGENT_STEP",
                     "agent": "Dispatch_Routing_Agent",
                     "status": "LOCKED",
-                    "message": "🔒 [TIER 1 CPF RESTRICTION] Dispatch Routing Agent locked. Upgrade to Tier 2 (Pro) or Tier 3 (Gov) for automated SAPS/Armed Response routing."
+                    "message": "🔒 [TIER 1 CPF RESTRICTION] Computer-Aided Dispatch AI Agent restricted to Tier 2/3 enterprise subscribers."
                 })
 
         agent_results = await asyncio.gather(*tasks, return_exceptions=True)

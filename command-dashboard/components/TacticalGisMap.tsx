@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Navigation, ShieldAlert, Radio, Compass, Car, Crosshair } from "lucide-react";
+import React, { useEffect, useRef } from "react";
+import "leaflet/dist/leaflet.css";
+import { Crosshair, ShieldAlert, Radio, Compass, Car } from "lucide-react";
 
 interface TacticalGisMapProps {
   isRedAlert: boolean;
@@ -27,220 +28,270 @@ export const TacticalGisMap: React.FC<TacticalGisMapProps> = ({
   headingDeg = 140,
   responders,
 }) => {
-  // Breadcrumb trajectory
-  const [breadcrumbs, setBreadcrumbs] = useState<Array<{ x: number; y: number }>>([
-    { x: 120, y: 380 },
-    { x: 145, y: 340 },
-    { x: 180, y: 290 },
-    { x: 215, y: 235 },
-  ]);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersLayerRef = useRef<any>(null);
 
-  // Anonymized green citizen dots
-  const greenCitizens = [
-    { id: 1, x: 90, y: 140, callsign: "CIT-8821 (DMS Safe)" },
-    { id: 2, x: 280, y: 110, callsign: "CIT-4190 (DMS Safe)" },
-    { id: 3, x: 330, y: 320, callsign: "CIT-9034 (DMS Safe)" },
-    { id: 4, x: 80, y: 280, callsign: "CIT-1120 (DMS Safe)" },
+  // Default coordinate path along Alberton corridor
+  const corridorRoute: [number, number][] = [
+    [-26.2585, 28.1215], // 8th Ave, Alberton North
+    [-26.2602, 28.1220], // Hendrik Potgieter St
+    [-26.2625, 28.1228], // Voortrekker Rd past Alberton City
+    [-26.2650, 28.1235], // N12 On-Ramp Approach
+    [-26.2678, 28.1245], // N12 On-Ramp Struggle Point
+    [-26.2640, 28.1280], // N12 East Highway
+    [-26.2620, 28.1310], // Reading Interchange
   ];
 
-  const currentX = 230;
-  const currentY = 210;
+  // Intercept Nodes predicted by The Way Swarm
+  const interceptNodes = [
+    {
+      name: "Node Alpha: N12 / Voortrekker Off-Ramp",
+      coords: [-26.2620, 28.1210] as [number, number],
+      eta: "110s",
+      action: "Pinch off eastbound on-ramp",
+    },
+    {
+      name: "Node Bravo: R59 Sybrand van Niekerk",
+      coords: [-26.2750, 28.1180] as [number, number],
+      eta: "225s",
+      action: "Secondary south escape vector",
+    },
+    {
+      name: "Node Charlie: Reading Interchange",
+      coords: [-26.2510, 28.1340] as [number, number],
+      eta: "340s",
+      action: "N3 North corridor junction",
+    },
+  ];
+
+  useEffect(() => {
+    let isMounted = true;
+    const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || "cb1_4v5a_1_3ddf73d20da14b7be5f09ab5";
+
+    // Dynamically import Leaflet to avoid SSR window errors
+    import("leaflet").then((L) => {
+      if (!isMounted || !mapContainerRef.current) return;
+
+      // Clean up previous instance if already present
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+
+      // Clear any lingering _leaflet_id from React StrictMode double invocation
+      const container = mapContainerRef.current;
+      if ((container as any)._leaflet_id != null) {
+        delete (container as any)._leaflet_id;
+      }
+
+      // Initialize map centered on Alberton North, Gauteng
+      const map = L.map(container, {
+        center: [-26.2640, 28.1245],
+        zoom: 14,
+        zoomControl: false,
+      });
+
+      // Add zoom control top-right
+      L.control.zoom({ position: "topright" }).addTo(map);
+
+      // Primary: CartoDB Dark Matter real tactical map tiles with API key
+      const cartoUrl = cartoKey
+        ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${cartoKey}`
+        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+      const cartoLayer = L.tileLayer(cartoUrl, {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      });
+
+      const osmFallback = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution: "&copy; OpenStreetMap contributors",
+          maxZoom: 19,
+        }
+      );
+
+      cartoLayer.on("tileerror", () => {
+        if (!map.hasLayer(osmFallback)) {
+          osmFallback.addTo(map);
+        }
+      });
+
+      cartoLayer.addTo(map);
+
+      const markersGroup = L.layerGroup().addTo(map);
+      markersLayerRef.current = markersGroup;
+      mapInstanceRef.current = map;
+
+      // Draw route polyline
+      L.polyline(corridorRoute, {
+        color: isRedAlert ? "#ef4444" : "#10b981",
+        weight: 4,
+        dashArray: isRedAlert ? "8, 8" : undefined,
+        opacity: 0.85,
+      }).addTo(map);
+
+      renderDynamicLayers(L, map, markersGroup);
+
+      // Invalidate size after layout settles to guarantee tiles render
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 200);
+    });
+
+    return () => {
+      isMounted = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update dynamic markers and alert styling when state changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersLayerRef.current) return;
+    import("leaflet").then((L) => {
+      renderDynamicLayers(L, mapInstanceRef.current, markersLayerRef.current);
+    });
+  }, [isRedAlert, userLat, userLng, speedKmh, headingDeg, responders]);
+
+  const renderDynamicLayers = (L: any, map: any, group: any) => {
+    group.clearLayers();
+
+    // 1. User / Victim Position Marker
+    const userIconHtml = isRedAlert
+      ? `<div class="relative flex items-center justify-center">
+           <span class="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-red-500 opacity-75"></span>
+           <div class="relative flex items-center justify-center w-6 h-6 bg-red-600 rounded-full border-2 border-white shadow-lg text-white font-bold text-[10px]">
+             SOS
+           </div>
+         </div>`
+      : `<div class="relative flex items-center justify-center">
+           <span class="absolute inline-flex h-7 w-7 animate-pulse rounded-full bg-emerald-500 opacity-60"></span>
+           <div class="relative flex items-center justify-center w-5 h-5 bg-emerald-500 rounded-full border-2 border-white shadow-md text-white font-bold text-[9px]">
+             ✓
+           </div>
+         </div>`;
+
+    const userIcon = L.divIcon({
+      html: userIconHtml,
+      className: "custom-user-marker",
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+
+    const userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(group);
+    userMarker.bindPopup(
+      `<div class="p-2 font-sans text-xs">
+         <div class="font-bold ${isRedAlert ? "text-red-600" : "text-emerald-600"} uppercase text-sm">
+           ${isRedAlert ? "🚨 CODE RED TARGET" : "🛡️ MONITORED CITIZEN"}
+         </div>
+         <div class="mt-1 font-semibold text-slate-800">Thandiwe Ndlovu</div>
+         <div class="text-slate-600 text-[11px] mt-0.5">Alberton Corridor, Gauteng</div>
+         <div class="mt-1.5 flex gap-2 text-[10px] text-slate-500">
+           <span>Speed: <b>${speedKmh} km/h</b></span>
+           <span>Heading: <b>${headingDeg}°</b></span>
+         </div>
+       </div>`
+    );
+
+    // 2. Active Responders (Fox Tactical & SAPS)
+    responders.forEach((resp) => {
+      const isFox = resp.callsign.toLowerCase().includes("fox");
+      const isSaps = resp.callsign.toLowerCase().includes("saps");
+      const bgClass = isFox ? "bg-amber-500 border-amber-300" : isSaps ? "bg-blue-600 border-blue-300" : "bg-emerald-500 border-white";
+
+      const respIcon = L.divIcon({
+        html: `<div class="flex items-center justify-center w-6 h-6 ${bgClass} rounded-full border-2 shadow-md text-white text-[10px]">
+                 🚓
+               </div>`,
+        className: "custom-responder-marker",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+
+      const rMarker = L.marker([resp.lat, resp.lng], { icon: respIcon }).addTo(group);
+      rMarker.bindPopup(
+        `<div class="p-1.5 font-sans text-xs">
+           <div class="font-bold text-slate-900">${resp.callsign}</div>
+           <div class="text-slate-600 text-[11px]">Role: ${resp.role}</div>
+           <div class="text-emerald-600 text-[11px] font-semibold">Status: ${resp.status}</div>
+         </div>`
+      );
+    });
+
+    // 3. Predicted Intercept Choke Points (Only in Red Alert)
+    if (isRedAlert) {
+      interceptNodes.forEach((node) => {
+        const interceptIcon = L.divIcon({
+          html: `<div class="flex items-center justify-center w-7 h-7 bg-red-950/90 border-2 border-red-500 rounded-lg shadow-lg text-red-400 font-mono text-[10px] font-bold animate-bounce">
+                   🎯
+                 </div>`,
+          className: "custom-intercept-marker",
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+
+        const iMarker = L.marker(node.coords, { icon: interceptIcon }).addTo(group);
+        iMarker.bindPopup(
+          `<div class="p-2 font-sans text-xs">
+             <div class="font-bold text-red-600 text-xs">PREDICTED INTERCEPT CHOKE POINT</div>
+             <div class="font-semibold text-slate-900 mt-1">${node.name}</div>
+             <div class="text-slate-600 text-[11px] mt-0.5">ETA: <b>${node.eta}</b></div>
+             <div class="text-slate-500 text-[10px] mt-1 italic">${node.action}</div>
+           </div>`
+        );
+      });
+    }
+  };
 
   return (
     <div className="relative w-full h-[520px] bg-[#0b101b] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col select-none">
       {/* Top Map HUD Overlay */}
-      <div className="absolute top-4 left-4 z-20 flex items-center space-x-3 pointer-events-none">
-        <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 shadow-md flex items-center space-x-2.5 text-xs">
+      <div className="absolute top-4 left-4 z-[1000] flex items-center space-x-3 pointer-events-none">
+        <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 shadow-md flex items-center space-x-2.5 text-xs pointer-events-auto">
           <Crosshair className="w-4 h-4 text-cyan-400" />
           <span className="font-mono text-cyan-300 font-bold">
             LAT: {userLat.toFixed(4)}° S | LNG: {userLng.toFixed(4)}° E
           </span>
         </div>
 
-        <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 shadow-md flex items-center space-x-2 text-xs">
-          <Compass className="w-4 h-4 text-emerald-400" />
-          <span className="font-bold text-slate-200">
-            {speedKmh} km/h • {headingDeg}° SE
+        <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 shadow-md flex items-center space-x-2 text-xs pointer-events-auto">
+          <Radio className={`w-3.5 h-3.5 ${isRedAlert ? "text-red-500 animate-ping" : "text-emerald-400"}`} />
+          <span className={`font-semibold ${isRedAlert ? "text-red-400 font-mono font-bold" : "text-emerald-400"}`}>
+            {isRedAlert ? "CODE RED INTERCEPT ACTIVE" : "REAL GIS MAP (ALBERTON, GAUTENG)"}
           </span>
         </div>
       </div>
 
-      {/* Alert Level Pill */}
-      <div className="absolute top-4 right-4 z-20 pointer-events-none">
-        <div
-          className={`px-4 py-2 rounded-xl border font-bold text-xs flex items-center space-x-2 shadow-lg backdrop-blur-md ${
-            isRedAlert
-              ? "bg-red-950/90 border-red-500/80 text-red-200 animate-pulse"
-              : "bg-emerald-950/80 border-emerald-500/50 text-emerald-300"
-          }`}
-        >
-          <span className={`w-2.5 h-2.5 rounded-full ${isRedAlert ? "bg-red-500 animate-ping" : "bg-emerald-500"}`} />
-          <span>{isRedAlert ? "CODE RED: SWARM INTERCEPT ACTIVE" : "GREEN MONITORING: JURISDICTION NORMAL"}</span>
-        </div>
-      </div>
+      {/* Real Leaflet Map Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* SVG GIS Layer */}
-      <svg
-        className="w-full h-full"
-        viewBox="0 0 600 500"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <defs>
-          {/* Tactical grid pattern */}
-          <pattern id="tacGrid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#1e293b" strokeWidth="0.8" />
-            <circle cx="50" cy="50" r="1.5" fill="#334155" />
-          </pattern>
-
-          {/* Radar sweep gradient */}
-          <radialGradient id="radarSweep" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.15" />
-            <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.05" />
-            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-
-        {/* Map Grid */}
-        <rect width="100%" height="100%" fill="#070c16" />
-        <rect width="100%" height="100%" fill="url(#tacGrid)" />
-
-        {/* Jurisdiction Geofence Polygon (Alberton Sector) */}
-        <polygon
-          points="40,80 260,40 540,90 560,420 320,460 60,440"
-          fill="rgba(6, 182, 212, 0.04)"
-          stroke="#0891b2"
-          strokeWidth="1.5"
-          strokeDasharray="6,4"
-        />
-        <text x="70" y="70" fill="#0891b2" fontSize="11" fontWeight="bold" letterSpacing="1">
-          ALBERTON NORTH JURISDICTION GEOFENCE (CPF SECTOR 4)
-        </text>
-
-        {/* Major Highways (N12 / Voortrekker / R59) */}
-        <path
-          d="M 60,450 C 140,360 190,280 250,210 C 310,140 370,80 440,30"
-          fill="none"
-          stroke="#334155"
-          strokeWidth="12"
-          strokeLinecap="round"
-        />
-        <path
-          d="M 60,450 C 140,360 190,280 250,210 C 310,140 370,80 440,30"
-          fill="none"
-          stroke="#1e293b"
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
-
-        {/* Arterial Crossing: Voortrekker Ave */}
-        <path d="M 40,280 L 360,330" stroke="#1e293b" strokeWidth="4" />
-        <text x="50" y="270" fill="#64748b" fontSize="9" fontWeight="bold">
-          Voortrekker Ave
-        </text>
-
-        {/* Arterial Crossing: R59 Reading Interchange */}
-        <path d="M 180,480 L 320,30" stroke="#1e293b" strokeWidth="4" />
-        <text x="280" y="60" fill="#64748b" fontSize="9" fontWeight="bold">
-          R59 Highway
-        </text>
-
-        {/* Anonymized Green Citizens */}
-        {greenCitizens.map((cit) => (
-          <g key={cit.id} transform={`translate(${cit.x}, ${cit.y})`}>
-            <circle r="4" fill="#10b981" />
-            <circle r="12" fill="rgba(16, 185, 129, 0.15)" />
-            <text x="8" y="3" fill="#6ee7b7" fontSize="8" fontWeight="bold">
-              {cit.callsign}
-            </text>
-          </g>
-        ))}
-
-        {/* Red Alert Breadcrumb Trail */}
-        {isRedAlert && (
-          <>
-            {/* Breadcrumb line */}
-            <path
-              d="M 120,380 L 145,340 L 180,290 L 215,235 L 230,210"
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="3"
-              strokeDasharray="4,4"
-            />
-            {breadcrumbs.map((b, i) => (
-              <circle key={i} cx={b.x} cy={b.y} r="4" fill="#dc2626" opacity="0.7" />
-            ))}
-
-            {/* Predicted Off-ramp Intercept Node 1 */}
-            <g transform="translate(250, 210)">
-              <circle r="36" fill="rgba(239, 68, 68, 0.15)" className="animate-ping" />
-              <circle r="22" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3,3" />
-              <text x="28" y="-8" fill="#f87171" fontSize="10" fontWeight="bold">
-                🎯 Target Intercept Node 1
-              </text>
-              <text x="28" y="6" fill="#fca5a5" fontSize="8">
-                N12 / Voortrekker Off-ramp (ETA 2.4 min)
-              </text>
-            </g>
-
-            {/* Predicted Intercept Node 2 */}
-            <g transform="translate(310, 140)">
-              <circle r="18" fill="rgba(245, 158, 11, 0.1)" />
-              <circle r="12" fill="none" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3,3" />
-              <text x="20" y="4" fill="#fbbf24" fontSize="9" fontWeight="bold">
-                Secondary Node: R59 Reading
-              </text>
-            </g>
-
-            {/* Active Citizen Target */}
-            <g transform={`translate(${currentX}, ${currentY})`}>
-              <circle r="28" fill="rgba(239, 68, 68, 0.3)" className="animate-ping" />
-              <circle r="10" fill="#dc2626" stroke="#ffffff" strokeWidth="2.5" />
-              <text x="-35" y="-18" fill="#f87171" fontSize="11" fontWeight="bold">
-                THANDIWE NDLOVU (SOS)
-              </text>
-            </g>
-          </>
-        )}
-
-        {/* Responders Patrol Vehicles */}
-        {responders.map((r, idx) => {
-          // Map responder coordinates to SVG bounds approximately
-          const rx = 180 + idx * 75;
-          const ry = 360 - idx * 45;
-          return (
-            <g key={r.responder_id || idx} transform={`translate(${rx}, ${ry})`}>
-              <circle r="16" fill="rgba(59, 130, 246, 0.2)" className="animate-pulse" />
-              <circle r="8" fill="#2563eb" stroke="#ffffff" strokeWidth="1.5" />
-              <text x="12" y="3" fill="#93c5fd" fontSize="9" fontWeight="bold">
-                {r.callsign}
-              </text>
-              <text x="12" y="14" fill="#60a5fa" fontSize="8">
-                {r.status} • {r.role}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* Bottom Map Legend */}
-      <div className="absolute bottom-3 left-4 right-4 z-20 flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-800 text-xs">
+      {/* Bottom Telemetry HUD */}
+      <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-slate-900/90 backdrop-blur-md p-3.5 rounded-xl border border-slate-700/80 shadow-lg flex items-center justify-between text-xs pointer-events-auto">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span className="text-slate-300">Protected Citizen (Safe DMS)</span>
+          <div className="flex items-center space-x-1.5 text-slate-300">
+            <Compass className="w-4 h-4 text-cyan-400" />
+            <span>HEADING: <b className="font-mono text-white">{headingDeg}° (SE)</b></span>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <span className="text-slate-300">Emergency Distress Incident</span>
+          <div className="flex items-center space-x-1.5 text-slate-300">
+            <Car className="w-4 h-4 text-emerald-400" />
+            <span>VELOCITY: <b className="font-mono text-white">{speedKmh} km/h</b></span>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <span className="text-slate-300">Patrol Units Converging</span>
+          <div className="flex items-center space-x-1.5 text-slate-300">
+            <span>NETWORK: <b className="font-mono text-cyan-300">N12 / Voortrekker Corridor</b></span>
           </div>
         </div>
 
-        <div className="text-slate-500 text-[11px] font-mono">
-          PostGIS Haversine Engine: 5km Radius
+        <div className="text-[11px] text-slate-400 font-mono">
+          MAP TILES: OpenStreetMap / CartoDB Dark Matter
         </div>
       </div>
     </div>
