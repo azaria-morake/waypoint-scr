@@ -11,6 +11,8 @@ import { PopiaVaultView } from "../components/PopiaVaultView";
 import { B2BOpsView } from "../components/B2BOpsView";
 import { BoloYoungConsole } from "../components/BoloYoungConsole";
 import { NotificationItem } from "../components/NotificationTray";
+import { BoloConsoleHeader } from "../components/BoloConsoleHeader";
+import { BoloConsoleFooter } from "../components/BoloConsoleFooter";
 
 interface ActivityItem {
   id: string;
@@ -22,7 +24,7 @@ interface ActivityItem {
 
 export default function CommandDashboardPage() {
   const [currentOrg, setCurrentOrg] = useState<OrganizationOption | null>(null);
-  const [activeTab, setActiveTab] = useState<NavTab>("OVERVIEW");
+  const [activeTab, setActiveTab] = useState<NavTab>("LIVE_MAP");
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [incomingAlerts, setIncomingAlerts] = useState<LiveAlertItem[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<LiveAlertItem | null>(null);
@@ -588,82 +590,97 @@ export default function CommandDashboardPage() {
 
   // LOGGED IN DASHBOARD VIEW
   return (
-    <div className="w-full h-screen bg-slate-950 text-slate-100 flex flex-row overflow-hidden">
-      {/* Side Menu Navigation */}
-      <TacticalSidebar
-        currentOrg={currentOrg}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogout={handleLogout}
-        isWsConnected={isWsConnected}
-        activeAlertCount={incomingAlerts.filter((a) => a.status === "RED").length}
-        hasActiveJourney={hasActiveJourney}
+    <div className="w-full h-screen bg-[#0a0c10] text-slate-100 flex flex-col overflow-hidden select-none">
+      {/* Top Header Bar (Warm Off-White / Cream) */}
+      <BoloConsoleHeader
         notifications={notifications}
+        onOpenBoloYoung={() => setActiveTab("BOLO_YOUNG")}
         onClearNotification={handleClearNotification}
         onClearAllNotifications={handleClearAllNotifications}
+        isWsConnected={isWsConnected}
       />
 
-      {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col h-screen bg-slate-950 ${activeTab === "LIVE_MAP" || activeTab === "BOLO_YOUNG" ? "overflow-hidden" : "overflow-y-auto"}`}>
-        {activeTab === "OVERVIEW" && (
-          <StationOverviewView
-            currentOrg={currentOrg}
-            recentActivities={recentActivities}
-            isWsConnected={isWsConnected}
-            onNavigateToMap={() => setActiveTab("LIVE_MAP")}
-          />
-        )}
+      {/* Main Center Area: Left Sidebar + Active View */}
+      <div className="flex flex-1 min-h-0 w-full overflow-hidden">
+        {/* Side Menu Navigation */}
+        <TacticalSidebar
+          currentOrg={currentOrg}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLogout={handleLogout}
+          isWsConnected={isWsConnected}
+          activeAlertCount={incomingAlerts.filter((a) => a.status === "RED").length}
+          hasActiveJourney={hasActiveJourney}
+          notifications={notifications}
+          onClearNotification={handleClearNotification}
+          onClearAllNotifications={handleClearAllNotifications}
+        />
 
-        {activeTab === "LIVE_MAP" && (
-          <LiveMapView
-            currentOrg={currentOrg}
-            isWsConnected={isWsConnected}
-            incomingAlerts={incomingAlerts}
-            selectedAlert={selectedAlert}
-            onSelectAlert={setSelectedAlert}
-            onAcknowledgeAlert={handleAcknowledgeAlert}
-            extractedAttire={extractedAttire}
-            onAttireExtracted={setExtractedAttire}
-            onNavigateToBolo={() => setActiveTab("BOLO_YOUNG")}
-            notifications={notifications}
-            onClearNotification={handleClearNotification}
-            onClearAllNotifications={handleClearAllNotifications}
-          />
-        )}
+        {/* Main Content Area */}
+        <main className={`flex-1 flex flex-col h-full bg-[#0a0c10] ${activeTab === "LIVE_MAP" || activeTab === "BOLO_YOUNG" ? "overflow-hidden" : "overflow-y-auto"}`}>
+          {activeTab === "OVERVIEW" && (
+            <StationOverviewView
+              currentOrg={currentOrg}
+              recentActivities={recentActivities}
+              isWsConnected={isWsConnected}
+              onNavigateToMap={() => setActiveTab("LIVE_MAP")}
+            />
+          )}
 
-        {activeTab === "BOLO_YOUNG" && (
-          <BoloYoungConsole
-            currentOrg={currentOrg}
-            hasActiveEmergency={incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED"}
-            extractedAttire={extractedAttire}
-            onAttireExtracted={setExtractedAttire}
-            onNavigateToMap={() => setActiveTab("LIVE_MAP")}
-          />
-        )}
+          {activeTab === "LIVE_MAP" && (
+            <LiveMapView
+              currentOrg={currentOrg}
+              isWsConnected={isWsConnected}
+              incomingAlerts={incomingAlerts}
+              selectedAlert={selectedAlert}
+              onSelectAlert={setSelectedAlert}
+              onAcknowledgeAlert={handleAcknowledgeAlert}
+              extractedAttire={extractedAttire}
+              onAttireExtracted={setExtractedAttire}
+              onNavigateToBolo={() => setActiveTab("BOLO_YOUNG")}
+              notifications={notifications}
+              onClearNotification={handleClearNotification}
+              onClearAllNotifications={handleClearAllNotifications}
+            />
+          )}
 
-        {activeTab === "SWARM_MATRIX" && (
-          <SwarmMatrixView
-            currentOrg={currentOrg}
-            isWsConnected={isWsConnected}
-            hasActiveCrisis={incomingAlerts.some((a) => a.status === "RED")}
-          />
-        )}
+          {activeTab === "BOLO_YOUNG" && (
+            <BoloYoungConsole
+              currentOrg={currentOrg}
+              hasActiveEmergency={incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED"}
+              extractedAttire={extractedAttire}
+              onAttireExtracted={setExtractedAttire}
+              onNavigateToMap={() => setActiveTab("LIVE_MAP")}
+            />
+          )}
 
-        {activeTab === "POPIA_VAULT" && (
-          <PopiaVaultView
-            currentOrg={currentOrg}
-            isWsConnected={isWsConnected}
-            hasActiveCrisis={incomingAlerts.some((a) => a.status === "RED")}
-          />
-        )}
+          {activeTab === "SWARM_MATRIX" && (
+            <SwarmMatrixView
+              currentOrg={currentOrg}
+              isWsConnected={isWsConnected}
+              hasActiveCrisis={incomingAlerts.some((a) => a.status === "RED")}
+            />
+          )}
 
-        {activeTab === "B2B_OPS" && (
-          <B2BOpsView
-            currentOrg={currentOrg}
-            isWsConnected={isWsConnected}
-          />
-        )}
-      </main>
+          {activeTab === "POPIA_VAULT" && (
+            <PopiaVaultView
+              currentOrg={currentOrg}
+              isWsConnected={isWsConnected}
+              hasActiveCrisis={incomingAlerts.some((a) => a.status === "RED")}
+            />
+          )}
+
+          {activeTab === "B2B_OPS" && (
+            <B2BOpsView
+              currentOrg={currentOrg}
+              isWsConnected={isWsConnected}
+            />
+          )}
+        </main>
+      </div>
+
+      {/* Bottom Footer Bar (Warm Off-White / Cream) */}
+      <BoloConsoleFooter />
 
       {/* Global Floating Toast Banner (Visible on all dashboard screens) */}
       {activeToast && (
