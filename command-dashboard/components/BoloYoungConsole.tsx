@@ -93,13 +93,13 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
   const [observationLogs, setObservationLogs] = useState<ObservationEntry[]>([
     {
       id: "obs-init-1",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      timestamp: "Just now",
       tag: "STANDBY",
       text: "Sector 2 corridor radar sweep: 0 active citizen beacons detected. CARTO mesh nominal.",
     },
     {
       id: "obs-init-2",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      timestamp: "Just now",
       tag: "WATCHDOG",
       text: "Autonomous watchdog active. Awaiting journey start signals from citizen mobile clients.",
     },
