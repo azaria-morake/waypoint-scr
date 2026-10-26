@@ -82,24 +82,85 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col justify-end overflow-hidden bg-slate-900 select-none">
-      {/* Background Image: Jacaranda tree runner street */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/Waypoint_login_bg.png"
-          alt="Waypoint Runner Background"
-          fill
-          priority
-          className="object-cover object-center filter brightness-[0.98]"
-        />
-        {/* Soft atmospheric gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+    <div className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-slate-950 select-none">
+      {/* ========================================================= */}
+      {/* PARTITION 1: LEFT COLUMN [IMAGE] - Desktop Hero Showcase  */}
+      {/* ========================================================= */}
+      <div className="relative w-full lg:w-1/2 min-h-[380px] lg:min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-hidden">
+        {/* Background Hero Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/Waypoint_login_bg.png"
+            alt="Waypoint Runner Background"
+            fill
+            priority
+            className="object-cover object-center filter brightness-[0.92] contrast-[1.08] scale-[1.02]"
+          />
+          {/* Subtle atmospheric gradients for readable contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/60 lg:bg-gradient-to-r lg:from-transparent lg:via-slate-950/20 lg:to-slate-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-slate-950/80" />
+        </div>
+
+        {/* Top Header Badge */}
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center space-x-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs font-bold tracking-widest text-emerald-400 uppercase">
+              Waypoint Secure Mesh
+            </span>
+          </div>
+
+          <div className="hidden sm:flex items-center space-x-2 text-xs font-medium text-white/80 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+            <span>Gauteng Corridor Shield</span>
+          </div>
+        </div>
+
+        {/* Bottom Hero Narrative & Features (Visible especially on desktop) */}
+        <div className="relative z-10 mt-auto pt-10">
+          <div className="max-w-xl">
+            <div className="inline-block px-3 py-1 bg-white/15 backdrop-blur-md rounded-lg text-[11px] font-semibold tracking-wider uppercase text-white/90 mb-3 border border-white/10">
+              Anticipatory Transit Protection
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+              Run as far as you like.<br />
+              <span className="text-emerald-400 font-extrabold">We watch every step.</span>
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-slate-200/90 leading-relaxed font-normal max-w-lg drop-shadow">
+              Autonomous multi-agent tactical shield. Live corridor telemetry, Dead-Man's Switch countdowns, and dual-PIN anti-coercion defense.
+            </p>
+
+            {/* Feature Pills */}
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <div className="flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15 text-xs text-white shadow-sm">
+                <span className="text-emerald-400">🛡️</span>
+                <span className="font-medium">Dual-PIN Anti-Coercion</span>
+              </div>
+              <div className="flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15 text-xs text-white shadow-sm">
+                <span className="text-blue-400">⏱️</span>
+                <span className="font-medium">Dead-Man's Switch ETA</span>
+              </div>
+              <div className="flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15 text-xs text-white shadow-sm">
+                <span className="text-amber-400">🤖</span>
+                <span className="font-medium">BOLO Young AI Co-Pilot</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Main Container - Centered Mobile Card Layout */}
-      <div className="relative z-10 w-full max-w-md mx-auto px-4 pb-6 pt-12 flex flex-col items-center">
-        {/* Exact Replica of Waypoint_login_component.png Card */}
-        <div className="w-full bg-white rounded-[2.2rem] px-7 py-8 shadow-2xl border border-white/20 animate-in slide-in-from-bottom-8 duration-300">
+      {/* ========================================================= */}
+      {/* PARTITION 2: RIGHT COLUMN [LOGIN] - Desktop Auth Console */}
+      {/* ========================================================= */}
+      <div className="relative w-full lg:w-1/2 min-h-screen flex items-center justify-center p-6 sm:p-10 lg:p-14 bg-gradient-to-b from-slate-950 via-slate-900 to-black z-10 border-t lg:border-t-0 lg:border-l border-white/10">
+        {/* Soft background ambient glow */}
+        <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Clean, Premium Login Card */}
+        <div className="w-full max-w-md bg-white rounded-[2.2rem] px-7 py-8 shadow-2xl border border-white/30 animate-in fade-in duration-300 relative z-20">
           {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-3xl font-black text-black tracking-tight font-sans">
@@ -116,7 +177,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
             <button
               type="button"
               onClick={handleDemoSignIn}
-              className="w-full h-12 bg-[#121212] hover:bg-[#222222] active:scale-[0.99] text-white font-medium text-sm rounded-xl flex items-center justify-center space-x-3 transition shadow-sm"
+              className="w-full h-12 bg-[#121212] hover:bg-[#222222] active:scale-[0.99] text-white font-medium text-sm rounded-xl flex items-center justify-center space-x-3 transition shadow-sm cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -143,12 +204,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
             <button
               type="button"
               onClick={handleDemoSignIn}
-              className="w-full h-12 bg-[#121212] hover:bg-[#222222] active:scale-[0.99] text-white font-medium text-sm rounded-xl flex items-center justify-center space-x-3 transition shadow-sm"
+              className="w-full h-12 bg-[#121212] hover:bg-[#222222] active:scale-[0.99] text-white font-medium text-sm rounded-xl flex items-center justify-center space-x-3 transition shadow-sm cursor-pointer"
             >
               <svg className="w-4 h-4 fill-white" viewBox="0 0 170 170">
                 <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.59-7.71-11.72-14.01-6.19-9.46-11.07-20.15-14.65-32.07-3.58-11.92-5.38-23.08-5.38-33.48 0-14.88 3.8-27.27 11.41-37.18 7.61-9.9 17.1-14.93 28.46-15.09 4.36 0 9.29 1.13 14.78 3.4 5.49 2.27 9.38 3.4 11.66 3.4 2.05 0 6.07-1.19 12.06-3.57 5.99-2.38 11.04-3.46 15.15-3.24 13.33.68 23.75 5.75 31.25 15.2-11.72 7.07-17.43 16.73-17.13 28.98.29 9.57 4.15 17.65 11.58 24.24 7.43 6.59 16.34 10.37 26.74 11.34-2.22 6.94-5.06 14.54-8.52 22.81zM119.22 31.84c0-7.39 2.65-14.28 7.96-20.67 5.3-6.4 11.89-10.45 19.76-12.17.68 1.83 1.03 3.69 1.03 5.58 0 7.39-2.73 14.29-8.19 20.7-5.46 6.42-12.18 10.49-20.16 12.22-.12-1.89-.4-3.77-.4-5.66z" />
               </svg>
-              <span>Sign in with Apple</span>
+              <span>Sign In with Apple</span>
             </button>
           </div>
 
@@ -200,7 +261,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -213,7 +274,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-slate-900 hover:bg-black active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition shadow-md flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-slate-900 hover:bg-black active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition shadow-md flex items-center justify-center space-x-2 cursor-pointer"
             >
               <span>{loading ? "Verifying..." : isSignUp ? "Create Waypoint Account" : "Sign In"}</span>
               <ArrowRight size={16} />
@@ -230,7 +291,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
                   setIsSignUp(!isSignUp);
                   setErrorMsg("");
                 }}
-                className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2 ml-1"
+                className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2 ml-1 cursor-pointer"
               >
                 {isSignUp ? "Sign In" : "Sign Up"}
               </button>
@@ -238,15 +299,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
           </div>
 
           {/* Instant Demo Quick Access */}
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center">
+          <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col items-center justify-center space-y-1.5">
             <button
               onClick={handleDemoSignIn}
               type="button"
-              className="text-[12px] font-semibold text-emerald-600 hover:text-emerald-700 flex items-center space-x-1.5 transition"
+              className="text-[12px] font-semibold text-emerald-600 hover:text-emerald-700 flex items-center space-x-1.5 transition cursor-pointer"
             >
               <ShieldCheck size={14} />
               <span>⚡ One-Click Demo as Thandiwe Ndlovu</span>
             </button>
+            <div className="flex items-center space-x-3 text-[10px] text-slate-400">
+              <span>Safe PIN: <strong className="text-slate-600">1234</strong></span>
+              <span>•</span>
+              <span>Duress PIN: <strong className="text-red-600">9999</strong></span>
+            </div>
           </div>
         </div>
       </div>
