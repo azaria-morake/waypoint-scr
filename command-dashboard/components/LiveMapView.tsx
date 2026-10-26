@@ -3,37 +3,27 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import "leaflet/dist/leaflet.css";
 import {
-  Crosshair,
-  Radio,
-  Compass,
-  Car,
+  Activity,
   AlertTriangle,
-  ShieldAlert,
-  CheckCircle2,
-  Navigation,
-  MapPin,
-  Locate,
-  Volume2,
-  Clock,
-  Sparkles,
-  RefreshCw,
-  HelpCircle,
-  Satellite,
-  AlertCircle,
-  Loader2,
-  Bot,
-  MessageSquare,
-  ShieldCheck,
-  ExternalLink,
-  ArrowRight,
+  BarChart3,
+  Car,
+  ChevronRight,
   FileText,
-  Share2,
-  BarChart2,
+  MapPin,
+  MessageSquare,
+  Navigation,
+  Radio,
+  Shield,
+  Siren,
+  Target,
+  Users,
   Zap,
-  Network,
+  CheckCircle2,
+  Loader2,
+  X,
 } from "lucide-react";
 import { OrganizationOption } from "./LoginScreen";
-import { NotificationTray, NotificationItem } from "./NotificationTray";
+import { NotificationItem } from "./NotificationTray";
 import { WhatsAppReconModal } from "./WhatsAppReconModal";
 
 export interface LiveAlertItem {
@@ -73,6 +63,46 @@ interface DeviceLocation {
   source: string;
 }
 
+function Panel({
+  title,
+  icon,
+  children,
+  action,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <section className="panel">
+      <div className="panel-header">
+        <div className="panel-title">
+          {icon}
+          <span>{title}</span>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Metric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="metric">
+      <span className="metric-label">{label}</span>
+      <span className="metric-value">{value}</span>
+    </div>
+  );
+}
+
 export const LiveMapView: React.FC<LiveMapViewProps> = ({
   currentOrg,
   isWsConnected,
@@ -83,9 +113,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   extractedAttire,
   onAttireExtracted,
   onNavigateToBolo,
-  notifications = [],
-  onClearNotification = () => {},
-  onClearAllNotifications = () => {},
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -93,7 +120,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   const patrolLayerRef = useRef<any>(null);
   const alertLayerRef = useRef<any>(null);
   const userGpsLayerRef = useRef<any>(null);
-  const accuracyCircleRef = useRef<any>(null);
   const watchIdRef = useRef<number | null>(null);
   const queryIntervalRef = useRef<any>(null);
 
@@ -102,6 +128,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   const [gpsLockStatus, setGpsLockStatus] = useState<"SEARCHING" | "LOCKED" | "DENIED">("SEARCHING");
   const [queryAttempts, setQueryAttempts] = useState<number>(1);
   const [showLockSuccessAlert, setShowLockSuccessAlert] = useState<boolean>(false);
+  const [incidentOpen, setIncidentOpen] = useState<boolean>(true);
 
   // Dynamic patrol units
   const [patrolUnits, setPatrolUnits] = useState<Array<{
@@ -218,17 +245,16 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       // Custom pulsing neon cyan focal radar marker
       const gpsIcon = L.divIcon({
         html: `
-          <div class="relative flex items-center justify-center cursor-pointer">
-            <span class="absolute inline-flex h-12 w-12 animate-ping rounded-full bg-cyan-400 opacity-60"></span>
-            <span class="absolute inline-flex h-8 w-8 rounded-full bg-cyan-500/40"></span>
-            <div class="relative flex items-center justify-center w-8 h-8 bg-cyan-500 rounded-full border-2 border-white shadow-2xl text-slate-950 font-black text-sm">
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <div style="position:absolute;width:36px;height:36px;border-radius:50%;background:#06b6d4;opacity:0.4;animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;width:24px;height:24px;background:#0891b2;border-radius:50%;border:2px solid #ffffff;color:#fff;font-size:12px;">
               📍
             </div>
           </div>
         `,
         className: "custom-officer-gps",
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
       });
 
       const marker = L.marker([loc.lat, loc.lng], {
@@ -236,36 +262,12 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         zIndexOffset: 1000,
       }).addTo(group);
 
-      const accStr = loc.accuracy ? `±${Math.round(loc.accuracy)}m` : "Ground-Truth";
-
-      marker.bindPopup(`
-        <div class="p-2.5 font-sans text-xs min-w-[220px]">
-          <div class="flex items-center justify-between pb-1 mb-1.5 border-b border-slate-200">
-            <span class="font-black text-cyan-600 uppercase text-[10px] tracking-wider">Terminal Focal Point</span>
-            <span class="bg-cyan-50 text-cyan-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">GPS LOCKED</span>
-          </div>
-          <div class="font-bold text-slate-900 text-sm">${currentOrg.officerName}</div>
-          <div class="text-slate-600 text-xs font-medium">${currentOrg.name} (${currentOrg.officerRank})</div>
-          <div class="mt-2 text-[11px] text-slate-600 font-mono bg-slate-50 p-2 rounded border border-slate-100 space-y-0.5">
-            <div><b>LAT:</b> ${loc.lat.toFixed(5)}° S</div>
-            <div><b>LNG:</b> ${loc.lng.toFixed(5)}° E</div>
-            <div class="text-[10px] text-cyan-700 font-semibold">ACCURACY: ${accStr}</div>
-          </div>
-          <div class="mt-2 text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-            ✓ ${loc.source}
-          </div>
-        </div>
-      `);
-
       if (flyTo) {
         map.invalidateSize();
         map.flyTo([loc.lat, loc.lng], 15, { animate: true, duration: 1.3 });
-        setTimeout(() => {
-          marker.openPopup();
-        }, 1400);
       }
     },
-    [currentOrg]
+    []
   );
 
   // Apply real ground-truth position
@@ -289,7 +291,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       setPatrolUnits(generatePatrolUnits(lat, lng));
       renderOfficerPin(loc, true);
 
-      // Dismiss lock success badge after 4 seconds
       setTimeout(() => {
         setShowLockSuccessAlert(false);
       }, 4000);
@@ -306,14 +307,12 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
     setGpsLockStatus("SEARCHING");
 
-    // Single query execution
     const runQuery = () => {
       setQueryAttempts((prev) => prev + 1);
 
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           handleLocationSuccess(pos, "Device Hardware GPS");
-          // Clear polling loop once acquired
           if (queryIntervalRef.current) {
             clearInterval(queryIntervalRef.current);
             queryIntervalRef.current = null;
@@ -326,23 +325,18 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
               clearInterval(queryIntervalRef.current);
               queryIntervalRef.current = null;
             }
-          } else {
-            console.warn(`GPS query attempt #${queryAttempts} waiting:`, err.message);
-            // Keep searching...
           }
         },
         {
           enableHighAccuracy: true,
           timeout: 6000,
-          maximumAge: 0, // Force fresh real-time sensor reading
+          maximumAge: 0,
         }
       );
     };
 
-    // 1. Initial immediate query
     runQuery();
 
-    // 2. Set up watchPosition for stream updates
     if (watchIdRef.current == null) {
       try {
         watchIdRef.current = navigator.geolocation.watchPosition(
@@ -369,7 +363,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       }
     }
 
-    // 3. Keep polling every 3 seconds until lock is established
     if (queryIntervalRef.current) {
       clearInterval(queryIntervalRef.current);
     }
@@ -384,7 +377,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         return current;
       });
     }, 3000);
-  }, [handleLocationSuccess, queryAttempts]);
+  }, [handleLocationSuccess]);
 
   // Clean up watchers on unmount
   useEffect(() => {
@@ -410,7 +403,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
       leafletRef.current = L;
 
-      // Clean up previous instance
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -428,18 +420,16 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         zoomControl: false,
       });
 
-      // Carto Dark Matter standard raster tiles with authorized key
       const cartoUrl = cartoKey
         ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=${cartoKey}`
         : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
 
       const cartoLayer = L.tileLayer(cartoUrl, {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        attribution: '&copy; CARTO',
         subdomains: "abcd",
         minZoom: 1,
         maxZoom: 20,
-        updateWhenIdle: false, // Don't delay tile loading!
+        updateWhenIdle: false,
         updateWhenZooming: true,
         keepBuffer: 6,
       });
@@ -447,7 +437,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       const osmFallback = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
-          attribution: "&copy; OpenStreetMap contributors",
+          attribution: "&copy; OpenStreetMap",
           maxZoom: 19,
           updateWhenIdle: false,
         }
@@ -461,7 +451,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
       cartoLayer.addTo(map);
 
-      // Dedicated layer groups
       userGpsLayerRef.current = L.layerGroup().addTo(map);
       patrolLayerRef.current = L.layerGroup().addTo(map);
       alertLayerRef.current = L.layerGroup().addTo(map);
@@ -484,7 +473,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         renderOfficerPin(manualLoc, false);
       });
 
-      // Attach ResizeObserver to container to guarantee tiles update on ANY zoom/layout change
       let ro: ResizeObserver | null = null;
       if (typeof ResizeObserver !== "undefined") {
         ro = new ResizeObserver(() => {
@@ -495,14 +483,11 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         ro.observe(container);
       }
 
-      // Multi-pass size invalidation as browser renders frames
       requestAnimationFrame(() => map.invalidateSize());
       setTimeout(() => map.invalidateSize(), 50);
       setTimeout(() => map.invalidateSize(), 150);
       setTimeout(() => map.invalidateSize(), 350);
-      setTimeout(() => map.invalidateSize(), 700);
 
-      // Start continuous real GPS querying immediately
       startContinuousGpsQuery();
 
       return () => {
@@ -553,27 +538,23 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
     patrolUnits.forEach((unit) => {
       const coords = unit.route[unit.step] || unit.route[0];
-      const isSaps = unit.id.startsWith("SAPS");
 
       const carIcon = L.divIcon({
         html: `
-          <div class="relative flex items-center justify-center transition-all duration-700">
-            <div class="w-6 h-6 rounded-full bg-[#082a27] border border-[#2dd4bf] shadow-md flex items-center justify-center text-[#2dd4bf] text-xs">
-              🚗
-            </div>
+          <div style="width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#0b2625;color:#3ad7bd;box-shadow:0 0 0 2px rgba(37,201,173,0.12);">
+            🚗
           </div>
         `,
         className: "patrol-marker-moving",
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
       });
 
       L.marker(coords, { icon: carIcon })
         .bindPopup(`
-          <div class="p-2 font-sans text-xs">
-            <div class="font-bold text-[#2dd4bf]">${unit.callsign}</div>
-            <div class="text-slate-700 text-[11px] font-semibold">${unit.role}</div>
-            <div class="text-slate-500 text-[10px] mt-0.5">Patrolling Active Sector Beat</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px;">
+            <b style="color:#25c9ad;">${unit.callsign}</b>
+            <div style="color:#aaa;">${unit.role}</div>
           </div>
         `)
         .addTo(group);
@@ -590,46 +571,46 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
     group.clearLayers();
 
-    // Focal coordinates (Selected alert or Katlehong demo incident hotspot)
     const coords: [number, number] =
       selectedAlert && selectedAlert.status === "RED"
         ? [selectedAlert.lat, selectedAlert.lng]
         : [-26.315, 28.16];
 
-    // 1. Tactical Geofence Outer (Red translucent ring with solid border)
+    // Tactical Geofence Outer (Red translucent ring with solid border)
     L.circle(coords, {
       radius: 4600,
-      color: "#dc2626",
-      fillColor: "#dc2626",
-      fillOpacity: 0.16,
-      weight: 1.8,
+      color: "#ff3e24",
+      fillColor: "#c22b1b",
+      fillOpacity: 0.18,
+      weight: 2,
     }).addTo(group);
 
-    // 2. Tactical Geofence Inner Ring
+    // Tactical Geofence Inner Ring
     L.circle(coords, {
       radius: 2200,
-      color: "#ef4444",
-      fillColor: "transparent",
-      weight: 1.2,
-      dashArray: "4, 4",
+      color: "#ff3e24",
+      fillColor: "rgba(95, 22, 17, 0.2)",
+      fillOpacity: 0.2,
+      weight: 2,
+      dashArray: "6, 6",
     }).addTo(group);
 
-    // 3. Agent Route (Amber dotted line approaching target)
+    // Agent Route (Amber dotted line approaching target)
     const routeCoords: [number, number][] = [
       [coords[0] + 0.018, coords[1] - 0.028],
       [coords[0] + 0.009, coords[1] - 0.012],
       coords,
     ];
     L.polyline(routeCoords, {
-      color: "#f59e0b",
-      weight: 2,
-      dashArray: "4, 4",
+      color: "#eba823",
+      weight: 2.5,
+      dashArray: "9, 5",
     }).addTo(group);
 
-    // 4. BOLO Young Waypoint Triangle Marker
+    // BOLO Young Waypoint Triangle Marker
     const boloMarkerIcon = L.divIcon({
       html: `
-        <div class="w-5 h-5 rounded bg-amber-500 border border-white text-black font-black text-[10px] flex items-center justify-center shadow-md">
+        <div style="color:#eba823;font-size:16px;">
           ▲
         </div>
       `,
@@ -638,58 +619,41 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       iconAnchor: [10, 10],
     });
     L.marker(routeCoords[0], { icon: boloMarkerIcon })
-      .bindPopup(`<div class="p-1.5 font-mono text-xs font-bold text-amber-500">BOLO Young Route Intercept Vector</div>`)
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-bold;color:#eba823;">BOLO Young Route Intercept</div>`)
       .addTo(group);
 
-    // 5. Town Labels
+    // Town Labels
     const createTownLabel = (name: string) =>
       L.divIcon({
-        html: `<div class="text-[11px] font-mono font-bold text-slate-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] select-none pointer-events-none">${name}</div>`,
+        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#e5e4dd;text-shadow:0 1px 3px rgba(0,0,0,0.9);">${name}</div>`,
         className: "tactical-town-marker",
-        iconSize: [80, 20],
-        iconAnchor: [40, 10],
+        iconSize: [90, 20],
+        iconAnchor: [45, 10],
       });
 
     L.marker([coords[0] + 0.003, coords[1]], { icon: createTownLabel("Katlehong"), interactive: false }).addTo(group);
     L.marker([coords[0] + 0.024, coords[1] + 0.045], { icon: createTownLabel("Vosloorus"), interactive: false }).addTo(group);
     L.marker([coords[0] - 0.016, coords[1] - 0.04], { icon: createTownLabel("Thokoza"), interactive: false }).addTo(group);
 
-    // 6. Center Incident Hotspot Pin
+    // Center Incident Core Dot
     const distressIcon = L.divIcon({
       html: `
-        <div class="relative flex items-center justify-center">
-          <span class="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-red-500 opacity-75"></span>
-          <div class="relative flex items-center justify-center w-5 h-5 bg-red-600 rounded-full border-2 border-white shadow-2xl text-white font-black text-[8px]">
-            ●
-          </div>
-        </div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#f5f2e9;border:6px solid #d9381e;box-shadow:0 0 18px rgba(255,67,41,0.8);"></div>
       `,
       className: "crisis-marker-live",
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
 
-    const attireHtml = currentAttire
-      ? `<div class="mt-2 p-1.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 text-[10px] leading-tight">
-           <div class="font-bold text-emerald-800 flex items-center gap-1">✓ Verified Attire (NOK Recon):</div>
-           <div class="mt-0.5 font-medium">${currentAttire}</div>
-         </div>`
-      : `<div class="mt-2 p-1.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-[10px] leading-tight">
-           <div class="font-bold text-amber-800">⚠️ Attire Unconfirmed</div>
-           <div class="text-slate-600 mt-0.5">Deploy WhatsApp Recon to verify clothing</div>
-         </div>`;
-
     const citizenTitle = selectedAlert?.citizenName || "POSSIBLE GBV - DISTRESS SIGNAL";
-    const triggerText = selectedAlert?.triggerSource || "Subject sent SOS via Waypoint";
 
     L.marker(coords, { icon: distressIcon })
       .bindPopup(`
-        <div class="p-2 font-sans text-xs min-w-[200px]">
-          <div class="font-black text-red-600 text-xs">🚨 CODE RED DISTRESS SIGNAL</div>
-          <div class="font-bold text-slate-900 mt-1">${citizenTitle}</div>
-          <div class="text-slate-600 text-[11px] mt-0.5">Trigger: <b>${triggerText}</b></div>
-          <div class="text-slate-500 font-mono text-[10px] mt-1">${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}</div>
-          ${attireHtml}
+        <div style="font-family:'IBM Plex Mono',monospace;padding:6px;font-size:11px;min-width:210px;">
+          <div style="font-weight:700;color:#d9381e;">ACTIVE INCIDENT</div>
+          <div style="font-weight:700;margin-top:2px;color:#111;">${citizenTitle}</div>
+          <div style="color:#555;font-size:10px;margin-top:2px;">${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}</div>
+          ${currentAttire ? `<div style="margin-top:4px;padding:3px;background:#e6fffa;border:1px solid #38b2ac;color:#234e52;border-radius:3px;">Attire: ${currentAttire}</div>` : ""}
         </div>
       `)
       .addTo(group);
@@ -699,7 +663,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
     }
   }, [selectedAlert, currentAttire]);
 
-  // Recenter Click Handler
   const handleRecenter = () => {
     if (deviceLocation) {
       renderOfficerPin(deviceLocation, true);
@@ -709,482 +672,407 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden select-none bg-[#090a0f] p-3 gap-2.5">
-      {/* Top Banner Row: Active Incident Alert Card + 3 Header Action Buttons */}
-      <div className="flex flex-col lg:flex-row items-stretch gap-2.5 flex-shrink-0">
-        {/* Left: Active Incident Alert Card (Solid Crimson) */}
-        <div className="flex-1 bg-[#c2221b] border border-red-700 rounded p-2.5 px-3.5 flex items-center justify-between shadow-md">
-          <div className="flex items-center space-x-3 min-w-0">
-            {/* Rounded red warning square */}
-            <div className="w-10 h-10 rounded bg-[#d63832] flex items-center justify-center flex-shrink-0 text-white shadow-inner">
-              <AlertTriangle className="w-6 h-6 text-white stroke-[2.2]" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center space-x-2">
-                <span className="bg-[#f59e0b] text-black font-extrabold text-[9.5px] px-2 py-0.5 rounded-sm font-mono uppercase tracking-wider">
-                  ACTIVE INCIDENT
-                </span>
-                {selectedAlert && (
-                  <span className="text-[10px] font-mono text-red-200">
-                    ID: {selectedAlert.id}
-                  </span>
-                )}
-              </div>
-              <div className="text-white font-black text-sm uppercase tracking-wide truncate mt-0.5">
-                {selectedAlert ? selectedAlert.message : "POSSIBLE GBV - DISTRESS SIGNAL"}
-              </div>
-              <div className="text-xs text-red-100 font-mono flex items-center space-x-1.5 truncate">
-                <span>Katlehong, Gauteng</span>
-                <span>•</span>
-                <span>4.2 km</span>
-                <span>•</span>
-                <span>{selectedAlert ? selectedAlert.timestamp : "3 min ago"}</span>
-                {currentAttire && (
-                  <>
-                    <span>•</span>
-                    <span className="text-emerald-300 font-bold">Attire: {currentAttire}</span>
-                  </>
-                )}
-              </div>
-            </div>
+    <div className="main-content">
+      {/* INCIDENT STRIP */}
+      {incidentOpen && (
+        <div className="incident-strip">
+          <div className="incident-symbol">
+            <AlertTriangle size={26} />
           </div>
 
+          <div className="incident-copy">
+            <span>ACTIVE INCIDENT</span>
+            <strong>{selectedAlert ? selectedAlert.message : "POSSIBLE GBV - DISTRESS SIGNAL"}</strong>
+            <small>
+              Katlehong, Gauteng&nbsp;&nbsp;•&nbsp;&nbsp;4.2 km&nbsp;&nbsp;•&nbsp;&nbsp;{selectedAlert ? selectedAlert.timestamp : "3 min ago"}
+              {currentAttire && `  •  Attire: ${currentAttire}`}
+            </small>
+          </div>
+
+          <button className="details-button" type="button" onClick={onNavigateToBolo}>
+            VIEW DETAILS
+            <ChevronRight size={18} />
+          </button>
+
           <button
+            className="close-incident"
             type="button"
-            onClick={onNavigateToBolo}
-            className="ml-3 px-3 py-1.5 rounded bg-[#3a0808] hover:bg-[#520a0a] border border-red-700/80 text-white text-xs font-mono font-bold tracking-wider flex items-center space-x-1.5 transition flex-shrink-0 cursor-pointer shadow-sm"
+            onClick={() => setIncidentOpen(false)}
           >
-            <span>VIEW DETAILS</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <X size={17} />
           </button>
         </div>
+      )}
 
-        {/* Right: 3 Quick Header Action Buttons with glowing borders */}
-        <div className="flex items-center space-x-2 flex-shrink-0">
-          {/* Button 1: WHATSAPP RECON */}
-          <button
-            type="button"
-            onClick={() => setIsWhatsAppOpen(true)}
-            className="flex items-center space-x-2.5 px-3.5 py-2 rounded border border-[#059669] bg-[#052016] hover:bg-[#073623] text-[#34d399] font-mono text-xs font-bold tracking-wider transition shadow-sm cursor-pointer"
-          >
-            <MessageSquare className="w-5 h-5 text-[#34d399] flex-shrink-0" />
-            <div className="text-left leading-tight">
-              <div className="text-xs">WHATSAPP</div>
-              <div className="text-[9.5px] text-emerald-400 font-mono">RECON</div>
-            </div>
-          </button>
+      {/* ACTION ROW */}
+      <div className="action-row">
+        <button
+          type="button"
+          className="action-button whatsapp"
+          onClick={() => setIsWhatsAppOpen(true)}
+        >
+          <MessageSquare size={21} />
+          <span>
+            WHATSAPP
+            <br />
+            RECON
+          </span>
+        </button>
 
-          {/* Button 2: OPEN IN NEW WINDOW */}
-          <button
-            type="button"
-            onClick={() => window.open("/bolo-young", "BoloYoungConsole", "width=1280,height=820")}
-            className="flex items-center space-x-2.5 px-3.5 py-2 rounded border border-[#334155] bg-[#0e121b] hover:bg-[#161c2b] text-[#cbd5e1] font-mono text-xs font-bold tracking-wider transition shadow-sm cursor-pointer"
-          >
-            <ExternalLink className="w-5 h-5 text-slate-300 flex-shrink-0" />
-            <div className="text-left leading-tight">
-              <div className="text-xs">OPEN IN NEW</div>
-              <div className="text-[9.5px] text-slate-400 font-mono">WINDOW</div>
-            </div>
-          </button>
+        <button
+          type="button"
+          className="action-button"
+          onClick={() => window.open("/bolo-young", "BoloYoungConsole", "width=1280,height=820")}
+        >
+          <Navigation size={21} />
+          <span>
+            OPEN IN NEW
+            <br />
+            WINDOW
+          </span>
+        </button>
 
-          {/* Button 3: LIVE TACTICAL MAP */}
-          <button
-            type="button"
-            onClick={handleRecenter}
-            className="flex items-center space-x-2.5 px-3.5 py-2 rounded border border-[#4338ca] bg-[#0c102a] hover:bg-[#141b44] text-[#818cf8] font-mono text-xs font-bold tracking-wider transition shadow-sm cursor-pointer"
-          >
-            <MapPin className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-            <div className="text-left leading-tight">
-              <div className="text-xs">LIVE TACTICAL</div>
-              <div className="text-[9.5px] text-indigo-400 font-mono">MAP</div>
-            </div>
-          </button>
-        </div>
+        <button
+          type="button"
+          className="action-button tactical"
+          onClick={handleRecenter}
+        >
+          <MapPin size={21} />
+          <span>
+            LIVE TACTICAL
+            <br />
+            MAP
+          </span>
+        </button>
       </div>
 
-      {/* Main Content Area: Left Column (Map + Waveform + 3 Cards) | Right Column (Feed + Agents) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2.5 min-h-0 overflow-hidden">
-        {/* Left Column (8 cols): Map Canvas + Waveform Bar + Bottom 3-Card Row */}
-        <div className="lg:col-span-8 flex flex-col gap-2.5 min-h-0 h-full overflow-hidden">
-          {/* Map Canvas Frame */}
-          <div className="relative flex-1 min-h-[300px] rounded border border-[#1e2430] bg-[#07090e] overflow-hidden shadow-inner">
-            {/* North Compass Arrow (top-left) */}
-            <div className="absolute top-3 left-3 z-[400] pointer-events-none flex flex-col items-center justify-center bg-black/75 border border-neutral-700/80 rounded px-2 py-1 text-slate-200 font-mono text-[11px] font-bold shadow">
+      {/* DASHBOARD GRID: MAP + RIGHT COLUMN */}
+      <div className="dashboard-grid">
+        <div className="primary-column">
+          {/* MAP CANVAS */}
+          <div className="map">
+            {/* North Compass Indicator */}
+            <div className="north">
               <span>N</span>
-              <span className="text-xs leading-none">▲</span>
+              <div />
             </div>
 
-            {/* Scale Indicator 2km (bottom-left) */}
-            <div className="absolute bottom-3 left-3 z-[400] pointer-events-none flex items-center space-x-2 bg-black/75 border border-neutral-700/80 rounded px-2.5 py-1 text-slate-200 font-mono text-[11px] shadow">
+            {/* Tactical Scale Indicator */}
+            <div className="map-scale">
               <span>2 km</span>
-              <div className="flex items-center">
-                <span className="h-2 w-[1.5px] bg-slate-300"></span>
-                <span className="w-12 h-[1.5px] bg-slate-300"></span>
-                <span className="h-2 w-[1.5px] bg-slate-300"></span>
+              <div />
+            </div>
+
+            {/* Tactical Legend Box */}
+            <div className="map-legend">
+              <div>
+                <span className="legend-dot red-dot" />
+                Incident Location
+              </div>
+              <div>
+                <span className="legend-ring" />
+                Geofence (20km)
+              </div>
+              <div>
+                <span className="legend-route" />
+                Agent Route
+              </div>
+              <div>
+                <Car size={14} />
+                Mobile Unit
+              </div>
+              <div>
+                <span className="legend-triangle" />
+                BOLO Young
               </div>
             </div>
 
-            {/* Tactical Legend Box (bottom-right) */}
-            <div className="absolute bottom-3 right-3 z-[400] pointer-events-auto bg-[#0a0c12]/90 backdrop-blur-sm border border-[#1e2430] rounded p-2.5 text-[10.5px] font-mono space-y-1.5 shadow-xl text-slate-300">
-              <div className="flex items-center space-x-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-600 inline-block shadow-sm"></span>
-                <span>Incident Location</span>
-              </div>
-              <div className="flex items-center space-x-2.5">
-                <span className="w-3 h-3 rounded-full border border-red-500 inline-block"></span>
-                <span>Geofence (20km)</span>
-              </div>
-              <div className="flex items-center space-x-2.5">
-                <span className="w-4 h-0.5 border-t-2 border-amber-400 border-dashed inline-block"></span>
-                <span>Agent Route</span>
-              </div>
-              <div className="flex items-center space-x-2.5">
-                <span className="w-3.5 h-3.5 rounded-full bg-[#082a27] border border-[#2dd4bf] inline-flex items-center justify-center text-[8px] text-[#2dd4bf]">
-                  🚗
-                </span>
-                <span>Mobile Unit</span>
-              </div>
-              <div className="flex items-center space-x-2.5">
-                <span className="text-amber-500 font-black text-xs leading-none">▲</span>
-                <span>BOLO Young</span>
-              </div>
-            </div>
-
-            {/* Tactical GPS Overlays */}
+            {/* GPS Lock Overlays */}
             {gpsLockStatus === "SEARCHING" && (
-              <div className="absolute top-3 left-14 z-[400] pointer-events-auto bg-slate-900/90 border border-amber-500/50 rounded px-3 py-1 flex items-center space-x-2 text-xs text-amber-300 shadow">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                <span className="font-mono text-[11px]">Acquiring Device GPS... (Attempt #{queryAttempts})</span>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "16px",
+                  left: "60px",
+                  zIndex: 20,
+                  background: "rgba(10,14,15,0.9)",
+                  border: "1px solid var(--amber)",
+                  borderRadius: "3px",
+                  padding: "4px 10px",
+                  color: "var(--amber)",
+                  fontFamily: "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace",
+                  fontSize: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <Loader2 size={13} className="animate-spin" />
+                <span>Acquiring Device GPS... (#{queryAttempts})</span>
               </div>
             )}
 
             {showLockSuccessAlert && deviceLocation && (
-              <div className="absolute top-3 left-14 z-[400] pointer-events-auto bg-slate-900/90 border border-emerald-500/50 rounded px-3 py-1 flex items-center space-x-2 text-xs text-emerald-300 shadow">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="font-mono text-[11px]">GPS Locked (±{Math.round(deviceLocation.accuracy)}m)</span>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "16px",
+                  left: "60px",
+                  zIndex: 20,
+                  background: "rgba(10,14,15,0.9)",
+                  border: "1px solid #18d49e",
+                  borderRadius: "3px",
+                  padding: "4px 10px",
+                  color: "#18d49e",
+                  fontFamily: "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace",
+                  fontSize: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <CheckCircle2 size={13} />
+                <span>GPS Locked (±{Math.round(deviceLocation.accuracy)}m)</span>
               </div>
             )}
 
-            {/* Real Leaflet Map Canvas */}
-            <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0 cursor-crosshair" />
+            {/* Real Interactive Leaflet Map Layer */}
+            <div ref={mapContainerRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1 }} />
           </div>
 
-          {/* Audio Dispatch Waveform Bar */}
-          <div className="h-11 bg-[#0c0e14] border border-[#1e2430] rounded px-3 flex items-center justify-between text-xs flex-shrink-0 shadow">
-            {/* Left: Waveform animation + BOLO YOUNG identity */}
-            <div className="flex items-center space-x-3">
-              <div className="flex items-end space-x-0.5 h-4 w-5">
-                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-3"></span>
-                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-4 delay-75"></span>
-                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-2 delay-150"></span>
-                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-3.5 delay-100"></span>
-              </div>
+          {/* BOLO COMMAND BAR */}
+          <div className="bolo-command">
+            <div className="bolo-icon">
+              <Activity size={28} />
+            </div>
+
+            <div className="bolo-info">
               <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-white text-xs tracking-wider font-mono">BOLO YOUNG</span>
-                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border border-[#10b981] bg-[#06241b] text-[#34d399]">
-                    ACTIVE
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-mono block leading-tight">
-                  Traffic Control AI Guardian
-                </span>
+                BOLO YOUNG
+                <span className="status-pill green">ACTIVE</span>
               </div>
+              <small>Traffic Control AI Guardian</small>
             </div>
 
-            {/* Center: Tactical voice quote */}
-            <div className="hidden md:block text-slate-200 font-mono text-xs truncate max-w-md">
-              &quot;Unit 01, confirm visual on suspect. Maintain 2 block perimeter.&quot;
+            <div className="command-divider" />
+
+            <div className="command-message">
+              “Unit 01, confirm visual on suspect.
+              <br />
+              Maintain 2 block perimeter.”
             </div>
 
-            {/* Right: Timestamp and speaker icon */}
-            <div className="flex items-center space-x-2 text-slate-400 font-mono text-[11px]">
-              <span>22:26:41</span>
-              <Volume2 className="w-3.5 h-3.5 text-[#10b981]" />
+            <div className="command-time">
+              22:26:41
+              <Activity size={16} />
             </div>
           </div>
 
-          {/* Bottom 3-Card Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 flex-shrink-0">
-            {/* Card 1: QUICK ACTIONS */}
-            <div className="bg-[#0c0e14] border border-[#1e2430] rounded p-2.5 px-3 flex flex-col justify-between">
-              <div className="flex items-center space-x-1.5 text-amber-500 font-mono text-xs font-bold tracking-wider mb-2">
-                <Zap className="w-3.5 h-3.5" />
-                <span>QUICK ACTIONS</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {/* BOTTOM CONTROL ROW */}
+          <div className="bottom-grid">
+            <Panel title="QUICK ACTIONS" icon={<Zap size={17} />}>
+              <div className="quick-actions">
                 <button
                   type="button"
+                  className="quick danger"
                   onClick={() => alert("🚨 PANIC DISPATCH: All available sector units converging on Katlehong hotspot.")}
-                  className="bg-[#7f1d1d] hover:bg-[#991b1b] border border-red-600 text-white font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
-                  <AlertCircle className="w-3 h-3 text-red-300" />
-                  <span>PANIC</span>
+                  <AlertTriangle size={17} />
+                  PANIC
                 </button>
                 <button
                   type="button"
+                  className="quick"
                   onClick={handleConvergeUnits}
-                  className="bg-[#121622] hover:bg-[#1a2030] border border-[#2a324b] text-slate-200 font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
-                  <Car className="w-3 h-3 text-cyan-400" />
-                  <span>DISPATCH</span>
+                  <Siren size={17} />
+                  DISPATCH
                 </button>
                 <button
                   type="button"
+                  className="quick"
                   onClick={onNavigateToBolo}
-                  className="bg-[#121622] hover:bg-[#1a2030] border border-[#2a324b] text-slate-200 font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
-                  <FileText className="w-3 h-3 text-slate-400" />
-                  <span>LOG INCIDENT</span>
+                  <FileText size={17} />
+                  LOG INCIDENT
                 </button>
                 <button
                   type="button"
+                  className="quick"
                   onClick={() => {
                     navigator.clipboard?.writeText("-26.315, 28.16 (Katlehong, Gauteng)");
                     alert("Sector Coordinates copied: -26.315, 28.16");
                   }}
-                  className="bg-[#121622] hover:bg-[#1a2030] border border-[#2a324b] text-slate-200 font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
-                  <Share2 className="w-3 h-3 text-slate-400" />
-                  <span>SHARE LOCATION</span>
+                  <MapPin size={17} />
+                  SHARE LOCATION
                 </button>
               </div>
-            </div>
+            </Panel>
 
-            {/* Card 2: SYSTEM METRICS */}
-            <div className="bg-[#0c0e14] border border-[#1e2430] rounded p-2.5 px-3 flex flex-col justify-between">
-              <div className="flex items-center space-x-1.5 text-amber-500 font-mono text-xs font-bold tracking-wider mb-2">
-                <BarChart2 className="w-3.5 h-3.5" />
-                <span>SYSTEM METRICS</span>
+            <Panel title="SYSTEM METRICS" icon={<BarChart3 size={17} />}>
+              <div className="metrics">
+                <Metric label="ACTIVE AGENTS" value="4/6" />
+                <Metric label="AVG. RESPONSE" value="2.8 min" />
+                <Metric label="CITIZEN REPORTS" value="12 (24h)" />
+                <Metric label="UPTIME" value="99.9%" />
               </div>
-              <div className="grid grid-cols-4 gap-1 text-left">
-                <div>
-                  <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">ACTIVE AGENTS</div>
-                  <div className="text-white font-mono font-bold text-sm mt-0.5">4/6</div>
-                </div>
-                <div className="border-l border-neutral-800 pl-1.5">
-                  <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">AVG. RESPONSE</div>
-                  <div className="text-white font-mono font-bold text-sm mt-0.5">2.8 min</div>
-                </div>
-                <div className="border-l border-neutral-800 pl-1.5">
-                  <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">CITIZEN REPORTS</div>
-                  <div className="text-white font-mono font-bold text-sm mt-0.5">12 (24h)</div>
-                </div>
-                <div className="border-l border-neutral-800 pl-1.5">
-                  <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">UPTIME</div>
-                  <div className="text-white font-mono font-bold text-sm mt-0.5">99.9%</div>
-                </div>
-              </div>
-            </div>
+            </Panel>
 
-            {/* Card 3: POLPIA / PRIVACY */}
-            <div className="bg-[#0c0e14] border border-[#1e2430] rounded p-2.5 px-3 flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center space-x-1.5 text-amber-500 font-mono text-xs font-bold tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>POLPIA / PRIVACY</span>
-                </div>
-                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border border-[#10b981] bg-[#06241b] text-[#34d399] flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
-                  <span>COMPLIANT</span>
-                </span>
-              </div>
-              <div className="text-[10px] text-slate-400 space-y-0.5 font-mono">
-                <div className="text-slate-300">Zero-Knowledge Architecture</div>
+            <Panel
+              title="POPIA / PRIVACY"
+              icon={<Shield size={17} />}
+              action={<span className="status-pill green">● COMPLIANT</span>}
+            >
+              <div className="privacy">
+                <div>Zero-Knowledge Architecture</div>
                 <div>End-to-End Encryption</div>
                 <div>No Personal Data Storage</div>
               </div>
-            </div>
+            </Panel>
           </div>
         </div>
 
-        {/* Right Column (4 cols): Live Incident Feed + Agent Status */}
-        <div className="lg:col-span-4 flex flex-col gap-2.5 min-h-0 h-full overflow-hidden">
-          {/* Top Box: LIVE INCIDENT FEED */}
-          <div className="flex-1 min-h-0 bg-[#0c0e14] border border-[#1e2430] rounded p-3 flex flex-col overflow-hidden shadow">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1e2430]">
-              <div className="flex items-center space-x-1.5 font-mono text-xs font-bold tracking-wider text-white">
-                <span className="text-amber-500 font-bold">&gt;</span>
-                <span>LIVE INCIDENT FEED</span>
-              </div>
-              <span className="text-[10px] font-mono text-[#34d399] bg-[#0c1318] border border-[#10b981]/50 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
-                <span>AUTO-REFRESH</span>
-              </span>
-            </div>
-
-            <div className="mt-2.5 flex-1 overflow-y-auto space-y-2 pr-1">
-              {/* Dynamic Alert from mobile if active */}
+        {/* RIGHT COLUMN */}
+        <aside className="right-column">
+          <Panel
+            title="LIVE INCIDENT FEED"
+            icon={<Radio size={17} />}
+            action={<span className="status-pill green">● AUTO-REFRESH</span>}
+          >
+            <div className="incident-feed">
               {incomingAlerts.map((alert) => (
                 <div
+                  className="feed-item"
                   key={alert.id}
                   onClick={() => onSelectAlert(alert)}
-                  className="p-2.5 rounded border border-red-500/90 bg-red-950/40 hover:bg-red-950/60 transition cursor-pointer"
+                  style={{ cursor: "pointer" }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="bg-[#dc2626] text-white font-mono font-extrabold text-[9px] px-2 py-0.5 rounded-sm uppercase tracking-wider animate-pulse">
-                      HIGH
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400">{alert.timestamp}</span>
+                  <div className="feed-top">
+                    <span className="severity high">HIGH</span>
+                    <strong>{alert.citizenName} • {alert.triggerSource}</strong>
+                    <time>{alert.timestamp}</time>
                   </div>
-                  <div className="text-xs font-bold text-white mt-1.5">
-                    {alert.citizenName} • {alert.triggerSource}
+
+                  <div className="feed-location">
+                    {alert.lat.toFixed(4)}°, {alert.lng.toFixed(4)}°&nbsp;&nbsp;•&nbsp;&nbsp;{alert.speedKmh} km/h
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    {alert.lat.toFixed(4)}°, {alert.lng.toFixed(4)}° • {alert.speedKmh} km/h
-                  </div>
-                  <div className="text-[11px] text-slate-300 mt-1 leading-snug">{alert.message}</div>
+
+                  <p>{alert.message}</p>
                 </div>
               ))}
 
-              {/* Mockup Incident 1: HIGH */}
               <div
+                className="feed-item"
                 onClick={() => {
                   if (mapInstanceRef.current) {
                     mapInstanceRef.current.flyTo([-26.315, 28.16], 14, { animate: true });
                   }
                 }}
-                className="p-2.5 rounded border border-[#1f2430] bg-[#07090e] hover:border-neutral-700 transition cursor-pointer"
+                style={{ cursor: "pointer" }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="bg-[#dc2626] text-white font-mono font-extrabold text-[9px] px-2.5 py-0.5 rounded-sm uppercase tracking-wider">
-                    HIGH
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400">22:23</span>
+                <div className="feed-top">
+                  <span className="severity high">HIGH</span>
+                  <strong>POSSIBLE GBV - DISTRESS SIGNAL</strong>
+                  <time>22:23</time>
                 </div>
-                <div className="text-xs font-bold text-white mt-1.5">POSSIBLE GBV - DISTRESS SIGNAL</div>
-                <div className="text-[10px] text-slate-400 font-mono mt-0.5">Katlehong, Gauteng • 4.2 km</div>
-                <div className="text-[11px] text-slate-400 mt-1 leading-snug">
-                  Subject sent SOS via Waypoint. Audio stream active.
+
+                <div className="feed-location">
+                  Katlehong, Gauteng&nbsp;&nbsp;•&nbsp;&nbsp;4.2 km
                 </div>
+
+                <p>Subject sent SOS via Waypoint. Audio stream active.</p>
               </div>
 
-              {/* Mockup Incident 2: MED */}
-              <div className="p-2.5 rounded border border-[#1f2430] bg-[#07090e] hover:border-neutral-700 transition cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span className="bg-[#f59e0b] text-black font-mono font-extrabold text-[9px] px-2.5 py-0.5 rounded-sm uppercase tracking-wider">
-                    MED
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400">22:17</span>
+              <div className="feed-item">
+                <div className="feed-top">
+                  <span className="severity med">MED</span>
+                  <strong>SUSPICIOUS VEHICLE</strong>
+                  <time>22:17</time>
                 </div>
-                <div className="text-xs font-bold text-white mt-1.5">SUSPICIOUS VEHICLE</div>
-                <div className="text-[10px] text-slate-400 font-mono mt-0.5">Vosloorus, Gauteng • 7.8 km</div>
-                <div className="text-[11px] text-slate-400 mt-1 leading-snug">
-                  Plate: BZ 74 PL GP. Moving north. No units on scene.
+
+                <div className="feed-location">
+                  Vosloorus, Gauteng&nbsp;&nbsp;•&nbsp;&nbsp;7.8 km
                 </div>
+
+                <p>Plate: BZ 74 PL GP. Moving north. No units on scene.</p>
               </div>
 
-              {/* Mockup Incident 3: LOW */}
-              <div className="p-2.5 rounded border border-[#1f2430] bg-[#07090e] hover:border-neutral-700 transition cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span className="bg-[#10b981] text-black font-mono font-extrabold text-[9px] px-2.5 py-0.5 rounded-sm uppercase tracking-wider">
-                    LOW
-                  </span>
-                  <span className="text-[10px] font-mono text-slate-400">22:03</span>
+              <div className="feed-item">
+                <div className="feed-top">
+                  <span className="severity low">LOW</span>
+                  <strong>THEFT IN PROGRESS</strong>
+                  <time>22:03</time>
                 </div>
-                <div className="text-xs font-bold text-white mt-1.5">THEFT IN PROGRESS</div>
-                <div className="text-[10px] text-slate-400 font-mono mt-0.5">Thokoza, Gauteng • 12.1 km</div>
-                <div className="text-[11px] text-slate-400 mt-1 leading-snug">
-                  Citizen report via app. Units dispatched.
+
+                <div className="feed-location">
+                  Thokoza, Gauteng&nbsp;&nbsp;•&nbsp;&nbsp;12.1 km
                 </div>
+
+                <p>Citizen report via app. Units dispatched.</p>
               </div>
             </div>
-          </div>
+          </Panel>
 
-          {/* Bottom Box: AGENT STATUS */}
-          <div className="h-56 bg-[#0c0e14] border border-[#1e2430] rounded p-3 flex flex-col flex-shrink-0 overflow-hidden shadow">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1e2430]">
-              <div className="flex items-center space-x-2 font-mono text-xs font-bold tracking-wider text-white">
-                {/* 3-node connected network icon in amber */}
-                <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="5" r="2.5" />
-                  <circle cx="5" cy="19" r="2.5" />
-                  <circle cx="19" cy="19" r="2.5" />
-                  <line x1="12" y1="7.5" x2="5" y2="16.5" />
-                  <line x1="12" y1="7.5" x2="19" y2="16.5" />
-                </svg>
-                <span>AGENT STATUS</span>
+          <Panel
+            title="AGENT STATUS"
+            icon={<Users size={17} />}
+            action={<span className="status-pill neutral">4 ACTIVE</span>}
+          >
+            <div className="agent-table">
+              <div className="table-head">
+                <span>AGENT</span>
+                <span>STATUS</span>
+                <span>LOCATION</span>
+                <span>ETA</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-300 bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded">
-                4 ACTIVE
-              </span>
+
+              {/* Row 1: BOLO Young */}
+              <div className="agent-row">
+                <span className="agent-name">
+                  <Target size={15} />
+                  BOLO Young
+                </span>
+                <span className="status-pill orange">EN ROUTE</span>
+                <span>Katlehong</span>
+                <span>3 min</span>
+              </div>
+
+              {/* Row 2: Agent 01 */}
+              <div className="agent-row">
+                <span className="agent-name">
+                  <Car size={15} />
+                  Agent 01
+                </span>
+                <span className="status-pill green">ON SITE</span>
+                <span>Vosloorus</span>
+                <span>6 min</span>
+              </div>
+
+              {/* Row 3: Agent 02 */}
+              <div className="agent-row">
+                <span className="agent-name">
+                  <Car size={15} />
+                  Agent 02
+                </span>
+                <span className="status-pill blue">PATROLLING</span>
+                <span>Thokoza</span>
+                <span>12 min</span>
+              </div>
+
+              {/* Row 4: Agent 03 */}
+              <div className="agent-row">
+                <span className="agent-name">
+                  <Car size={15} />
+                  Agent 03
+                </span>
+                <span className="status-pill neutral">AVAILABLE</span>
+                <span>Sector 2</span>
+                <span>—</span>
+              </div>
             </div>
-
-            <div className="mt-2 flex-1 overflow-y-auto">
-              <table className="w-full text-left font-mono text-xs">
-                <thead>
-                  <tr className="text-[10px] text-slate-500 border-b border-neutral-800">
-                    <th className="pb-1.5 font-bold">AGENT</th>
-                    <th className="pb-1.5 font-bold">STATUS</th>
-                    <th className="pb-1.5 font-bold">LOCATION</th>
-                    <th className="pb-1.5 font-bold text-right">ETA</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-800/60 text-[11px]">
-                  {/* Row 1: BOLO Young */}
-                  <tr className="hover:bg-neutral-900/40">
-                    <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
-                      <span className="text-amber-500 text-xs font-black">▲</span>
-                      <span>BOLO Young</span>
-                    </td>
-                    <td className="py-2">
-                      <span className="px-2 py-0.5 rounded bg-[#78350f] border border-amber-500/60 text-amber-300 text-[9px] font-bold">
-                        EN ROUTE
-                      </span>
-                    </td>
-                    <td className="py-2 text-slate-300">Katlehong</td>
-                    <td className="py-2 text-right text-slate-300 font-bold">3 min</td>
-                  </tr>
-
-                  {/* Row 2: Agent 01 */}
-                  <tr className="hover:bg-neutral-900/40">
-                    <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
-                      <span className="text-[#2dd4bf] text-xs">🚗</span>
-                      <span>Agent 01</span>
-                    </td>
-                    <td className="py-2">
-                      <span className="px-2 py-0.5 rounded bg-[#083344] border border-cyan-500/60 text-cyan-300 text-[9px] font-bold">
-                        ON SITE
-                      </span>
-                    </td>
-                    <td className="py-2 text-slate-300">Vosloorus</td>
-                    <td className="py-2 text-right text-slate-300 font-bold">6 min</td>
-                  </tr>
-
-                  {/* Row 3: Agent 02 */}
-                  <tr className="hover:bg-neutral-900/40">
-                    <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
-                      <span className="text-[#2dd4bf] text-xs">🚗</span>
-                      <span>Agent 02</span>
-                    </td>
-                    <td className="py-2">
-                      <span className="px-2 py-0.5 rounded bg-[#042f2e] border border-teal-500/60 text-teal-300 text-[9px] font-bold">
-                        PATROLLING
-                      </span>
-                    </td>
-                    <td className="py-2 text-slate-300">Thokoza</td>
-                    <td className="py-2 text-right text-slate-300 font-bold">12 min</td>
-                  </tr>
-
-                  {/* Row 4: Agent 03 */}
-                  <tr className="hover:bg-neutral-900/40">
-                    <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
-                      <span className="text-[#2dd4bf] text-xs">🚗</span>
-                      <span>Agent 03</span>
-                    </td>
-                    <td className="py-2">
-                      <span className="px-2 py-0.5 rounded bg-[#1e293b] border border-slate-600 text-slate-400 text-[9px] font-bold">
-                        AVAILABLE
-                      </span>
-                    </td>
-                    <td className="py-2 text-slate-300">Sector 2</td>
-                    <td className="py-2 text-right text-slate-400">—</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+          </Panel>
+        </aside>
       </div>
 
       {/* Real-time Next-of-Kin WhatsApp Recon Modal */}
