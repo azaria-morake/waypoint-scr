@@ -23,7 +23,7 @@ interface ActivityItem {
 }
 
 export default function CommandDashboardPage() {
-  const [currentOrg, setCurrentOrg] = useState<OrganizationOption | null>(null);
+  const [currentOrg, setCurrentOrg] = useState<OrganizationOption | null>(ORGANIZATIONS[0]);
   const [activeTab, setActiveTab] = useState<NavTab>("LIVE_MAP");
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [incomingAlerts, setIncomingAlerts] = useState<LiveAlertItem[]>([]);

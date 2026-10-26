@@ -140,45 +140,51 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
     );
   }, [selectedAlert]);
 
-  // Generate patrol units around the real acquired center [lat, lng]
+  // Generate patrol units around the real acquired center [lat, lng] matching mockup
   const generatePatrolUnits = useCallback((centerLat: number, centerLng: number) => {
     return [
       {
-        id: "FOX-14",
-        callsign: "Fox Tactical 14",
-        role: "Armed Sector Reaction",
+        id: "AGENT-01",
+        callsign: "Agent 01",
+        role: "On Site (Vosloorus)",
         route: [
-          [centerLat + 0.0035, centerLng - 0.003],
-          [centerLat + 0.0018, centerLng + 0.0025],
-          [centerLat - 0.002, centerLng + 0.0038],
-          [centerLat - 0.0038, centerLng - 0.001],
-          [centerLat + 0.001, centerLng - 0.0035],
+          [centerLat + 0.022, centerLng + 0.042],
+          [centerLat + 0.020, centerLng + 0.040],
+          [centerLat + 0.024, centerLng + 0.044],
         ] as [number, number][],
         step: 0,
         direction: 1,
       },
       {
-        id: "FOX-08",
-        callsign: "Fox Tactical 08",
-        role: "Community Patrol Intercept",
+        id: "AGENT-02",
+        callsign: "Agent 02",
+        role: "Patrolling (Thokoza)",
         route: [
-          [centerLat - 0.0028, centerLng - 0.0035],
-          [centerLat - 0.001, centerLng - 0.0018],
-          [centerLat + 0.0025, centerLng + 0.0012],
-          [centerLat + 0.0042, centerLng + 0.0028],
+          [centerLat - 0.016, centerLng - 0.038],
+          [centerLat - 0.014, centerLng - 0.035],
+          [centerLat - 0.018, centerLng - 0.040],
         ] as [number, number][],
         step: 0,
         direction: 1,
       },
       {
-        id: "SAPS-302",
-        callsign: "SAPS Flying Squad 302",
-        role: "Highway Tactical Beat",
+        id: "AGENT-03",
+        callsign: "Agent 03",
+        role: "Available (Sector 2)",
         route: [
-          [centerLat + 0.005, centerLng + 0.0045],
-          [centerLat + 0.0028, centerLng + 0.0028],
-          [centerLat - 0.001, centerLng + 0.001],
-          [centerLat - 0.0042, centerLng - 0.0028],
+          [centerLat - 0.034, centerLng + 0.002],
+          [centerLat - 0.032, centerLng + 0.004],
+        ] as [number, number][],
+        step: 0,
+        direction: 1,
+      },
+      {
+        id: "UNIT-NORTH",
+        callsign: "Mobile Unit",
+        role: "Sector Perimeter Guard",
+        route: [
+          [centerLat + 0.026, centerLng - 0.012],
+          [centerLat + 0.024, centerLng - 0.010],
         ] as [number, number][],
         step: 0,
         direction: 1,
@@ -415,14 +421,12 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         delete (container as any)._leaflet_id;
       }
 
-      // Initialize map centered on South Africa baseline
+      // Initialize map centered on Katlehong baseline matching tactical console
       const map = L.map(container, {
-        center: [-26.2640, 28.1245],
+        center: [-26.315, 28.16],
         zoom: 13,
         zoomControl: false,
       });
-
-      L.control.zoom({ position: "topleft" }).addTo(map);
 
       // Carto Dark Matter standard raster tiles with authorized key
       const cartoUrl = cartoKey
@@ -592,14 +596,13 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         ? [selectedAlert.lat, selectedAlert.lng]
         : [-26.315, 28.16];
 
-    // 1. Tactical Geofence Outer (Red translucent ring with dashed border)
+    // 1. Tactical Geofence Outer (Red translucent ring with solid border)
     L.circle(coords, {
-      radius: 4800,
-      color: "#ef4444",
-      fillColor: "#ef4444",
-      fillOpacity: 0.14,
-      weight: 1.5,
-      dashArray: "6, 6",
+      radius: 4600,
+      color: "#dc2626",
+      fillColor: "#dc2626",
+      fillOpacity: 0.16,
+      weight: 1.8,
     }).addTo(group);
 
     // 2. Tactical Geofence Inner Ring
@@ -706,18 +709,19 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden select-none bg-[#0a0d14] p-3 gap-3">
+    <div className="flex-1 flex flex-col h-full w-full overflow-hidden select-none bg-[#090a0f] p-3 gap-2.5">
       {/* Top Banner Row: Active Incident Alert Card + 3 Header Action Buttons */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 flex-shrink-0">
-        {/* Left: Active Incident Alert Card */}
-        <div className="flex-1 bg-gradient-to-r from-[#991b1b] via-[#881337] to-[#7f1d1d] border border-red-700/80 rounded-lg p-2.5 px-3.5 flex items-center justify-between shadow-lg">
+      <div className="flex flex-col lg:flex-row items-stretch gap-2.5 flex-shrink-0">
+        {/* Left: Active Incident Alert Card (Solid Crimson) */}
+        <div className="flex-1 bg-[#c2221b] border border-red-700 rounded p-2.5 px-3.5 flex items-center justify-between shadow-md">
           <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-9 h-9 rounded-md bg-red-950/80 border border-red-600/60 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
-              <AlertTriangle className="w-5 h-5 text-red-300" />
+            {/* Rounded red warning square */}
+            <div className="w-10 h-10 rounded bg-[#d63832] flex items-center justify-center flex-shrink-0 text-white shadow-inner">
+              <AlertTriangle className="w-6 h-6 text-white stroke-[2.2]" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded font-mono uppercase tracking-wider">
+                <span className="bg-[#f59e0b] text-black font-extrabold text-[9.5px] px-2 py-0.5 rounded-sm font-mono uppercase tracking-wider">
                   ACTIVE INCIDENT
                 </span>
                 {selectedAlert && (
@@ -729,7 +733,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
               <div className="text-white font-black text-sm uppercase tracking-wide truncate mt-0.5">
                 {selectedAlert ? selectedAlert.message : "POSSIBLE GBV - DISTRESS SIGNAL"}
               </div>
-              <div className="text-xs text-red-200/90 font-mono flex items-center space-x-1.5 truncate">
+              <div className="text-xs text-red-100 font-mono flex items-center space-x-1.5 truncate">
                 <span>Katlehong, Gauteng</span>
                 <span>•</span>
                 <span>4.2 km</span>
@@ -748,25 +752,25 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToBolo}
-            className="ml-3 px-3.5 py-2 rounded bg-[#5b0e0e] hover:bg-[#781212] border border-red-500/50 text-white text-xs font-bold tracking-wider flex items-center space-x-1.5 transition flex-shrink-0 cursor-pointer shadow-md"
+            className="ml-3 px-3 py-1.5 rounded bg-[#3a0808] hover:bg-[#520a0a] border border-red-700/80 text-white text-xs font-mono font-bold tracking-wider flex items-center space-x-1.5 transition flex-shrink-0 cursor-pointer shadow-sm"
           >
             <span>VIEW DETAILS</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Right: 3 Quick Header Action Buttons */}
+        {/* Right: 3 Quick Header Action Buttons with glowing borders */}
         <div className="flex items-center space-x-2 flex-shrink-0">
           {/* Button 1: WHATSAPP RECON */}
           <button
             type="button"
             onClick={() => setIsWhatsAppOpen(true)}
-            className="flex items-center space-x-2 px-3.5 py-2.5 rounded-lg border border-emerald-500/50 bg-[#06241b]/90 hover:bg-[#0c382b] text-emerald-400 font-mono text-xs font-bold tracking-wider transition shadow-md cursor-pointer"
+            className="flex items-center space-x-2.5 px-3.5 py-2 rounded border border-[#059669] bg-[#052016] hover:bg-[#073623] text-[#34d399] font-mono text-xs font-bold tracking-wider transition shadow-sm cursor-pointer"
           >
-            <MessageSquare className="w-4 h-4 text-emerald-400" />
-            <div className="text-left">
-              <div className="leading-tight">WHATSAPP</div>
-              <div className="text-[9px] text-emerald-500/90 font-mono">RECON</div>
+            <MessageSquare className="w-5 h-5 text-[#34d399] flex-shrink-0" />
+            <div className="text-left leading-tight">
+              <div className="text-xs">WHATSAPP</div>
+              <div className="text-[9.5px] text-emerald-400 font-mono">RECON</div>
             </div>
           </button>
 
@@ -774,12 +778,12 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
           <button
             type="button"
             onClick={() => window.open("/bolo-young", "BoloYoungConsole", "width=1280,height=820")}
-            className="flex items-center space-x-2 px-3.5 py-2.5 rounded-lg border border-slate-700 bg-[#0f1422]/90 hover:bg-[#1a2136] text-slate-200 font-mono text-xs font-bold tracking-wider transition shadow-md cursor-pointer"
+            className="flex items-center space-x-2.5 px-3.5 py-2 rounded border border-[#334155] bg-[#0e121b] hover:bg-[#161c2b] text-[#cbd5e1] font-mono text-xs font-bold tracking-wider transition shadow-sm cursor-pointer"
           >
-            <ExternalLink className="w-4 h-4 text-slate-300" />
-            <div className="text-left">
-              <div className="leading-tight">OPEN IN NEW</div>
-              <div className="text-[9px] text-slate-400 font-mono">WINDOW</div>
+            <ExternalLink className="w-5 h-5 text-slate-300 flex-shrink-0" />
+            <div className="text-left leading-tight">
+              <div className="text-xs">OPEN IN NEW</div>
+              <div className="text-[9.5px] text-slate-400 font-mono">WINDOW</div>
             </div>
           </button>
 
@@ -787,75 +791,75 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
           <button
             type="button"
             onClick={handleRecenter}
-            className="flex items-center space-x-2 px-3.5 py-2.5 rounded-lg border border-indigo-500/50 bg-[#101736]/90 hover:bg-[#192454] text-indigo-300 font-mono text-xs font-bold tracking-wider transition shadow-md cursor-pointer"
+            className="flex items-center space-x-2.5 px-3.5 py-2 rounded border border-[#4338ca] bg-[#0c102a] hover:bg-[#141b44] text-[#818cf8] font-mono text-xs font-bold tracking-wider transition shadow-sm cursor-pointer"
           >
-            <MapPin className="w-4 h-4 text-indigo-400" />
-            <div className="text-left">
-              <div className="leading-tight">LIVE TACTICAL</div>
-              <div className="text-[9px] text-indigo-400/90 font-mono">MAP</div>
+            <MapPin className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+            <div className="text-left leading-tight">
+              <div className="text-xs">LIVE TACTICAL</div>
+              <div className="text-[9.5px] text-indigo-400 font-mono">MAP</div>
             </div>
           </button>
         </div>
       </div>
 
-      {/* Main Content Area: Left Map & Actions + Right Feed & Agents */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0 overflow-hidden">
+      {/* Main Content Area: Left Column (Map + Waveform + 3 Cards) | Right Column (Feed + Agents) */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2.5 min-h-0 overflow-hidden">
         {/* Left Column (8 cols): Map Canvas + Waveform Bar + Bottom 3-Card Row */}
-        <div className="lg:col-span-8 flex flex-col gap-3 min-h-0 h-full overflow-hidden">
+        <div className="lg:col-span-8 flex flex-col gap-2.5 min-h-0 h-full overflow-hidden">
           {/* Map Canvas Frame */}
-          <div className="relative flex-1 min-h-[300px] rounded-lg border border-[#1e2433] bg-[#07090e] overflow-hidden shadow-inner">
+          <div className="relative flex-1 min-h-[300px] rounded border border-[#1e2430] bg-[#07090e] overflow-hidden shadow-inner">
             {/* North Compass Arrow (top-left) */}
-            <div className="absolute top-3 left-3 z-[500] pointer-events-none flex flex-col items-center justify-center bg-[#0d0f14]/85 backdrop-blur-sm border border-slate-800 rounded px-2 py-1 text-slate-300 font-mono text-[10px] shadow">
-              <span className="font-bold">N</span>
-              <span className="text-amber-400 text-xs leading-none">▲</span>
+            <div className="absolute top-3 left-3 z-[400] pointer-events-none flex flex-col items-center justify-center bg-black/75 border border-neutral-700/80 rounded px-2 py-1 text-slate-200 font-mono text-[11px] font-bold shadow">
+              <span>N</span>
+              <span className="text-xs leading-none">▲</span>
             </div>
 
             {/* Scale Indicator 2km (bottom-left) */}
-            <div className="absolute bottom-3 left-3 z-[500] pointer-events-none flex items-center space-x-2 bg-[#0d0f14]/85 backdrop-blur-sm border border-slate-800 rounded px-2.5 py-1 text-slate-300 font-mono text-[10px] shadow">
+            <div className="absolute bottom-3 left-3 z-[400] pointer-events-none flex items-center space-x-2 bg-black/75 border border-neutral-700/80 rounded px-2.5 py-1 text-slate-200 font-mono text-[11px] shadow">
               <span>2 km</span>
               <div className="flex items-center">
-                <span className="h-2 w-0.5 bg-slate-400"></span>
-                <span className="w-10 h-0.5 bg-slate-400"></span>
-                <span className="h-2 w-0.5 bg-slate-400"></span>
+                <span className="h-2 w-[1.5px] bg-slate-300"></span>
+                <span className="w-12 h-[1.5px] bg-slate-300"></span>
+                <span className="h-2 w-[1.5px] bg-slate-300"></span>
               </div>
             </div>
 
             {/* Tactical Legend Box (bottom-right) */}
-            <div className="absolute bottom-3 right-3 z-[500] pointer-events-auto bg-[#0d0f14]/90 backdrop-blur-md border border-slate-800 rounded-lg p-2.5 text-[10px] font-mono space-y-1.5 shadow-xl text-slate-300">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block shadow-sm"></span>
+            <div className="absolute bottom-3 right-3 z-[400] pointer-events-auto bg-[#0a0c12]/90 backdrop-blur-sm border border-[#1e2430] rounded p-2.5 text-[10.5px] font-mono space-y-1.5 shadow-xl text-slate-300">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-600 inline-block shadow-sm"></span>
                 <span>Incident Location</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full border border-red-500 border-dashed inline-block"></span>
+              <div className="flex items-center space-x-2.5">
+                <span className="w-3 h-3 rounded-full border border-red-500 inline-block"></span>
                 <span>Geofence (20km)</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2.5">
                 <span className="w-4 h-0.5 border-t-2 border-amber-400 border-dashed inline-block"></span>
                 <span>Agent Route</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2.5">
                 <span className="w-3.5 h-3.5 rounded-full bg-[#082a27] border border-[#2dd4bf] inline-flex items-center justify-center text-[8px] text-[#2dd4bf]">
                   🚗
                 </span>
                 <span>Mobile Unit</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-amber-400 font-bold text-[9px]">▲</span>
+              <div className="flex items-center space-x-2.5">
+                <span className="text-amber-500 font-black text-xs leading-none">▲</span>
                 <span>BOLO Young</span>
               </div>
             </div>
 
             {/* Tactical GPS Overlays */}
             {gpsLockStatus === "SEARCHING" && (
-              <div className="absolute top-3 left-14 z-[500] pointer-events-auto bg-slate-900/90 border border-amber-500/50 rounded-lg px-3 py-1.5 flex items-center space-x-2 text-xs text-amber-300 shadow-lg">
+              <div className="absolute top-3 left-14 z-[400] pointer-events-auto bg-slate-900/90 border border-amber-500/50 rounded px-3 py-1 flex items-center space-x-2 text-xs text-amber-300 shadow">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
                 <span className="font-mono text-[11px]">Acquiring Device GPS... (Attempt #{queryAttempts})</span>
               </div>
             )}
 
             {showLockSuccessAlert && deviceLocation && (
-              <div className="absolute top-3 left-14 z-[500] pointer-events-auto bg-slate-900/90 border border-emerald-500/50 rounded-lg px-3 py-1.5 flex items-center space-x-2 text-xs text-emerald-300 shadow-lg">
+              <div className="absolute top-3 left-14 z-[400] pointer-events-auto bg-slate-900/90 border border-emerald-500/50 rounded px-3 py-1 flex items-center space-x-2 text-xs text-emerald-300 shadow">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="font-mono text-[11px]">GPS Locked (±{Math.round(deviceLocation.accuracy)}m)</span>
               </div>
@@ -866,19 +870,19 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
           </div>
 
           {/* Audio Dispatch Waveform Bar */}
-          <div className="h-12 bg-[#0c1018] border border-[#1e2433] rounded-lg px-4 flex items-center justify-between text-xs flex-shrink-0 shadow">
+          <div className="h-11 bg-[#0c0e14] border border-[#1e2430] rounded px-3 flex items-center justify-between text-xs flex-shrink-0 shadow">
             {/* Left: Waveform animation + BOLO YOUNG identity */}
             <div className="flex items-center space-x-3">
               <div className="flex items-end space-x-0.5 h-4 w-5">
-                <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-3"></span>
-                <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-4 delay-75"></span>
-                <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-2 delay-150"></span>
-                <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-3.5 delay-100"></span>
+                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-3"></span>
+                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-4 delay-75"></span>
+                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-2 delay-150"></span>
+                <span className="w-1 bg-[#10b981] rounded-full animate-pulse h-3.5 delay-100"></span>
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-white text-xs tracking-wider">BOLO YOUNG</span>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border border-emerald-500/50 bg-emerald-950/70 text-emerald-400">
+                  <span className="font-extrabold text-white text-xs tracking-wider font-mono">BOLO YOUNG</span>
+                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border border-[#10b981] bg-[#06241b] text-[#34d399]">
                     ACTIVE
                   </span>
                 </div>
@@ -889,21 +893,21 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
             </div>
 
             {/* Center: Tactical voice quote */}
-            <div className="hidden md:block text-slate-300 font-mono text-xs italic truncate max-w-md">
+            <div className="hidden md:block text-slate-200 font-mono text-xs truncate max-w-md">
               &quot;Unit 01, confirm visual on suspect. Maintain 2 block perimeter.&quot;
             </div>
 
             {/* Right: Timestamp and speaker icon */}
             <div className="flex items-center space-x-2 text-slate-400 font-mono text-[11px]">
               <span>22:26:41</span>
-              <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+              <Volume2 className="w-3.5 h-3.5 text-[#10b981]" />
             </div>
           </div>
 
           {/* Bottom 3-Card Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-shrink-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 flex-shrink-0">
             {/* Card 1: QUICK ACTIONS */}
-            <div className="bg-[#0c1018] border border-[#1e2433] rounded-lg p-2.5 px-3 flex flex-col justify-between">
+            <div className="bg-[#0c0e14] border border-[#1e2430] rounded p-2.5 px-3 flex flex-col justify-between">
               <div className="flex items-center space-x-1.5 text-amber-500 font-mono text-xs font-bold tracking-wider mb-2">
                 <Zap className="w-3.5 h-3.5" />
                 <span>QUICK ACTIONS</span>
@@ -912,15 +916,15 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                 <button
                   type="button"
                   onClick={() => alert("🚨 PANIC DISPATCH: All available sector units converging on Katlehong hotspot.")}
-                  className="bg-[#7f1d1d] hover:bg-[#991b1b] border border-red-600 text-white font-mono text-[10px] font-bold py-2 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
+                  className="bg-[#7f1d1d] hover:bg-[#991b1b] border border-red-600 text-white font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
-                  <AlertTriangle className="w-3 h-3" />
+                  <AlertCircle className="w-3 h-3 text-red-300" />
                   <span>PANIC</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleConvergeUnits}
-                  className="bg-[#141824] hover:bg-[#1e2436] border border-slate-700 text-slate-200 font-mono text-[10px] font-bold py-2 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
+                  className="bg-[#121622] hover:bg-[#1a2030] border border-[#2a324b] text-slate-200 font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
                   <Car className="w-3 h-3 text-cyan-400" />
                   <span>DISPATCH</span>
@@ -928,7 +932,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                 <button
                   type="button"
                   onClick={onNavigateToBolo}
-                  className="bg-[#141824] hover:bg-[#1e2436] border border-slate-700 text-slate-200 font-mono text-[10px] font-bold py-2 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
+                  className="bg-[#121622] hover:bg-[#1a2030] border border-[#2a324b] text-slate-200 font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
                   <FileText className="w-3 h-3 text-slate-400" />
                   <span>LOG INCIDENT</span>
@@ -939,7 +943,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                     navigator.clipboard?.writeText("-26.315, 28.16 (Katlehong, Gauteng)");
                     alert("Sector Coordinates copied: -26.315, 28.16");
                   }}
-                  className="bg-[#141824] hover:bg-[#1e2436] border border-slate-700 text-slate-200 font-mono text-[10px] font-bold py-2 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
+                  className="bg-[#121622] hover:bg-[#1a2030] border border-[#2a324b] text-slate-200 font-mono text-[10px] font-bold py-1.5 px-1 rounded flex items-center justify-center space-x-1 transition cursor-pointer"
                 >
                   <Share2 className="w-3 h-3 text-slate-400" />
                   <span>SHARE LOCATION</span>
@@ -948,7 +952,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
             </div>
 
             {/* Card 2: SYSTEM METRICS */}
-            <div className="bg-[#0c1018] border border-[#1e2433] rounded-lg p-2.5 px-3 flex flex-col justify-between">
+            <div className="bg-[#0c0e14] border border-[#1e2430] rounded p-2.5 px-3 flex flex-col justify-between">
               <div className="flex items-center space-x-1.5 text-amber-500 font-mono text-xs font-bold tracking-wider mb-2">
                 <BarChart2 className="w-3.5 h-3.5" />
                 <span>SYSTEM METRICS</span>
@@ -958,35 +962,35 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                   <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">ACTIVE AGENTS</div>
                   <div className="text-white font-mono font-bold text-sm mt-0.5">4/6</div>
                 </div>
-                <div>
+                <div className="border-l border-neutral-800 pl-1.5">
                   <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">AVG. RESPONSE</div>
                   <div className="text-white font-mono font-bold text-sm mt-0.5">2.8 min</div>
                 </div>
-                <div>
+                <div className="border-l border-neutral-800 pl-1.5">
                   <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">CITIZEN REPORTS</div>
                   <div className="text-white font-mono font-bold text-sm mt-0.5">12 (24h)</div>
                 </div>
-                <div>
+                <div className="border-l border-neutral-800 pl-1.5">
                   <div className="text-[9px] text-slate-400 uppercase font-mono tracking-wider">UPTIME</div>
                   <div className="text-white font-mono font-bold text-sm mt-0.5">99.9%</div>
                 </div>
               </div>
             </div>
 
-            {/* Card 3: POPIA / PRIVACY */}
-            <div className="bg-[#0c1018] border border-[#1e2433] rounded-lg p-2.5 px-3 flex flex-col justify-between">
+            {/* Card 3: POLPIA / PRIVACY */}
+            <div className="bg-[#0c0e14] border border-[#1e2430] rounded p-2.5 px-3 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-1.5 text-amber-500 font-mono text-xs font-bold tracking-wider">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>POPIA / PRIVACY</span>
+                  <span>POLPIA / PRIVACY</span>
                 </div>
-                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-500/50 bg-emerald-950/70 text-emerald-400 flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border border-[#10b981] bg-[#06241b] text-[#34d399] flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
                   <span>COMPLIANT</span>
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 space-y-0.5">
-                <div className="text-slate-200">Zero-Knowledge Architecture</div>
+              <div className="text-[10px] text-slate-400 space-y-0.5 font-mono">
+                <div className="text-slate-300">Zero-Knowledge Architecture</div>
                 <div>End-to-End Encryption</div>
                 <div>No Personal Data Storage</div>
               </div>
@@ -995,30 +999,30 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
         </div>
 
         {/* Right Column (4 cols): Live Incident Feed + Agent Status */}
-        <div className="lg:col-span-4 flex flex-col gap-3 min-h-0 h-full overflow-hidden">
+        <div className="lg:col-span-4 flex flex-col gap-2.5 min-h-0 h-full overflow-hidden">
           {/* Top Box: LIVE INCIDENT FEED */}
-          <div className="flex-1 min-h-0 bg-[#0c1018] border border-[#1e2433] rounded-lg p-3.5 flex flex-col overflow-hidden shadow">
-            <div className="flex items-center justify-between pb-2.5 border-b border-[#1e2433]">
-              <div className="flex items-center space-x-1.5 font-mono text-xs font-bold tracking-wider text-slate-200">
-                <span className="text-amber-500">&gt;</span>
+          <div className="flex-1 min-h-0 bg-[#0c0e14] border border-[#1e2430] rounded p-3 flex flex-col overflow-hidden shadow">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1e2430]">
+              <div className="flex items-center space-x-1.5 font-mono text-xs font-bold tracking-wider text-white">
+                <span className="text-amber-500 font-bold">&gt;</span>
                 <span>LIVE INCIDENT FEED</span>
               </div>
-              <span className="text-[10px] font-mono text-emerald-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-full flex items-center space-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-[10px] font-mono text-[#34d399] bg-[#0c1318] border border-[#10b981]/50 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
                 <span>AUTO-REFRESH</span>
               </span>
             </div>
 
             <div className="mt-2.5 flex-1 overflow-y-auto space-y-2 pr-1">
-              {/* Dynamic Incoming Alert if triggered from Citizen Mobile App */}
+              {/* Dynamic Alert from mobile if active */}
               {incomingAlerts.map((alert) => (
                 <div
                   key={alert.id}
                   onClick={() => onSelectAlert(alert)}
-                  className="p-2.5 rounded-lg border border-red-500/90 bg-red-950/40 hover:bg-red-950/60 transition cursor-pointer shadow"
+                  className="p-2.5 rounded border border-red-500/90 bg-red-950/40 hover:bg-red-950/60 transition cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="bg-red-600 text-white font-extrabold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">
+                    <span className="bg-[#dc2626] text-white font-mono font-extrabold text-[9px] px-2 py-0.5 rounded-sm uppercase tracking-wider animate-pulse">
                       HIGH
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">{alert.timestamp}</span>
@@ -1030,20 +1034,6 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                     {alert.lat.toFixed(4)}°, {alert.lng.toFixed(4)}° • {alert.speedKmh} km/h
                   </div>
                   <div className="text-[11px] text-slate-300 mt-1 leading-snug">{alert.message}</div>
-                  {onAcknowledgeAlert && (
-                    <div className="mt-2 pt-1 border-t border-red-900/40 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAcknowledgeAlert(alert.id);
-                        }}
-                        className="text-[10px] font-mono text-red-200 bg-red-900/60 hover:bg-red-800 px-2 py-0.5 rounded border border-red-500/40"
-                      >
-                        Acknowledge
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
 
@@ -1054,47 +1044,47 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                     mapInstanceRef.current.flyTo([-26.315, 28.16], 14, { animate: true });
                   }
                 }}
-                className="p-2.5 rounded-lg border border-slate-800/80 bg-[#07090e] hover:border-slate-700 transition cursor-pointer"
+                className="p-2.5 rounded border border-[#1f2430] bg-[#07090e] hover:border-neutral-700 transition cursor-pointer"
               >
                 <div className="flex items-center justify-between">
-                  <span className="bg-red-600 text-white font-extrabold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">
+                  <span className="bg-[#dc2626] text-white font-mono font-extrabold text-[9px] px-2.5 py-0.5 rounded-sm uppercase tracking-wider">
                     HIGH
                   </span>
                   <span className="text-[10px] font-mono text-slate-400">22:23</span>
                 </div>
                 <div className="text-xs font-bold text-white mt-1.5">POSSIBLE GBV - DISTRESS SIGNAL</div>
                 <div className="text-[10px] text-slate-400 font-mono mt-0.5">Katlehong, Gauteng • 4.2 km</div>
-                <div className="text-[11px] text-slate-300 mt-1 leading-snug">
+                <div className="text-[11px] text-slate-400 mt-1 leading-snug">
                   Subject sent SOS via Waypoint. Audio stream active.
                 </div>
               </div>
 
               {/* Mockup Incident 2: MED */}
-              <div className="p-2.5 rounded-lg border border-slate-800/80 bg-[#07090e] hover:border-slate-700 transition cursor-pointer">
+              <div className="p-2.5 rounded border border-[#1f2430] bg-[#07090e] hover:border-neutral-700 transition cursor-pointer">
                 <div className="flex items-center justify-between">
-                  <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">
+                  <span className="bg-[#f59e0b] text-black font-mono font-extrabold text-[9px] px-2.5 py-0.5 rounded-sm uppercase tracking-wider">
                     MED
                   </span>
                   <span className="text-[10px] font-mono text-slate-400">22:17</span>
                 </div>
                 <div className="text-xs font-bold text-white mt-1.5">SUSPICIOUS VEHICLE</div>
                 <div className="text-[10px] text-slate-400 font-mono mt-0.5">Vosloorus, Gauteng • 7.8 km</div>
-                <div className="text-[11px] text-slate-300 mt-1 leading-snug">
+                <div className="text-[11px] text-slate-400 mt-1 leading-snug">
                   Plate: BZ 74 PL GP. Moving north. No units on scene.
                 </div>
               </div>
 
               {/* Mockup Incident 3: LOW */}
-              <div className="p-2.5 rounded-lg border border-slate-800/80 bg-[#07090e] hover:border-slate-700 transition cursor-pointer">
+              <div className="p-2.5 rounded border border-[#1f2430] bg-[#07090e] hover:border-neutral-700 transition cursor-pointer">
                 <div className="flex items-center justify-between">
-                  <span className="bg-emerald-600 text-white font-extrabold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">
+                  <span className="bg-[#10b981] text-black font-mono font-extrabold text-[9px] px-2.5 py-0.5 rounded-sm uppercase tracking-wider">
                     LOW
                   </span>
                   <span className="text-[10px] font-mono text-slate-400">22:03</span>
                 </div>
                 <div className="text-xs font-bold text-white mt-1.5">THEFT IN PROGRESS</div>
                 <div className="text-[10px] text-slate-400 font-mono mt-0.5">Thokoza, Gauteng • 12.1 km</div>
-                <div className="text-[11px] text-slate-300 mt-1 leading-snug">
+                <div className="text-[11px] text-slate-400 mt-1 leading-snug">
                   Citizen report via app. Units dispatched.
                 </div>
               </div>
@@ -1102,13 +1092,20 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
           </div>
 
           {/* Bottom Box: AGENT STATUS */}
-          <div className="h-60 bg-[#0c1018] border border-[#1e2433] rounded-lg p-3.5 flex flex-col flex-shrink-0 overflow-hidden shadow">
-            <div className="flex items-center justify-between pb-2.5 border-b border-[#1e2433]">
-              <div className="flex items-center space-x-2 font-mono text-xs font-bold tracking-wider text-slate-200">
-                <Network className="w-3.5 h-3.5 text-amber-500" />
+          <div className="h-56 bg-[#0c0e14] border border-[#1e2430] rounded p-3 flex flex-col flex-shrink-0 overflow-hidden shadow">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1e2430]">
+              <div className="flex items-center space-x-2 font-mono text-xs font-bold tracking-wider text-white">
+                {/* 3-node connected network icon in amber */}
+                <svg className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="5" r="2.5" />
+                  <circle cx="5" cy="19" r="2.5" />
+                  <circle cx="19" cy="19" r="2.5" />
+                  <line x1="12" y1="7.5" x2="5" y2="16.5" />
+                  <line x1="12" y1="7.5" x2="19" y2="16.5" />
+                </svg>
                 <span>AGENT STATUS</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-300 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-slate-300 bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded">
                 4 ACTIVE
               </span>
             </div>
@@ -1116,22 +1113,22 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
             <div className="mt-2 flex-1 overflow-y-auto">
               <table className="w-full text-left font-mono text-xs">
                 <thead>
-                  <tr className="text-[10px] text-slate-400 border-b border-slate-800/80">
+                  <tr className="text-[10px] text-slate-500 border-b border-neutral-800">
                     <th className="pb-1.5 font-bold">AGENT</th>
                     <th className="pb-1.5 font-bold">STATUS</th>
                     <th className="pb-1.5 font-bold">LOCATION</th>
                     <th className="pb-1.5 font-bold text-right">ETA</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40 text-[11px]">
+                <tbody className="divide-y divide-neutral-800/60 text-[11px]">
                   {/* Row 1: BOLO Young */}
-                  <tr className="hover:bg-slate-900/40">
+                  <tr className="hover:bg-neutral-900/40">
                     <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
-                      <span className="text-amber-400 text-xs">⚠️</span>
+                      <span className="text-amber-500 text-xs font-black">▲</span>
                       <span>BOLO Young</span>
                     </td>
                     <td className="py-2">
-                      <span className="px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-500/60 text-amber-400 text-[9px] font-bold">
+                      <span className="px-2 py-0.5 rounded bg-[#78350f] border border-amber-500/60 text-amber-300 text-[9px] font-bold">
                         EN ROUTE
                       </span>
                     </td>
@@ -1140,13 +1137,13 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                   </tr>
 
                   {/* Row 2: Agent 01 */}
-                  <tr className="hover:bg-slate-900/40">
+                  <tr className="hover:bg-neutral-900/40">
                     <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
                       <span className="text-[#2dd4bf] text-xs">🚗</span>
                       <span>Agent 01</span>
                     </td>
                     <td className="py-2">
-                      <span className="px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/60 text-cyan-400 text-[9px] font-bold">
+                      <span className="px-2 py-0.5 rounded bg-[#083344] border border-cyan-500/60 text-cyan-300 text-[9px] font-bold">
                         ON SITE
                       </span>
                     </td>
@@ -1155,13 +1152,13 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                   </tr>
 
                   {/* Row 3: Agent 02 */}
-                  <tr className="hover:bg-slate-900/40">
+                  <tr className="hover:bg-neutral-900/40">
                     <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
                       <span className="text-[#2dd4bf] text-xs">🚗</span>
                       <span>Agent 02</span>
                     </td>
                     <td className="py-2">
-                      <span className="px-1.5 py-0.5 rounded bg-teal-950/70 border border-teal-500/60 text-teal-300 text-[9px] font-bold">
+                      <span className="px-2 py-0.5 rounded bg-[#042f2e] border border-teal-500/60 text-teal-300 text-[9px] font-bold">
                         PATROLLING
                       </span>
                     </td>
@@ -1170,13 +1167,13 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
                   </tr>
 
                   {/* Row 4: Agent 03 */}
-                  <tr className="hover:bg-slate-900/40">
+                  <tr className="hover:bg-neutral-900/40">
                     <td className="py-2 flex items-center space-x-1.5 text-slate-200 font-medium">
                       <span className="text-[#2dd4bf] text-xs">🚗</span>
                       <span>Agent 03</span>
                     </td>
                     <td className="py-2">
-                      <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-400 text-[9px] font-bold">
+                      <span className="px-2 py-0.5 rounded bg-[#1e293b] border border-slate-600 text-slate-400 text-[9px] font-bold">
                         AVAILABLE
                       </span>
                     </td>
