@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { AuthScreen } from "../components/AuthScreen";
 import { SetupView } from "../components/SetupView";
 import { ActiveJourneyView } from "../components/ActiveJourneyView";
@@ -159,8 +160,38 @@ export default function CitizenMobileApp() {
   }
 
   return (
-    <main className="w-full min-h-screen bg-slate-950 flex justify-center">
-      <div className="w-full max-w-md min-h-screen bg-white relative shadow-2xl overflow-hidden flex flex-col">
+    <main className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-slate-950 select-none">
+      {/* ========================================================= */}
+      {/* LEFT PANEL: [IMAGE] - Clean Desktop Hero                   */}
+      {/* ========================================================= */}
+      <div className="relative w-full lg:w-1/2 min-h-[300px] lg:min-h-screen flex flex-col justify-end p-8 lg:p-14 overflow-hidden">
+        {/* Background Hero Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/Waypoint_login_bg.png"
+            alt="Waypoint Runner Background"
+            fill
+            priority
+            className="object-cover object-center filter brightness-[0.92] contrast-[1.08] scale-[1.02]"
+          />
+          {/* Subtle atmospheric gradients for clean contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/60 lg:bg-gradient-to-r lg:from-transparent lg:via-slate-950/20 lg:to-slate-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-slate-950/80" />
+        </div>
+
+        {/* User requested: Avoid adding unnecessary things to the left panel like pills or text. Just a simple, You can run, as far as you like. */}
+        <div className="relative z-10 max-w-xl mb-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+            You can run,<br />
+            <span className="text-emerald-400 font-extrabold">as far as you like.</span>
+          </h2>
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* RIGHT PANEL: Main Activity (Desktop view no narrow mobile) */}
+      {/* ========================================================= */}
+      <div className="relative w-full lg:w-1/2 min-h-screen bg-[#15202b] flex flex-col justify-between overflow-hidden border-t lg:border-t-0 lg:border-l border-white/10 shadow-2xl">
         {currentView === "SETUP" && (
           <SetupView
             user={user}

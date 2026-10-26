@@ -35,11 +35,11 @@ export const SetupView: React.FC<SetupViewProps> = ({
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-[#15202b] flex flex-col justify-between select-none">
+    <div className="relative w-full min-h-screen bg-[#15202b] flex flex-col justify-between select-none overflow-y-auto">
       {/* Top Header & Start Action Section */}
-      <div className="pt-10 px-6 pb-6 flex flex-col items-center text-center">
+      <div className="pt-10 px-6 sm:px-10 pb-6 flex flex-col items-center text-center max-w-xl mx-auto w-full">
         {/* Brand Header */}
-        <div className="flex items-center space-x-2 mb-8">
+        <div className="flex items-center space-x-2 mb-6">
           <span className="text-2xl font-bold text-white tracking-tight">Waypoint</span>
           <div className="w-6 h-6 rounded-full bg-[#f6ad55] flex items-center justify-center text-slate-900 shadow-sm">
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -49,15 +49,15 @@ export const SetupView: React.FC<SetupViewProps> = ({
         </div>
 
         {/* Heading */}
-        <h2 className="text-3xl font-extrabold text-white leading-tight max-w-[280px] mb-8 font-sans">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight max-w-md mb-6 font-sans">
           Ready to start your journey?
         </h2>
 
-        {/* Big Mint Green Start Button (Exact Match) */}
+        {/* Big Mint Green Start Button */}
         <button
           onClick={handleStart}
           disabled={loading}
-          className="w-full max-w-xs py-4 px-6 rounded-full bg-[#9ee8d1] hover:bg-[#88dcbe] active:scale-[0.98] text-[#13372c] font-bold text-lg shadow-lg transition flex items-center justify-center"
+          className="w-full max-w-sm py-4 px-8 rounded-full bg-[#9ee8d1] hover:bg-[#88dcbe] active:scale-[0.98] text-[#13372c] font-bold text-lg shadow-lg transition flex items-center justify-center cursor-pointer"
         >
           {loading ? "Initializing Dead-Man's Switch..." : "Start Journey"}
         </button>
@@ -66,8 +66,8 @@ export const SetupView: React.FC<SetupViewProps> = ({
         </p>
       </div>
 
-      {/* Bottom Sheet Card (Rounded Top Corners) */}
-      <div className="bg-[#f8fafc] rounded-t-[2.5rem] p-6 shadow-2xl flex flex-col space-y-4">
+      {/* Bottom Sheet Card */}
+      <div className="bg-[#f8fafc] rounded-t-[2.5rem] p-6 sm:p-8 shadow-2xl flex flex-col space-y-4 max-w-2xl mx-auto w-full">
         {/* Destination Search Box */}
         <div className="relative">
           <div className="flex items-center bg-white rounded-2xl px-4 py-3.5 border border-slate-200/80 shadow-sm">

@@ -42,7 +42,7 @@ export const HelpDispatchedView: React.FC<HelpDispatchedViewProps> = ({
 
       {/* Top Banner (Coral/Red Alert Pill) */}
       <div className="relative z-10 pt-10 px-6 flex justify-center">
-        <div className="w-full max-w-sm bg-[#ff7660]/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-xl border border-red-400 flex items-center justify-between text-white animate-pulse">
+        <div className="w-full max-w-lg bg-[#ff7660]/95 backdrop-blur-md px-6 py-3.5 rounded-2xl shadow-xl border border-red-400 flex items-center justify-between text-white animate-pulse">
           <div className="flex flex-col">
             <h3 className="text-sm font-black tracking-wide uppercase">
               HELP IS ON THE WAY
@@ -63,13 +63,13 @@ export const HelpDispatchedView: React.FC<HelpDispatchedViewProps> = ({
       </div>
 
       {/* Mid Status Beacon */}
-      <div className="relative z-10 mx-auto bg-slate-900/80 backdrop-blur-md text-white px-4 py-2 rounded-full border border-red-500/50 shadow-lg flex items-center space-x-2 text-xs">
+      <div className="relative z-10 mx-auto bg-slate-900/80 backdrop-blur-md text-white px-5 py-2 rounded-full border border-red-500/50 shadow-lg flex items-center space-x-2 text-xs">
         <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
         <span className="font-semibold">Fox Tactical Unit 14 Converging</span>
       </div>
 
       {/* Bottom Sheet Card */}
-      <div className="relative z-10 bg-[#fdfbf7] rounded-t-[2.5rem] px-6 pt-5 pb-6 shadow-[0_-10px_30px_rgba(0,0,0,0.2)] flex flex-col space-y-3.5">
+      <div className="relative z-10 bg-[#fdfbf7] rounded-t-[2.5rem] px-6 sm:px-8 pt-5 pb-6 shadow-[0_-10px_30px_rgba(0,0,0,0.2)] flex flex-col space-y-3.5 max-w-2xl mx-auto w-full">
         {/* Coordination Card */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
           <h4 className="text-sm font-bold text-slate-800 mb-3">

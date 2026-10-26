@@ -66,7 +66,7 @@ export const ActiveJourneyView: React.FC<ActiveJourneyViewProps> = ({
 
       {/* Top Banner (Mint Green Pill) */}
       <div className="relative z-10 pt-10 px-6 flex justify-center">
-        <div className="w-full max-w-sm bg-[#bbf0dc]/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-lg border border-[#a2e5cc] flex items-center justify-between">
+        <div className="w-full max-w-lg bg-[#bbf0dc]/95 backdrop-blur-md px-6 py-3.5 rounded-2xl shadow-lg border border-[#a2e5cc] flex items-center justify-between">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-700 animate-pulse" />
@@ -111,7 +111,7 @@ export const ActiveJourneyView: React.FC<ActiveJourneyViewProps> = ({
       </div>
 
       {/* Bottom Sheet Card */}
-      <div className="relative z-10 bg-[#fdfbf7] rounded-t-[2.5rem] px-6 pt-5 pb-6 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] flex flex-col space-y-3">
+      <div className="relative z-10 bg-[#fdfbf7] rounded-t-[2.5rem] px-6 sm:px-8 pt-5 pb-6 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] flex flex-col space-y-3 max-w-2xl mx-auto w-full">
         {/* Share Journey Action */}
         <button
           onClick={() => {
