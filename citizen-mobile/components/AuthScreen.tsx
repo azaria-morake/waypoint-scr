@@ -101,29 +101,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-slate-950/80" />
         </div>
 
-        {/* Top Header Badge */}
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center space-x-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <span className="text-xs font-bold tracking-widest text-emerald-400 uppercase">
-              Waypoint Secure Mesh
-            </span>
-          </div>
 
-          <div className="hidden sm:flex items-center space-x-2 text-xs font-medium text-white/80 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-            <span>Gauteng Corridor Shield</span>
-          </div>
-        </div>
 
         {/* Bottom Hero Narrative & Features (Visible especially on desktop) */}
         <div className="relative z-10 mt-auto pt-10">
           <div className="max-w-xl">
-            <div className="inline-block px-3 py-1 bg-white/15 backdrop-blur-md rounded-lg text-[11px] font-semibold tracking-wider uppercase text-white/90 mb-3 border border-white/10">
-              Anticipatory Transit Protection
-            </div>
+
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
               Run as far as you like.<br />
               <span className="text-emerald-400 font-extrabold">We watch every step.</span>
@@ -132,21 +115,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
               Autonomous multi-agent tactical shield. Live corridor telemetry, Dead-Man's Switch countdowns, and dual-PIN anti-coercion defense.
             </p>
 
-            {/* Feature Pills */}
-            <div className="mt-6 flex flex-wrap gap-2.5">
-              <div className="flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15 text-xs text-white shadow-sm">
-                <span className="text-emerald-400">🛡️</span>
-                <span className="font-medium">Dual-PIN Anti-Coercion</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15 text-xs text-white shadow-sm">
-                <span className="text-blue-400">⏱️</span>
-                <span className="font-medium">Dead-Man's Switch ETA</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15 text-xs text-white shadow-sm">
-                <span className="text-amber-400">🤖</span>
-                <span className="font-medium">BOLO Young AI Co-Pilot</span>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
