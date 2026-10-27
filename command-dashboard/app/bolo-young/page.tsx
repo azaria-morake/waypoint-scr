@@ -19,7 +19,7 @@ export default function BoloYoungPopoutPage() {
   }, []);
 
   return (
-    <main className="w-screen h-screen bg-slate-950 overflow-hidden flex flex-col">
+    <main className="console" style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       <BoloYoungConsole
         currentOrg={currentOrg}
         isPopout={true}

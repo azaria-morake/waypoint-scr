@@ -129,67 +129,72 @@ export const TrafficControlCoPilot: React.FC<TrafficControlCoPilotProps> = ({
   const attireMissing = !extractedAttire && auditData?.appearance_audit?.appearance_gap_detected;
 
   return (
-    <div className="bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden select-none">
+    <section className="panel" style={{ width: "100%", margin: 0 }}>
       {/* Header Bar */}
       <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="p-3.5 px-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition border-b border-slate-800"
+        className="panel-header"
+        style={{ cursor: "pointer", padding: "10px 16px" }}
       >
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-600 flex items-center justify-center text-white shadow">
-            <Bot className="w-4 h-4" />
+        <div className="panel-title">
+          <div
+            style={{
+              width: "28px",
+              height: "28px",
+              border: "1px solid var(--amber)",
+              background: "#18140e",
+              color: "var(--amber)",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <Bot size={16} />
           </div>
 
           <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                <span className="text-amber-400">BOLO Young</span>
-                <span className="text-[10px] text-slate-400 font-mono font-normal">| Traffic Control Co-Pilot</span>
-              </h3>
-              <span
-                className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                  threatLevel === "CRITICAL"
-                    ? "bg-red-950 text-red-300 border-red-500/50 animate-pulse"
-                    : threatLevel === "HIGH"
-                    ? "bg-amber-950 text-amber-300 border-amber-500/40"
-                    : "bg-emerald-950 text-emerald-300 border-emerald-500/30"
-                }`}
-              >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "14px", fontWeight: 700, color: "#fff" }}>
+                BOLO YOUNG
+              </span>
+              <span className={`status-pill ${threatLevel === "CRITICAL" ? "red" : threatLevel === "HIGH" ? "orange" : "green"}`}>
                 {threatLevel}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-mono">
-              Liaising with {currentOrg.officerName} • Corridor Telemetry Guardian
-            </p>
+            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", marginTop: "2px" }}>
+              Liaison: {currentOrg.officerName} • Sector 2 Corridor Co-Pilot
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 text-slate-400">
-          <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center">
-            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--muted)" }}>
+          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
       </div>
 
       {/* Expanded Co-Pilot Panel */}
       {isExpanded && (
-        <div className="p-4 space-y-3.5 bg-slate-950/50">
+        <div style={{ padding: "14px 16px", background: "var(--panel-2)", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #444844" }}>
           {/* Live Audit Checklist Badges */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "8px" }}>
             {/* Kinematics / Stagnation Status */}
             <div
-              className={`p-2 rounded-xl border flex items-center space-x-2 ${
-                isStagnant
-                  ? "bg-red-950/40 border-red-500/50 text-red-300"
-                  : "bg-slate-900 border-slate-800 text-slate-300"
-              }`}
+              style={{
+                border: "1px solid #444844",
+                borderLeft: `3px solid ${isStagnant ? "var(--red)" : "var(--green)"}`,
+                padding: "8px 10px",
+                background: "#101415",
+                fontFamily: "var(--font-ibm-plex-mono), monospace",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
             >
-              <Activity className={`w-3.5 h-3.5 ${isStagnant ? "text-red-400 animate-ping" : "text-emerald-400"}`} />
-              <div className="overflow-hidden">
-                <span className="font-bold block text-[10px]">
+              <Activity size={16} color={isStagnant ? "var(--red)" : "var(--green)"} />
+              <div style={{ overflow: "hidden" }}>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: isStagnant ? "var(--red)" : "var(--green)", display: "block" }}>
                   {isStagnant ? "⚠️ TARGET STAGNANT (>90s)" : "✓ TELEMETRY STREAM NOMINAL"}
                 </span>
-                <span className="text-[10px] text-slate-400 truncate block">
+                <span style={{ fontSize: "9px", color: "var(--muted)", display: "block", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
                   {auditData?.location_audit?.stagnation_summary || "0 km/h baseline"}
                 </span>
               </div>
@@ -197,24 +202,27 @@ export const TrafficControlCoPilot: React.FC<TrafficControlCoPilotProps> = ({
 
             {/* Appearance / Attire Gap Status */}
             <div
-              className={`p-2 rounded-xl border flex items-center space-x-2 ${
-                extractedAttire
-                  ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
-                  : attireMissing
-                  ? "bg-amber-950/40 border-amber-500/50 text-amber-300"
-                  : "bg-slate-900 border-slate-800 text-slate-300"
-              }`}
+              style={{
+                border: "1px solid #444844",
+                borderLeft: `3px solid ${extractedAttire ? "var(--green)" : attireMissing ? "var(--orange)" : "var(--cyan)"}`,
+                padding: "8px 10px",
+                background: "#101415",
+                fontFamily: "var(--font-ibm-plex-mono), monospace",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
             >
-              <Shield className={`w-3.5 h-3.5 ${extractedAttire ? "text-emerald-400" : "text-amber-400"}`} />
-              <div className="overflow-hidden">
-                <span className="font-bold block text-[10px]">
+              <Shield size={16} color={extractedAttire ? "var(--green)" : attireMissing ? "var(--orange)" : "var(--cyan)"} />
+              <div style={{ overflow: "hidden" }}>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: extractedAttire ? "var(--green)" : attireMissing ? "var(--orange)" : "var(--cyan)", display: "block" }}>
                   {extractedAttire
                     ? "✓ VISUAL ATTIRE CONFIRMED"
                     : attireMissing
                     ? "⚠️ VISUAL ATTIRE GAP DETECTED"
                     : "✓ PRE-DEPARTURE PHOTO MATCH"}
                 </span>
-                <span className="text-[10px] text-slate-400 truncate block">
+                <span style={{ fontSize: "9px", color: "var(--muted)", display: "block", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
                   {extractedAttire || "Clothing unverified for today's run"}
                 </span>
               </div>
@@ -222,33 +230,35 @@ export const TrafficControlCoPilot: React.FC<TrafficControlCoPilotProps> = ({
           </div>
 
           {/* Traffic Control Agent Tactical Briefing Box */}
-          <div className="p-3.5 rounded-xl bg-slate-900 border border-indigo-500/30 text-xs text-slate-200 leading-relaxed shadow-inner">
-            <div className="flex items-center space-x-1.5 text-indigo-400 font-bold text-[10px] uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>BOLO Young Tactical Briefing:</span>
+          <div style={{ border: "1px solid #555750", borderLeft: "4px solid var(--amber)", padding: "10px 14px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--amber)", fontSize: "9px", fontWeight: 700, textTransform: "uppercase", marginBottom: "4px" }}>
+              <Sparkles size={13} />
+              <span>BOLO YOUNG TACTICAL BRIEFING:</span>
             </div>
-            <p className="text-slate-300 text-xs font-sans">
+            <p style={{ margin: 0, fontSize: "11px", color: "#eee", lineHeight: 1.5 }}>
               {liaisonBriefing}
             </p>
           </div>
 
           {/* Action Chips: Structured Options for Constable Morake */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
-              Operator Directives (Click to Execute):
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+              OPERATOR DIRECTIVES (CLICK TO EXECUTE):
             </span>
 
-            <div className="flex flex-wrap gap-2">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {actionChips.map((chip, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleActionClick(chip)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer shadow active:scale-95 ${
-                    chip.primary
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-950/50"
-                      : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
-                  }`}
+                  className={`quick ${chip.primary ? "danger" : ""}`}
+                  style={{
+                    fontSize: "10px",
+                    padding: "6px 12px",
+                    borderColor: chip.primary ? "var(--red)" : "var(--orange)",
+                    color: chip.primary ? "var(--red)" : "var(--orange)",
+                  }}
                 >
                   <span>{chip.label}</span>
                 </button>
@@ -259,36 +269,52 @@ export const TrafficControlCoPilot: React.FC<TrafficControlCoPilotProps> = ({
                 <button
                   type="button"
                   onClick={onOpenWhatsAppRecon}
-                  className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white text-xs font-bold transition flex items-center space-x-2 cursor-pointer shadow"
+                  className="quick"
+                  style={{
+                    fontSize: "10px",
+                    padding: "6px 12px",
+                    borderColor: "#078e76",
+                    color: "#20cbb0",
+                  }}
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Launch WhatsApp Recon (Sister Zanele)</span>
+                  <MessageSquare size={13} />
+                  <span>LAUNCH WHATSAPP RECON (SISTER ZANELE)</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Interactive Input Bar for Constable Morake */}
-          <div className="flex items-center space-x-2 pt-1 border-t border-slate-800/80">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "8px", borderTop: "1px solid #3c403d" }}>
             <input
               type="text"
               value={operatorPrompt}
               onChange={(e) => setOperatorPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendPrompt()}
               placeholder="Ask BOLO Young (e.g., 'What is closest unit?', 'Is target moving?')..."
-              className="flex-1 bg-slate-900 text-xs text-white px-3.5 py-2 rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none placeholder-slate-500"
+              style={{
+                flex: 1,
+                background: "#0c1012",
+                border: "1px solid #555750",
+                padding: "8px 12px",
+                fontFamily: "var(--font-ibm-plex-mono), monospace",
+                fontSize: "11px",
+                color: "#fff",
+                outline: "none",
+              }}
             />
             <button
               type="button"
               onClick={() => handleSendPrompt()}
               disabled={!operatorPrompt.trim() || isLiaising}
-              className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition active:scale-95 disabled:opacity-40 cursor-pointer"
+              className="quick"
+              style={{ padding: "8px 14px", borderColor: "var(--orange)", color: "var(--orange)", opacity: (!operatorPrompt.trim() || isLiaising) ? 0.4 : 1 }}
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send size={13} />
             </button>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

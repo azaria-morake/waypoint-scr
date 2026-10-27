@@ -95,259 +95,195 @@ export const B2BOpsView: React.FC<B2BOpsViewProps> = ({ currentOrg, isWsConnecte
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-950 text-slate-100 overflow-y-auto select-none p-6 lg:p-8">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-800 gap-4">
-        <div>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-950/50">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white uppercase tracking-wider">
-                Commercial B2B Operations Runner
-              </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Automated security control room workflows, voice check-ins &amp; metered minutes engine
-              </p>
-            </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "14px", width: "100%", maxWidth: "1280px", margin: "0 auto", padding: "4px" }}>
+      {/* Top Banner Strip */}
+      <section className="panel">
+        <div className="panel-header">
+          <div className="panel-title">
+            <Zap size={18} />
+            <span>COMMERCIAL B2B OPERATIONS RUNNER</span>
           </div>
+          <span className="status-pill green">METERED VOICE AI ACTIVE</span>
         </div>
 
-        {/* Metered Voice Minutes Card */}
-        <div className="flex items-center space-x-4 bg-slate-900 p-3 rounded-2xl border border-slate-800 shadow">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <PhoneCall className="w-5 h-5" />
-          </div>
+        <div style={{ padding: "16px 20px", background: "var(--panel)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
           <div>
-            <div className="flex items-center justify-between text-xs gap-3">
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Metered Voice AI Balance</span>
-              <span className="font-mono font-bold text-white">
-                {voiceMinutesUsed} / {voiceMinutesLimit} min
-              </span>
+            <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>
+              Automated Security Control Room Workflows
             </div>
-            <div className="w-44 bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${usagePercent}%` }}
-              />
+            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>
+              {currentOrg.name}&nbsp;&nbsp;|&nbsp;&nbsp;Tier:&nbsp;<b style={{ color: "var(--amber)" }}>{currentOrg.tier}</b>
             </div>
           </div>
-          <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-2 py-1 rounded-md border border-emerald-500/30">
-            {100 - usagePercent}% REMAINING
-          </span>
-        </div>
-      </div>
 
-      {/* Subscription Tier Banner */}
-      <div className="my-6 p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Building className="w-5 h-5 text-cyan-400" />
-          <div>
-            <div className="text-xs font-bold text-white">
-              {currentOrg.name} • Commercial Terminal Profile
+          <div style={{ display: "flex", gap: "14px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px" }}>
+            <div style={{ borderLeft: "1px solid #444844", paddingLeft: "12px" }}>
+              <span style={{ color: "var(--muted)", display: "block" }}>VOICE QUOTA</span>
+              <b style={{ color: "var(--green)" }}>{voiceMinutesUsed} / {voiceMinutesLimit} MIN</b>
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
-              Subscription Level: <b className="text-cyan-300 font-mono">{currentOrg.tier}</b> • Unlimited Telemetry Vectors • High-Concurrency Voice Dispatch
+            <div style={{ borderLeft: "1px solid #444844", paddingLeft: "12px" }}>
+              <span style={{ color: "var(--muted)", display: "block" }}>REMAINING</span>
+              <b style={{ color: "var(--cyan)" }}>{100 - usagePercent}% BALANCE</b>
             </div>
           </div>
         </div>
+      </section>
 
-        <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-mono">
-          COMMERCIAL LICENSE ACTIVE
-        </span>
-      </div>
-
-      {/* The 3 Interactive Commercial Automation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* 3 Automation Tasks */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "12px" }}>
         {/* Task 1: Perimeter Alarm Verification */}
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between shadow-xl">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <AlertCircle className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                2.0 MIN / RUN
-              </span>
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <AlertCircle size={15} />
+              <span>ALARM VERIFICATION</span>
             </div>
+            <span className="status-pill neutral">2.0 MIN / RUN</span>
+          </div>
 
-            <h3 className="text-sm font-bold text-white">Perimeter Alarm Verification</h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+          <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px", background: "var(--panel-2)" }}>
+            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", lineHeight: 1.5 }}>
               Automated outbound voice callout &amp; property contact on passive infrared beam trip to filter false alarms.
-            </p>
-
-            <div className="mt-4 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px]">
-              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Test Client Stand</span>
-              <span className="font-bold text-white">Stand 104 Meyersdal Eco Estate</span>
-              <span className="text-slate-400 block text-[10px] mt-0.5">Contact: Sipho Mthembu (+27 82 555 0199)</span>
             </div>
+
+            <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px" }}>
+              <span style={{ color: "var(--muted)", display: "block" }}>TEST STAND:</span>
+              <b style={{ color: "#fff" }}>Stand 104 Meyersdal Eco Estate</b>
+              <div style={{ color: "var(--amber)", marginTop: "2px" }}>Sipho Mthembu (+27 82 555 0199)</div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleRunTask("ALARM_VERIFICATION", "Stand 104 Meyersdal Eco Estate")}
+              disabled={loadingTask !== null}
+              className="quick danger"
+              style={{ width: "100%", padding: "10px" }}
+            >
+              {loadingTask === "ALARM_VERIFICATION" ? (
+                <span>EXECUTING AUTOMATED CALL...</span>
+              ) : (
+                <>
+                  <PhoneForwarded size={13} />
+                  <span>TRIGGER VERIFICATION CALL</span>
+                </>
+              )}
+            </button>
+          </div>
+        </section>
+
+        {/* Task 2: High-Value VIP Welfare Check */}
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <UserCheck size={15} />
+              <span>VIP WELFARE CHECK</span>
+            </div>
+            <span className="status-pill neutral">1.5 MIN / RUN</span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleRunTask("ALARM_VERIFICATION", "Stand 104 Meyersdal Eco Estate")}
-            disabled={loadingTask !== null}
-            className="mt-5 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
-          >
-            {loadingTask === "ALARM_VERIFICATION" ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Executing Automated Call...</span>
-              </>
-            ) : (
-              <>
-                <PhoneForwarded className="w-3.5 h-3.5" />
-                <span>Trigger Alarm Verification</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Task 2: VIP Welfare Check */}
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between shadow-xl">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                <UserCheck className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                1.5 MIN / RUN
-              </span>
+          <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px", background: "var(--panel-2)" }}>
+            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", lineHeight: 1.5 }}>
+              Scheduled conversational AI welfare call, dead-man pin challenge &amp; battery integrity check.
             </div>
 
-            <h3 className="text-sm font-bold text-white">VIP Client Welfare Check</h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Scheduled safety welfare call with high-value VIP resident, validating dual-PIN protocol and health check.
-            </p>
-
-            <div className="mt-4 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px]">
-              <span className="text-slate-500 block text-[10px] uppercase font-semibold">VIP Target</span>
-              <span className="font-bold text-white">Mrs. Nomvula Dlamini (Villa 18)</span>
-              <span className="text-slate-400 block text-[10px] mt-0.5">Status: Scheduled Night Check (20:00)</span>
+            <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px" }}>
+              <span style={{ color: "var(--muted)", display: "block" }}>VIP CLIENT:</span>
+              <b style={{ color: "#fff" }}>Stand 42 Bassonia Ridge</b>
+              <div style={{ color: "var(--cyan)", marginTop: "2px" }}>Mrs. Nomvula Dlamini (+27 83 444 0211)</div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => handleRunTask("CLIENT_WELFARE_CHECK", "Stand 42 Bassonia Ridge")}
+              disabled={loadingTask !== null}
+              className="quick"
+              style={{ width: "100%", padding: "10px", borderColor: "var(--cyan)", color: "var(--cyan)" }}
+            >
+              {loadingTask === "CLIENT_WELFARE_CHECK" ? (
+                <span>CHALLENGING BIOMETRICS...</span>
+              ) : (
+                <>
+                  <Volume2 size={13} />
+                  <span>START VIP WELFARE PING</span>
+                </>
+              )}
+            </button>
+          </div>
+        </section>
+
+        {/* Task 3: Guard Post Dead-Man Ping */}
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <Shield size={15} />
+              <span>GUARD POST PING</span>
+            </div>
+            <span className="status-pill neutral">1.0 MIN / RUN</span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleRunTask("CLIENT_WELFARE_CHECK", "Villa 18, Alberton North")}
-            disabled={loadingTask !== null}
-            className="mt-5 w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
-          >
-            {loadingTask === "CLIENT_WELFARE_CHECK" ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Connecting Welfare Bot...</span>
-              </>
-            ) : (
-              <>
-                <PhoneForwarded className="w-3.5 h-3.5" />
-                <span>Execute Welfare Check</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Task 3: Guard Dead-Man Check-In */}
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between shadow-xl">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <Shield className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                0.5 MIN / RUN
-              </span>
+          <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px", background: "var(--panel-2)" }}>
+            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", lineHeight: 1.5 }}>
+              Dead-man signal challenge via encrypted radio repeater &amp; NFC patrol wand confirmation.
             </div>
 
-            <h3 className="text-sm font-bold text-white">Guard Patrol Dead-Man Ping</h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Automated dead-man radio challenge to physical boom gate security posts to verify alertness and post integrity.
-            </p>
-
-            <div className="mt-4 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px]">
-              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Sector Post</span>
-              <span className="font-bold text-white">Post 3: Alberton Sector Boom Gate</span>
-              <span className="text-slate-400 block text-[10px] mt-0.5">Assigned: Officer Khumalo (Fox Patrol)</span>
+            <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px" }}>
+              <span style={{ color: "var(--muted)", display: "block" }}>POST VECTOR:</span>
+              <b style={{ color: "#fff" }}>Post 3 (Meyersdal Main Boom Gate)</b>
+              <div style={{ color: "var(--green)", marginTop: "2px" }}>Officer Khumalo (Guard ID: FOX-GD-31)</div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => handleRunTask("GUARD_POST_CHECK", "Post 3 (Meyersdal Main Boom Gate)")}
+              disabled={loadingTask !== null}
+              className="quick"
+              style={{ width: "100%", padding: "10px", borderColor: "var(--amber)", color: "var(--amber)" }}
+            >
+              {loadingTask === "GUARD_POST_CHECK" ? (
+                <span>INTERROGATING POST...</span>
+              ) : (
+                <>
+                  <Zap size={13} />
+                  <span>SEND DEAD-MAN PING</span>
+                </>
+              )}
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => handleRunTask("GUARD_CHECKIN", "Post 3 Boom Gate")}
-            disabled={loadingTask !== null}
-            className="mt-5 w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 transition active:scale-95 cursor-pointer disabled:opacity-50"
-          >
-            {loadingTask === "GUARD_CHECKIN" ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Pinging Post Guard Radio...</span>
-              </>
-            ) : (
-              <>
-                <Zap className="w-3.5 h-3.5" />
-                <span>Execute Guard Ping</span>
-              </>
-            )}
-          </button>
-        </div>
+        </section>
       </div>
 
-      {/* Live Result Dossier (When a Task is Triggered) */}
+      {/* Task Result / Transcript */}
       {activeTaskResult && (
-        <div className="p-6 rounded-2xl bg-slate-900 border border-cyan-500/40 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 mb-8">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <div className="flex items-center space-x-2.5">
-              <CheckCircle className="w-5 h-5 text-emerald-400" />
-              <div>
-                <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                  Automated Task Execution Report
-                </h3>
-                <span className="text-[11px] text-cyan-400 font-bold">
-                  {activeTaskResult.category} • {activeTaskResult.target}
-                </span>
-              </div>
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <CheckCircle size={16} />
+              <span>RUN EXECUTION RESULT&nbsp;&nbsp;//&nbsp;&nbsp;{activeTaskResult.category}</span>
             </div>
-
-            <div className="flex items-center space-x-3 text-xs font-mono">
-              <span className="text-slate-400">Latency: <b className="text-cyan-300">{activeTaskResult.latencyMs}ms</b></span>
-              <span className="text-emerald-400 font-bold bg-emerald-950/60 px-2.5 py-1 rounded-md border border-emerald-500/40">
-                {activeTaskResult.status}
-              </span>
-            </div>
+            <span className="status-pill green">{activeTaskResult.status}</span>
           </div>
 
-          <div className="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed">
-            <span className="font-bold text-white block uppercase text-[10px] mb-1">Execution Summary:</span>
-            {activeTaskResult.details}
-          </div>
+          <div style={{ padding: "16px", background: "#0e1213", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ border: "1px solid #555750", padding: "10px 14px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "#eee" }}>
+              <b style={{ color: "var(--amber)" }}>TARGET:&nbsp;&nbsp;</b>{activeTaskResult.target}&nbsp;&nbsp;|&nbsp;&nbsp;<b style={{ color: "var(--cyan)" }}>LATENCY:&nbsp;&nbsp;</b>{activeTaskResult.latencyMs}ms
+              <div style={{ color: "var(--muted)", marginTop: "4px" }}>{activeTaskResult.details}</div>
+            </div>
 
-          {/* Transcript Box */}
-          {activeTaskResult.transcript && (
-            <div className="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">
-                Live Voice Synthesis &amp; Audio Telephony Transcript:
-              </span>
-              <div className="space-y-2">
-                {activeTaskResult.transcript.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`p-2.5 rounded-xl text-xs max-w-[85%] ${
-                      msg.speaker.includes("Waypoint")
-                        ? "bg-slate-900 border border-slate-800 text-cyan-200"
-                        : "bg-cyan-950/40 border border-cyan-800/40 text-slate-100 ml-auto text-right"
-                    }`}
-                  >
-                    <div className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">
-                      {msg.speaker}
-                    </div>
-                    <div>{msg.text}</div>
+            {activeTaskResult.transcript && (
+              <div style={{ border: "1px solid #3c403d", padding: "12px", background: "#101415", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", fontWeight: 700, color: "var(--cyan)", textTransform: "uppercase", marginBottom: "4px" }}>
+                  TRANSCRIBED AUDIO LOG:
+                </div>
+                {activeTaskResult.transcript.map((line, idx) => (
+                  <div key={idx} style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "#ddd" }}>
+                    <b style={{ color: line.speaker.includes("AI") ? "var(--amber)" : "#fff" }}>{line.speaker}:&nbsp;</b>
+                    <span>&ldquo;{line.text}&rdquo;</span>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </section>
       )}
     </div>
   );

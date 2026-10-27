@@ -22,160 +22,133 @@ export const BoloInspector: React.FC<BoloInspectorProps> = ({
   const defaultPhoto = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80";
 
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-2xl flex flex-col justify-between select-none">
+    <section className="panel" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
       {/* Header & POPIA Shield Badge */}
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center space-x-2">
+        <div className="panel-header" style={{ padding: "10px 16px" }}>
+          <div className="panel-title">
             {isRedAlert ? (
-              <Unlock className="w-5 h-5 text-amber-400 animate-bounce" />
+              <Unlock size={16} color="var(--amber)" />
             ) : (
-              <Lock className="w-5 h-5 text-emerald-400" />
+              <Lock size={16} color="var(--green)" />
             )}
-            <h3 className="text-sm font-black text-white tracking-wide uppercase">
-              BOLO &amp; POPIA Zero-Knowledge Shield
-            </h3>
+            <span style={{ fontSize: "11px" }}>
+              BOLO &amp; POPIA ZERO-KNOWLEDGE SHIELD
+            </span>
           </div>
 
-          <span
-            className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-              isRedAlert
-                ? "bg-amber-950/80 text-amber-300 border-amber-500/40 animate-pulse"
-                : "bg-emerald-950/80 text-emerald-300 border-emerald-500/30"
-            }`}
-          >
+          <span className={`status-pill ${isRedAlert ? "orange" : "green"}`}>
             {isRedAlert ? "SEC 11(1)(d) UNLOCKED" : "SHIELD ACTIVE"}
           </span>
         </div>
 
         {/* Biometric Card & Decryption Preview */}
-        <div className="mt-4 flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-          {/* Face Photo Container */}
-          <div className="relative w-32 h-36 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex-shrink-0 flex items-center justify-center">
-            {isRedAlert ? (
-              <img
-                src={boloData?.photo_url || defaultPhoto}
-                alt="BOLO Citizen"
-                className="w-full h-full object-cover animate-in fade-in zoom-in-95 duration-300"
-              />
-            ) : (
-              <div className="relative w-full h-full flex flex-col items-center justify-center p-2 text-center bg-slate-950">
-                <div className="filter blur-md opacity-25 w-full h-full absolute inset-0">
-                  <img
-                    src={defaultPhoto}
-                    alt="Encrypted"
-                    className="w-full h-full object-cover"
-                  />
+        <div style={{ padding: "16px", background: "var(--panel-2)", display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+            {/* Face Photo Container */}
+            <div style={{ width: "110px", height: "130px", border: "1px solid #555750", background: "#0c1012", position: "relative", flexShrink: 0, display: "grid", placeItems: "center" }}>
+              {isRedAlert ? (
+                <img
+                  src={boloData?.photo_url || defaultPhoto}
+                  alt="BOLO Citizen"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px", textAlign: "center" }}>
+                  <Lock size={22} color="var(--muted)" />
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", marginTop: "6px" }}>
+                    AES-256-GCM SEALED
+                  </span>
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "7px", color: "#666", marginTop: "2px" }}>
+                    KMS #za-c4-09
+                  </span>
                 </div>
-                <Lock className="w-7 h-7 text-slate-500 relative z-10 mb-1" />
-                <span className="text-[9px] font-mono font-bold text-slate-400 relative z-10 uppercase leading-tight">
-                  AES-256-GCM Encrypted
-                </span>
-                <span className="text-[8px] font-mono text-slate-600 relative z-10 mt-1">
-                  KMS Key: #za-c4-09
-                </span>
-              </div>
-            )}
+              )}
 
-            {isRedAlert && (
-              <div className="absolute top-1 right-1 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
-                BOLO
-              </div>
-            )}
-          </div>
-
-          {/* Citizen Details */}
-          <div className="flex-1 w-full space-y-2 text-xs">
-            <div>
-              <span className="text-[10px] text-slate-500 uppercase font-semibold">
-                Citizen Full Name
-              </span>
-              <p className={`text-base font-black ${isRedAlert ? "text-white" : "font-mono text-slate-400 text-xs"}`}>
-                {isRedAlert ? "Thandiwe Ndlovu" : "[ENCRYPTED - POPIA SHIELD ACTIVE]"}
-              </p>
+              {isRedAlert && (
+                <div style={{ position: "absolute", top: "4px", right: "4px", background: "var(--red)", color: "#fff", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", fontWeight: 900, padding: "2px 4px" }}>
+                  BOLO
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            {/* Citizen Details */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">
-                  Height
+                <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", textTransform: "uppercase" }}>
+                  CITIZEN FULL NAME
                 </span>
-                <p className="font-semibold text-slate-200">
-                  {isRedAlert ? "165 cm" : "[ENCRYPTED]"}
+                <p style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "14px", fontWeight: 700, color: isRedAlert ? "#fff" : "var(--muted)", margin: "2px 0 0" }}>
+                  {isRedAlert ? "Thandiwe Ndlovu" : "[ENCRYPTED - POPIA SHIELD ACTIVE]"}
                 </p>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">
-                  Physical Build
-                </span>
-                <p className="font-semibold text-slate-200">
-                  {isRedAlert ? "Slender Athletic" : "[ENCRYPTED]"}
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                <div style={{ border: "1px solid #3c403d", padding: "6px 8px", background: "#101415" }}>
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)", textTransform: "uppercase" }}>HEIGHT</span>
+                  <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", fontWeight: 700, color: "#eee", margin: "2px 0 0" }}>
+                    {isRedAlert ? "165 cm" : "[ENCRYPTED]"}
+                  </p>
+                </div>
+                <div style={{ border: "1px solid #3c403d", padding: "6px 8px", background: "#101415" }}>
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)", textTransform: "uppercase" }}>PHYSICAL BUILD</span>
+                  <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", fontWeight: 700, color: "#eee", margin: "2px 0 0" }}>
+                    {isRedAlert ? "Slender Athletic" : "[ENCRYPTED]"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Synthesized Live Attire */}
+              <div style={{ border: "1px solid #555750", borderLeft: "3px solid var(--amber)", padding: "6px 8px", background: "#101415" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--amber)", textTransform: "uppercase", fontWeight: 700 }}>
+                    AI-SYNTHESIZED ATTIRE (NOK RECON)
+                  </span>
+                  {isRedAlert && <span className="status-pill green" style={{ padding: "1px 4px", fontSize: "7px" }}>LIVE VERIFIED</span>}
+                </div>
+                <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "#eee", margin: "4px 0 0", lineHeight: 1.4 }}>
+                  {isRedAlert
+                    ? `"${synthesizedAttire}"`
+                    : "[POPIA Shield: Pre-journey outfit blob protected until distress event]"}
                 </p>
               </div>
             </div>
-
-            {/* Synthesized Live Attire (From Agent 3 NOK Recon) */}
-            <div className="pt-1">
-              <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
-                <span>AI-Synthesized Attire (NOK Recon)</span>
-                {isRedAlert && (
-                  <span className="text-emerald-400 text-[9px] font-bold">● LIVE VERIFIED</span>
-                )}
-              </span>
-              <p
-                className={`text-xs mt-0.5 rounded-lg p-2 ${
-                  isRedAlert
-                    ? "bg-amber-950/40 border border-amber-600/30 text-amber-200 font-medium"
-                    : "bg-slate-950 text-slate-500 font-mono text-[11px]"
-                }`}
-              >
-                {isRedAlert
-                  ? `"${synthesizedAttire}"`
-                  : "[POPIA Shield: Pre-journey outfit blob protected until distress event]"}
-              </p>
-            </div>
           </div>
-        </div>
 
-        {/* Emergency Contacts Interrogation Status */}
-        <div className="mt-4 pt-3 border-t border-slate-800/80">
-          <span className="text-[10px] text-slate-500 uppercase font-semibold">
-            Next of Kin Escalation Channels
-          </span>
-          <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs">👩🏽</span>
+          {/* Emergency Contacts Interrogation Status */}
+          <div style={{ borderTop: "1px solid #444844", paddingTop: "10px" }}>
+            <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", textTransform: "uppercase", fontWeight: 700 }}>
+              NEXT OF KIN ESCALATION CHANNELS
+            </span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "6px" }}>
+              <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <p className="font-bold text-slate-200">Zanele (Sister)</p>
-                  <p className="text-[10px] text-slate-500">+27 82 555 0198</p>
+                  <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", fontWeight: 700, color: "#fff", margin: 0 }}>Zanele (Sister)</p>
+                  <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", margin: "2px 0 0" }}>+27 82 555 0198</p>
                 </div>
+                <span className={`status-pill ${isRedAlert ? "green" : "neutral"}`} style={{ fontSize: "8px" }}>
+                  {isRedAlert ? "RECON ACTIVE" : "STANDBY"}
+                </span>
               </div>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isRedAlert ? "bg-emerald-950 text-emerald-400 border border-emerald-500/30" : "text-slate-600"}`}>
-                {isRedAlert ? "AI WhatsApp Reconn" : "STANDBY"}
-              </span>
-            </div>
 
-            <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs">👨🏾</span>
+              <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <p className="font-bold text-slate-200">Lerato (Friend)</p>
-                  <p className="text-[10px] text-slate-500">+27 82 555 0197</p>
+                  <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", fontWeight: 700, color: "#fff", margin: 0 }}>Lerato (Friend)</p>
+                  <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", margin: "2px 0 0" }}>+27 82 555 0197</p>
                 </div>
+                <span className="status-pill neutral" style={{ fontSize: "8px" }}>
+                  {isRedAlert ? "SMS ALERTED" : "STANDBY"}
+                </span>
               </div>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isRedAlert ? "bg-blue-950 text-blue-400 border border-blue-500/30" : "text-slate-600"}`}>
-                {isRedAlert ? "SMS Alerted" : "STANDBY"}
-              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* POPIA Legal Clause Banner */}
-      <div className="mt-4 pt-2.5 border-t border-slate-800/60 text-[10px] text-slate-500 leading-tight">
-        ⚖️ <span className="font-semibold text-slate-400">POPIA Section 11(1)(d):</span> Personal identification and biometric photos are automatically decrypted exclusively to save life during confirmed vital emergencies.
+      <div style={{ padding: "8px 16px", borderTop: "1px solid #444844", background: "var(--panel)", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)" }}>
+        ⚖️ <b style={{ color: "#eee" }}>POPIA Section 11(1)(d):</b> Personal identification and biometric photos are decrypted exclusively to save life during confirmed vital emergencies.
       </div>
-    </div>
+    </section>
   );
 };

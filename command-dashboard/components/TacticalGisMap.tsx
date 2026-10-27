@@ -206,7 +206,7 @@ export const TacticalGisMap: React.FC<TacticalGisMapProps> = ({
     responders.forEach((resp) => {
       const isFox = resp.callsign.toLowerCase().includes("fox");
       const isSaps = resp.callsign.toLowerCase().includes("saps");
-      const bgClass = isFox ? "bg-amber-500 border-amber-300" : isSaps ? "bg-blue-600 border-blue-300" : "bg-emerald-500 border-white";
+      const bgClass = isFox ? "bg-amber-500 border-amber-300" : isSaps ? "bg-cyan-600 border-cyan-300" : "bg-emerald-500 border-white";
 
       const respIcon = L.divIcon({
         html: `<div class="flex items-center justify-center w-6 h-6 ${bgClass} rounded-full border-2 shadow-md text-white text-[10px]">
@@ -219,10 +219,10 @@ export const TacticalGisMap: React.FC<TacticalGisMapProps> = ({
 
       const rMarker = L.marker([resp.lat, resp.lng], { icon: respIcon }).addTo(group);
       rMarker.bindPopup(
-        `<div class="p-1.5 font-sans text-xs">
-           <div class="font-bold text-slate-900">${resp.callsign}</div>
-           <div class="text-slate-600 text-[11px]">Role: ${resp.role}</div>
-           <div class="text-emerald-600 text-[11px] font-semibold">Status: ${resp.status}</div>
+        `<div style="font-family: monospace; font-size: 11px; padding: 4px; color: #181816;">
+           <div style="font-weight: bold; color: #181816;">${resp.callsign}</div>
+           <div style="color: #666; font-size: 10px;">Role: ${resp.role}</div>
+           <div style="color: #2b8a64; font-size: 10px; font-weight: bold;">Status: ${resp.status}</div>
          </div>`
       );
     });
@@ -253,45 +253,97 @@ export const TacticalGisMap: React.FC<TacticalGisMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[520px] bg-[#0b101b] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col select-none">
+    <div className="map" style={{ width: "100%", height: "520px", position: "relative" }}>
       {/* Top Map HUD Overlay */}
-      <div className="absolute top-4 left-4 z-[1000] flex items-center space-x-3 pointer-events-none">
-        <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 shadow-md flex items-center space-x-2.5 text-xs pointer-events-auto">
-          <Crosshair className="w-4 h-4 text-cyan-400" />
-          <span className="font-mono text-cyan-300 font-bold">
-            LAT: {userLat.toFixed(4)}° S | LNG: {userLng.toFixed(4)}° E
-          </span>
+      <div style={{ position: "absolute", top: "14px", left: "14px", zIndex: 1000, display: "flex", gap: "10px", pointerEvents: "none" }}>
+        <div
+          style={{
+            background: "rgba(11, 14, 15, 0.9)",
+            border: "1px solid #555750",
+            padding: "6px 12px",
+            fontFamily: "var(--font-ibm-plex-mono), monospace",
+            fontSize: "10px",
+            color: "var(--cyan)",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            pointerEvents: "auto",
+          }}
+        >
+          <Crosshair size={14} />
+          <b>LAT: {userLat.toFixed(4)}° S | LNG: {userLng.toFixed(4)}° E</b>
         </div>
 
-        <div className="bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 shadow-md flex items-center space-x-2 text-xs pointer-events-auto">
-          <Radio className={`w-3.5 h-3.5 ${isRedAlert ? "text-red-500 animate-ping" : "text-emerald-400"}`} />
-          <span className={`font-semibold ${isRedAlert ? "text-red-400 font-mono font-bold" : "text-emerald-400"}`}>
+        <div
+          style={{
+            background: "rgba(11, 14, 15, 0.9)",
+            border: "1px solid #555750",
+            padding: "6px 12px",
+            fontFamily: "var(--font-ibm-plex-mono), monospace",
+            fontSize: "10px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            pointerEvents: "auto",
+          }}
+        >
+          <Radio size={14} color={isRedAlert ? "var(--red)" : "var(--green)"} />
+          <span className={`status-pill ${isRedAlert ? "red" : "green"}`}>
             {isRedAlert ? "CODE RED INTERCEPT ACTIVE" : "REAL GIS MAP (ALBERTON, GAUTENG)"}
           </span>
         </div>
       </div>
 
+      {/* North Arrow */}
+      <div className="north">
+        <span>N</span>
+        <div />
+      </div>
+
+      {/* Map Scale */}
+      <div className="map-scale">
+        <span>2 km</span>
+        <div />
+      </div>
+
       {/* Real Leaflet Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
+      <div ref={mapContainerRef} style={{ width: "100%", height: "100%", position: "absolute", inset: 0, zIndex: 1 }} />
 
       {/* Bottom Telemetry HUD */}
-      <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-slate-900/90 backdrop-blur-md p-3.5 rounded-xl border border-slate-700/80 shadow-lg flex items-center justify-between text-xs pointer-events-auto">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5 text-slate-300">
-            <Compass className="w-4 h-4 text-cyan-400" />
-            <span>HEADING: <b className="font-mono text-white">{headingDeg}° (SE)</b></span>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "14px",
+          left: "14px",
+          right: "14px",
+          zIndex: 1000,
+          background: "rgba(11, 14, 15, 0.9)",
+          border: "1px solid #555750",
+          padding: "8px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          fontFamily: "var(--font-ibm-plex-mono), monospace",
+          fontSize: "10px",
+          pointerEvents: "auto",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--paper)" }}>
+            <Compass size={14} color="var(--cyan)" />
+            <span>HEADING: <b>{headingDeg}° (SE)</b></span>
           </div>
-          <div className="flex items-center space-x-1.5 text-slate-300">
-            <Car className="w-4 h-4 text-emerald-400" />
-            <span>VELOCITY: <b className="font-mono text-white">{speedKmh} km/h</b></span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--paper)" }}>
+            <Car size={14} color="var(--green)" />
+            <span>VELOCITY: <b>{speedKmh} km/h</b></span>
           </div>
-          <div className="flex items-center space-x-1.5 text-slate-300">
-            <span>NETWORK: <b className="font-mono text-cyan-300">N12 / Voortrekker Corridor</b></span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--muted)" }}>
+            <span>CORRIDOR: <b style={{ color: "var(--amber)" }}>N12 / Voortrekker Road</b></span>
           </div>
         </div>
 
-        <div className="text-[11px] text-slate-400 font-mono">
-          MAP TILES: OpenStreetMap / CartoDB Dark Matter
+        <div style={{ color: "var(--muted)", fontSize: "9px" }}>
+          TILES: CartoDB Dark Matter / OpenStreetMap
         </div>
       </div>
     </div>

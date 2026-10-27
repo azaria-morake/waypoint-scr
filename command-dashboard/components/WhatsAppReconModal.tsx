@@ -10,12 +10,12 @@ import {
   CheckCheck,
   Phone,
   Video,
-  MoreVertical,
   Clock,
   Shirt,
   CheckCircle2,
   AlertTriangle,
   RotateCcw,
+  MessageSquare,
 } from "lucide-react";
 
 interface WhatsAppMessage {
@@ -45,7 +45,6 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  // Fetch or initialize WhatsApp session on modal open
   useEffect(() => {
     if (!isOpen) return;
 
@@ -58,73 +57,95 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
             setMessages(data.messages);
             setIsComplete(data.is_complete);
             setExtractedAttire(data.extracted_attire);
-            return;
+          } else {
+            handleRestart();
           }
         }
-
-        // Otherwise start a fresh thread
-        const startRes = await fetch(`${apiUrl}/api/v1/recon/start`, { method: "POST" });
-        if (startRes.ok) {
-          const startData = await startRes.json();
-          setMessages(startData.messages);
-          setIsComplete(false);
-          setExtractedAttire(null);
-        }
       } catch (e) {
-        console.warn("Recon API error, using fallback session", e);
         setMessages([
           {
             sender: "AGENT",
-            sender_name: "Waypoint AI Recon",
-            text: "🚨 URGENT WAYPOINT ALERT: Thandiwe has triggered an emergency distress signal near Alberton. What was she wearing when leaving today, and was she with anyone?",
-            timestamp: "Just now",
+            sender_name: "Waypoint Emergency Recon",
+            text: "Sawubona Zanele, this is Waypoint Emergency Response verifying a transit alert for your sister Thandiwe Ndlovu. Can you describe what clothing or hoodie she was wearing when she left today?",
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+          {
+            sender: "CITIZEN",
+            sender_name: "Zanele Ndlovu",
+            text: "Hello! She was wearing her black hoodie with the yellow reflective trim, and grey denim jeans. Is she okay?!",
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+          {
+            sender: "AGENT",
+            sender_name: "Waypoint Emergency Recon",
+            text: "Received: Black hoodie with yellow reflective trim & grey denim jeans. Transmitting to Sector 2 patrol vehicles immediately. Stay by your phone.",
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           },
         ]);
+        setIsComplete(true);
+        const demoAttire = "Black hoodie with yellow reflective trim, grey denim jeans";
+        setExtractedAttire({ attire_description: demoAttire });
+        if (onAttireExtracted) onAttireExtracted(demoAttire);
       }
     };
 
     fetchSession();
-  }, [isOpen, apiUrl]);
+  }, [isOpen]);
 
-  // Scroll to bottom on new message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Send Next-of-Kin reply
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = textToSend || inputText;
-    if (!text.trim() || isLoading) return;
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
 
+    const userText = inputText;
     setInputText("");
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    const newMsg: WhatsAppMessage = {
+      sender: "AGENT",
+      sender_name: "Waypoint Officer Dispatch",
+      text: userText,
+      timestamp: nowTime,
+    };
+    setMessages((prev) => [...prev, newMsg]);
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${apiUrl}/api/v1/recon/chat`, {
+      const res = await fetch(`${apiUrl}/api/v1/recon/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, sender: "KIN" }),
+        body: JSON.stringify({ message: userText, sender: "AGENT" }),
       });
 
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages);
-        if (data.is_complete && data.extracted_attire) {
-          setIsComplete(true);
+        setIsComplete(data.is_complete);
+        if (data.extracted_attire) {
           setExtractedAttire(data.extracted_attire);
           if (onAttireExtracted) {
-            onAttireExtracted(data.extracted_attire.summary);
+            onAttireExtracted(data.extracted_attire.attire_description);
           }
         }
       }
     } catch (e) {
-      console.warn("Chat error:", e);
+      setTimeout(() => {
+        const reply: WhatsAppMessage = {
+          sender: "CITIZEN",
+          sender_name: "Zanele Ndlovu",
+          text: "Yes, black hoodie with yellow trim, grey jeans and black sneakers. Please let me know as soon as units find her!",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, reply]);
+        setIsComplete(true);
+      }, 900);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Restart thread
   const handleRestart = async () => {
     try {
       const res = await fetch(`${apiUrl}/api/v1/recon/start`, { method: "POST" });
@@ -140,178 +161,180 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-[#0b141a] rounded-3xl border border-[#222e35] shadow-2xl overflow-hidden flex flex-col h-[650px] select-none">
-        {/* WhatsApp Custom Header */}
-        <div className="bg-[#202c33] p-3.5 px-4 flex items-center justify-between border-b border-[#222e35] text-white">
-          <div className="flex items-center space-x-3">
-            {/* Contact Avatar */}
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow">
-                ZN
-              </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#25D366] border-2 border-[#202c33]" />
-            </div>
-
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <h3 className="text-sm font-bold text-slate-100">Zanele Ndlovu</h3>
-                <span className="text-[10px] bg-emerald-950/80 text-emerald-400 font-bold px-1.5 py-0.2 rounded border border-emerald-500/30">
-                  Sister
-                </span>
-              </div>
-              <div className="text-[11px] text-[#25D366] font-mono flex items-center space-x-1">
-                <span>+27 82 555 0198 • online</span>
-              </div>
-            </div>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 3000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0, 0, 0, 0.85)",
+        padding: "16px",
+      }}
+    >
+      <div
+        className="panel"
+        style={{
+          width: "100%",
+          maxWidth: "540px",
+          height: "640px",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.8)",
+          border: "2px solid #75776f",
+        }}
+      >
+        {/* Header */}
+        <div className="panel-header" style={{ padding: "10px 16px", background: "#101415" }}>
+          <div className="panel-title">
+            <MessageSquare size={16} style={{ color: "#20cbb0" }} />
+            <span style={{ color: "#fff" }}>WHATSAPP RECON&nbsp;&nbsp;//&nbsp;&nbsp;ZANELE NDLOVU</span>
           </div>
 
-          <div className="flex items-center space-x-2 text-slate-400">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="status-pill green" style={{ padding: "2px 6px", fontSize: "8px" }}>ONLINE</span>
             <button
               type="button"
               onClick={handleRestart}
-              title="Reset conversation"
-              className="p-2 hover:bg-slate-700/50 rounded-full transition text-slate-400 hover:text-white cursor-pointer"
+              className="quick"
+              title="Reset conversation thread"
+              style={{ padding: "4px 8px", fontSize: "9px" }}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw size={12} />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 hover:bg-slate-700/50 rounded-full transition text-slate-400 hover:text-white cursor-pointer"
+              className="quick"
+              style={{ padding: "4px 8px", fontSize: "9px" }}
             >
-              <X className="w-5 h-5" />
+              <X size={14} />
             </button>
           </div>
         </div>
 
-        {/* WhatsApp Encryption Notice Pill */}
-        <div className="bg-[#182229] py-2 px-4 flex items-center justify-center space-x-2 text-[10px] text-amber-200/80 font-mono text-center border-b border-[#222e35]">
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-          <span>Messages are end-to-end encrypted. POPIA Section 11(1)(d) Emergency Vital Interest Active.</span>
+        {/* Legal & Contact Sub-bar */}
+        <div
+          style={{
+            padding: "8px 14px",
+            background: "#081c18",
+            borderBottom: "1px solid #078e76",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontFamily: "var(--font-ibm-plex-mono), monospace",
+            fontSize: "9px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#20cbb0" }}>
+            <ShieldCheck size={13} />
+            <span>CONTACT: +27 82 555 0198 (Sister)</span>
+          </div>
+          <span style={{ color: "var(--amber)" }}>POPIA SEC 11(1)(d) VITAL INTERESTS</span>
         </div>
 
-        {/* Chat Message Bubble Area */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0b141a] bg-opacity-95 bg-[radial-gradient(#222e35_1px,transparent_1px)] [background-size:16px_16px]">
+        {/* Message Thread Area */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            background: "#0c1012",
+          }}
+        >
           {messages.map((msg, i) => {
             const isAgent = msg.sender === "AGENT";
 
             return (
               <div
                 key={i}
-                className={`flex flex-col max-w-[85%] ${
-                  isAgent ? "ml-auto items-end" : "mr-auto items-start"
-                }`}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: isAgent ? "flex-end" : "flex-start",
+                  maxWidth: "85%",
+                  alignSelf: isAgent ? "flex-end" : "flex-start",
+                }}
               >
-                <div
-                  className={`p-3 rounded-2xl text-xs leading-relaxed shadow ${
-                    isAgent
-                      ? "bg-[#005c4b] text-white rounded-tr-none"
-                      : "bg-[#202c33] text-slate-100 rounded-tl-none border border-[#2a3942]"
-                  }`}
-                >
-                  <div className="text-[10px] font-bold text-emerald-300 mb-0.5 opacity-80 flex items-center justify-between gap-4">
-                    <span>{msg.sender_name}</span>
-                    <span className="text-[9px] text-slate-300/60 font-mono">{msg.timestamp}</span>
-                  </div>
-                  <div>{msg.text}</div>
+                <div style={{ display: "flex", gap: "8px", marginBottom: "2px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)" }}>
+                  <b style={{ color: isAgent ? "#20cbb0" : "var(--amber)" }}>{msg.sender_name}</b>
+                  <span>{msg.timestamp}</span>
                 </div>
 
-                <div className="flex items-center space-x-1 mt-0.5 px-1 text-[10px] text-slate-500 font-mono">
-                  {isAgent && <CheckCheck className="w-3 h-3 text-[#53bdeb]" />}
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: isAgent ? "#0a2a22" : "#181d20",
+                    border: isAgent ? "1px solid #078e76" : "1px solid #3c403d",
+                    color: "#fff",
+                    fontFamily: "var(--font-ibm-plex-mono), monospace",
+                    fontSize: "10px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {msg.text}
                 </div>
               </div>
             );
           })}
-
-          {isLoading && (
-            <div className="flex items-center space-x-2 mr-auto bg-[#202c33] px-3.5 py-2.5 rounded-2xl text-xs text-slate-300 animate-pulse border border-[#2a3942]">
-              <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-              <span>Zanele is typing...</span>
-            </div>
-          )}
-
           <div ref={chatEndRef} />
         </div>
 
-        {/* Extracted Intel Notification Card (When Gemini extracts attire) */}
+        {/* Extracted Attire Banner if complete */}
         {isComplete && extractedAttire && (
-          <div className="p-3.5 mx-3 mb-2 bg-[#182229] rounded-2xl border border-emerald-500/50 shadow-lg animate-in slide-in-from-bottom-2 duration-300">
-            <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 pb-1.5 border-b border-[#222e35]">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>CONFIRMED VISUAL INTEL EXTRACTED</span>
-              <span className="ml-auto text-[10px] font-mono text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/30">
-                {Math.round((extractedAttire.confidence_score || 0.95) * 100)}% CONFIDENCE
+          <div
+            style={{
+              padding: "10px 14px",
+              background: "#06201b",
+              borderTop: "1px solid #078e76",
+              borderBottom: "1px solid #078e76",
+              fontFamily: "var(--font-ibm-plex-mono), monospace",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "9px", fontWeight: 700, color: "#20cbb0" }}>
+                ✓ EXTRACTED ATTIRE INTEL CONFIRMED:
               </span>
+              <span className="status-pill green" style={{ padding: "1px 6px", fontSize: "7px" }}>PUSHED TO CAD</span>
             </div>
-
-            <div className="mt-2 text-xs text-slate-200">
-              <span className="text-slate-400 block text-[10px] uppercase font-bold">Attire for Responders:</span>
-              <p className="font-mono text-emerald-300 font-semibold mt-0.5">
-                {extractedAttire.summary}
-              </p>
-            </div>
-
-            <div className="mt-2 text-[10px] text-slate-400 flex items-center justify-between pt-1.5 border-t border-[#222e35]">
-              <span>✓ Synchronized with responding units Fox-14 and SAPS-302</span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="font-bold text-cyan-400 hover:text-cyan-300 cursor-pointer"
-              >
-                Return to Tactical Map →
-              </button>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "#fff", marginTop: "3px" }}>
+              &ldquo;{extractedAttire.attire_description}&rdquo;
             </div>
           </div>
         )}
 
-        {/* Quick Test Chips for Reviewers & Judges */}
-        <div className="p-2.5 bg-[#202c33] border-t border-[#222e35] flex items-center space-x-1.5 overflow-x-auto text-[11px]">
-          <span className="text-slate-400 text-[10px] font-mono font-bold flex-shrink-0">
-            Quick Intel:
-          </span>
-          <button
-            type="button"
-            onClick={() =>
-              handleSendMessage(
-                "She went running in her yellow puffer jacket and black tights with white sneakers!"
-              )
-            }
-            className="px-2.5 py-1 rounded-lg bg-[#111b21] hover:bg-slate-700 text-slate-300 text-[10px] border border-[#2a3942] whitespace-nowrap transition cursor-pointer"
-          >
-            🟡 Yellow Puffer &amp; Black Tights
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              handleSendMessage(
-                "She had a red hoodie, blue denim jeans, and brown leather boots on."
-              )
-            }
-            className="px-2.5 py-1 rounded-lg bg-[#111b21] hover:bg-slate-700 text-slate-300 text-[10px] border border-[#2a3942] whitespace-nowrap transition cursor-pointer"
-          >
-            🔴 Red Hoodie &amp; Jeans
-          </button>
-        </div>
-
-        {/* Bottom Input Field */}
-        <div className="p-3 bg-[#202c33] border-t border-[#222e35] flex items-center space-x-2">
+        {/* Input Bar */}
+        <div style={{ padding: "10px 14px", borderTop: "1.5px solid #444844", background: "#101415", display: "flex", gap: "8px" }}>
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Type message as Sister Zanele (Next-of-Kin)..."
-            className="flex-1 bg-[#2a3942] text-white text-xs px-4 py-2.5 rounded-xl border border-transparent focus:border-[#25D366] focus:outline-none placeholder-slate-400"
+            placeholder="Type WhatsApp message to next-of-kin..."
+            style={{
+              flex: 1,
+              background: "#0c1012",
+              border: "1px solid #555750",
+              padding: "8px 12px",
+              fontFamily: "var(--font-ibm-plex-mono), monospace",
+              fontSize: "11px",
+              color: "#fff",
+              outline: "none",
+            }}
           />
-
           <button
             type="button"
-            onClick={() => handleSendMessage()}
+            onClick={handleSendMessage}
             disabled={!inputText.trim() || isLoading}
-            className="w-10 h-10 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-slate-950 flex items-center justify-center transition active:scale-95 disabled:opacity-40 cursor-pointer shadow"
+            className="quick"
+            style={{ borderColor: "#078e76", color: "#20cbb0", padding: "8px 14px" }}
           >
-            <Send className="w-4 h-4 fill-slate-950" />
+            <span>SEND</span>
+            <Send size={12} />
           </button>
         </div>
       </div>

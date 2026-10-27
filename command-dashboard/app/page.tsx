@@ -685,68 +685,88 @@ export default function CommandDashboardPage() {
       {/* Global Floating Toast Banner (Visible on all dashboard screens) */}
       {activeToast && (
         <div className="fixed top-5 right-6 z-[9999] max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-auto">
-          <div
-            className={`p-4 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-start space-x-3.5 ${
-              activeToast.type === "CRITICAL"
-                ? "bg-red-950/95 border-red-500 text-white shadow-red-950/60 ring-2 ring-red-500/30"
-                : "bg-slate-900/95 border-emerald-500/80 text-white shadow-emerald-950/40 ring-2 ring-emerald-500/20"
-            }`}
+          <section
+            className="panel"
+            style={{
+              borderColor: activeToast.type === "CRITICAL" ? "var(--red)" : "var(--orange)",
+              borderWidth: "2px",
+              boxShadow: activeToast.type === "CRITICAL" ? "0 0 20px rgba(217,56,30,0.35)" : "0 0 20px rgba(230,104,27,0.25)",
+            }}
           >
             <div
-              className={`p-2.5 rounded-xl flex-shrink-0 ${
-                activeToast.type === "CRITICAL"
-                  ? "bg-red-600 text-white animate-pulse"
-                  : "bg-emerald-500 text-slate-950 shadow-md"
-              }`}
+              className="panel-header"
+              style={{
+                background: activeToast.type === "CRITICAL" ? "#2a0d09" : "#1f150a",
+                borderBottomColor: activeToast.type === "CRITICAL" ? "var(--red)" : "var(--orange)",
+              }}
             >
-              {activeToast.type === "CRITICAL" ? (
-                <ShieldAlert className="w-5 h-5" />
-              ) : (
-                <Bot className="w-5 h-5 text-slate-950" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black uppercase tracking-wider">
+              <div className="panel-title">
+                {activeToast.type === "CRITICAL" ? (
+                  <ShieldAlert size={16} color="var(--red)" />
+                ) : (
+                  <Bot size={16} color="var(--orange)" />
+                )}
+                <span style={{ fontSize: "11px", letterSpacing: "0.08em" }}>
                   {activeToast.title}
-                </h4>
-                <button
-                  type="button"
-                  onClick={() => setActiveToast(null)}
-                  className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                </span>
               </div>
-              <p className="text-xs text-slate-200 mt-1 leading-snug">
+              <button
+                type="button"
+                onClick={() => setActiveToast(null)}
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  color: "var(--muted)",
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  padding: "4px",
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div style={{ padding: "14px 16px", background: "var(--panel-2)" }}>
+              <p style={{
+                fontFamily: "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace",
+                fontSize: "11px",
+                lineHeight: 1.6,
+                color: "#e8e5dc",
+                margin: 0,
+              }}>
                 {activeToast.message}
               </p>
-              <div className="mt-3 flex items-center space-x-2">
+
+              <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab("BOLO_YOUNG");
                     setActiveToast(null);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow cursor-pointer ${
-                    activeToast.type === "CRITICAL"
-                      ? "bg-red-600 hover:bg-red-500 text-white"
-                      : "bg-emerald-400 hover:bg-emerald-300 text-slate-950"
-                  }`}
+                  className={`quick ${activeToast.type === "CRITICAL" ? "danger" : ""}`}
+                  style={{
+                    fontSize: "10px",
+                    padding: "6px 14px",
+                    borderColor: activeToast.type === "CRITICAL" ? "var(--red)" : "var(--orange)",
+                    color: activeToast.type === "CRITICAL" ? "var(--red)" : "var(--orange)",
+                  }}
                 >
-                  <span>Engage BOLO Young</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>ENGAGE BOLO YOUNG</span>
+                  <ArrowRight size={13} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveToast(null)}
-                  className="px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white transition cursor-pointer"
+                  className="quick"
+                  style={{ fontSize: "10px", padding: "6px 12px", borderColor: "#555750", color: "var(--muted)" }}
                 >
-                  Dismiss
+                  DISMISS
                 </button>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>

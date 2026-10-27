@@ -43,17 +43,38 @@ export const NotificationTray: React.FC<NotificationTrayProps> = ({
   const unreadCount = notifications.length;
 
   return (
-    <div className="relative">
+    <div style={{ position: "relative" }}>
       {/* Bell Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white shadow-md pointer-events-auto transition cursor-pointer flex items-center justify-center"
+        className="quick"
+        style={{
+          padding: "6px 10px",
+          position: "relative",
+          borderColor: unreadCount > 0 ? "var(--red)" : "#555750",
+          color: unreadCount > 0 ? "var(--red)" : "#181816",
+        }}
         title="BOLO Young Notification Tray"
       >
-        <Bell className="w-4 h-4 text-amber-400" />
+        <Bell size={14} style={{ color: unreadCount > 0 ? "var(--red)" : "#181816" }} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 text-white font-black text-[10px] flex items-center justify-center shadow-lg border border-slate-900 animate-pulse">
+          <span
+            style={{
+              position: "absolute",
+              top: "-5px",
+              right: "-5px",
+              width: "16px",
+              height: "16px",
+              background: "var(--red)",
+              color: "#fff",
+              borderRadius: "50%",
+              fontSize: "8px",
+              fontWeight: 900,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
             {unreadCount}
           </span>
         )}
@@ -61,125 +82,99 @@ export const NotificationTray: React.FC<NotificationTrayProps> = ({
 
       {/* Floating Notification Tray Drawer */}
       {isOpen && (
-        <div className="fixed left-72 top-3.5 w-80 sm:w-96 bg-slate-900/98 backdrop-blur-xl rounded-2xl border border-slate-700 shadow-2xl z-[9999] p-4 text-slate-100 animate-in fade-in slide-in-from-left-2 duration-200">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <div className="flex items-center space-x-2">
-              <Bot className="w-4 h-4 text-amber-400" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-white">
-                BOLO Young Notifications
-              </h4>
+        <div
+          className="panel"
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "42px",
+            width: "360px",
+            maxHeight: "480px",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: 9999,
+            border: "1.5px solid #75776f",
+            background: "#0c1012",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.8)",
+          }}
+        >
+          <div className="panel-header" style={{ padding: "8px 12px" }}>
+            <div className="panel-title">
+              <Bell size={13} style={{ color: "var(--amber)" }} />
+              <span style={{ fontSize: "10px" }}>TACTICAL NOTIFICATIONS</span>
             </div>
-            <div className="flex items-center space-x-2">
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               {unreadCount > 0 && (
                 <button
                   type="button"
                   onClick={onClearAll}
-                  className="text-[10px] text-slate-400 hover:text-slate-200 font-mono"
+                  style={{ background: "transparent", border: 0, color: "var(--muted)", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", cursor: "pointer" }}
                 >
-                  Clear all
+                  CLEAR ALL
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
+                style={{ background: "transparent", border: 0, color: "var(--muted)", cursor: "pointer" }}
               >
-                <X className="w-3.5 h-3.5" />
+                <X size={13} />
               </button>
             </div>
           </div>
 
-          <div className="mt-3 max-h-80 overflow-y-auto space-y-2.5 pr-1">
+          <div style={{ flex: 1, overflowY: "auto", padding: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
             {notifications.length === 0 ? (
-              <div className="text-center py-6 text-slate-400 text-xs">
-                <Sparkles className="w-5 h-5 text-slate-600 mx-auto mb-1.5" />
-                <p>Notification tray is quiet.</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">BOLO Young will alert you on anomalies.</p>
+              <div style={{ padding: "24px", textAlign: "center", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)" }}>
+                No active tactical dispatches. Sector is quiet.
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`p-3 rounded-xl border text-xs transition relative ${
-                    n.type === "CRITICAL"
-                      ? "bg-red-950/30 border-red-500/40 text-red-200"
-                      : n.type === "SUCCESS"
-                      ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-200"
-                      : "bg-slate-950 border-slate-800 text-slate-200"
-                  }`}
+                  style={{
+                    border: "1px solid #3c403d",
+                    borderLeft: `3px solid ${n.type === "CRITICAL" ? "var(--red)" : n.type === "SUCCESS" ? "var(--green)" : "var(--cyan)"}`,
+                    padding: "8px 10px",
+                    background: "#101415",
+                    fontFamily: "var(--font-ibm-plex-mono), monospace",
+                  }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[11px] flex items-center space-x-1.5">
-                      {n.type === "CRITICAL" ? (
-                        <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-                      ) : n.type === "SUCCESS" ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      ) : (
-                        <Bot className="w-3.5 h-3.5 text-cyan-400" />
-                      )}
-                      <span>{n.title}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span className={`status-pill ${n.type === "CRITICAL" ? "red" : n.type === "SUCCESS" ? "green" : "blue"}`} style={{ padding: "1px 5px", fontSize: "7px" }}>
+                      {n.type}
                     </span>
-                    <span className="text-[9px] font-mono text-slate-400">{n.timestamp}</span>
+                    <span style={{ fontSize: "7px", color: "var(--muted)" }}>{n.timestamp}</span>
                   </div>
 
-                  <p className="text-[11px] text-slate-300 mt-1 leading-snug">{n.message}</p>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#fff", marginTop: "4px" }}>
+                    {n.title}
+                  </div>
+                  <p style={{ margin: "2px 0 6px", fontSize: "9px", color: "var(--muted)", lineHeight: 1.4 }}>
+                    {n.message}
+                  </p>
 
-                  <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                    <span className="text-[9px] font-mono text-slate-500">{n.source}</span>
-                    <div className="flex items-center space-x-2">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px", borderTop: "1px solid #282c2a" }}>
+                    <span style={{ fontSize: "8px", color: "var(--muted)" }}>{n.source}</span>
+                    {n.actionType === "OPEN_BOLO" && (
                       <button
                         type="button"
                         onClick={() => {
+                          onOpenBoloYoung();
                           setIsOpen(false);
-                          if (n.actionType === "OPEN_WHATSAPP" && onOpenWhatsApp) {
-                            onOpenWhatsApp();
-                          } else {
-                            onOpenBoloYoung();
-                          }
                         }}
-                        className="text-[10px] font-bold text-amber-400 hover:text-amber-300 flex items-center space-x-1"
+                        className="quick"
+                        style={{ padding: "2px 6px", fontSize: "8px" }}
                       >
-                        <span>View Console</span>
-                        <ArrowRight className="w-3 h-3" />
+                        <span>VIEW DISPATCH</span>
+                        <ArrowRight size={10} />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onClearNotification(n.id)}
-                        className="text-[9px] text-slate-400 hover:text-slate-200"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
+                    )}
                   </div>
                 </div>
               ))
             )}
-          </div>
-
-          {/* Quick Actions Footer */}
-          <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px]">
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                onOpenBoloYoung();
-              }}
-              className="text-amber-400 font-bold hover:underline flex items-center space-x-1"
-            >
-              <Bot className="w-3.5 h-3.5" />
-              <span>Full BOLO Console</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                window.open("/bolo-young", "BoloYoungC4iConsole", "width=1280,height=820");
-              }}
-              className="text-cyan-400 font-bold hover:underline flex items-center space-x-1"
-            >
-              <ExternalLink className="w-3 h-3" />
-              <span>Popout Window</span>
-            </button>
           </div>
         </div>
       )}

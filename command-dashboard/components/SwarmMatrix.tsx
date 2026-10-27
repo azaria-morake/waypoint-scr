@@ -53,8 +53,8 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
       icon: Radio,
       status: isRedAlert ? "COMPLETED" : "IDLE",
       latency: isRedAlert ? "240ms" : "—",
-      color: "border-blue-500/40 text-blue-400 bg-blue-950/20",
-      pillColor: "bg-blue-950 text-blue-300 border-blue-500/40",
+      color: "var(--cyan)",
+      pillColor: "status-pill blue",
       summary: isRedAlert
         ? "5km spatial geofence searched. 2 armed response units alerted in Alberton sector."
         : "Jurisdiction geofence active across 5km Alberton North zone...",
@@ -114,28 +114,26 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
   ];
 
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-2xl flex flex-col select-none">
+    <section className="panel" style={{ width: "100%" }}>
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-800 gap-2">
-        <div className="flex items-center space-x-2">
-          <Cpu className="w-5 h-5 text-cyan-400" />
-          <h3 className="text-sm font-black text-white tracking-wide uppercase">
-            The Way Swarm • Parallel Multi-Agent Matrix
-          </h3>
+      <div className="panel-header" style={{ padding: "10px 16px" }}>
+        <div className="panel-title">
+          <Cpu size={16} color="var(--cyan)" />
+          <span style={{ fontSize: "11px" }}>
+            THE WAY SWARM&nbsp;&nbsp;//&nbsp;&nbsp;PARALLEL MULTI-AGENT MATRIX
+          </span>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs">
-          <span className="text-slate-400 font-mono">
-            {isRedAlert ? "⚡ 4 Agents Live Escalation" : "Swarm Standby (Ready)"}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span className={`status-pill ${isRedAlert ? "orange" : "neutral"}`}>
+            {isRedAlert ? "4 AGENTS ACTIVE" : "STANDBY"}
           </span>
-          <span className="font-bold px-2 py-0.5 rounded text-[10px] border bg-emerald-950 text-emerald-300 border-emerald-500/30">
-            AOTY JUDGE ACCESS: ALL 4 AGENTS UNLOCKED
-          </span>
+          <span className="status-pill green">ALL AGENTS UNLOCKED</span>
         </div>
       </div>
 
       {/* 4 Parallel Agent Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-4">
+      <div style={{ padding: "16px", background: "var(--panel-2)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "12px" }}>
         {agents.map((agent) => {
           const Icon = agent.icon;
           const isExpanded = expandedAgent === agent.id;
@@ -143,54 +141,64 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
           return (
             <div
               key={agent.id}
-              className={`rounded-xl border p-3.5 transition-all ${agent.color} ${
-                isExpanded ? "ring-1 ring-cyan-500/30 shadow-lg" : ""
-              }`}
+              style={{
+                border: "1px solid #444844",
+                borderLeft: `3px solid ${isExpanded ? "var(--amber)" : "#555750"}`,
+                padding: "14px",
+                background: "#101415",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center space-x-2">
-                  <Icon className="w-4 h-4" />
-                  <h4 className="text-xs font-bold text-white">{agent.name}</h4>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Icon size={15} color="var(--amber)" />
+                  <h4 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "12px", fontWeight: 700, color: "#fff", margin: 0 }}>
+                    {agent.name}
+                  </h4>
                 </div>
-                <div className="flex items-center space-x-1.5">
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${agent.pillColor}`}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span className={`status-pill ${agent.status.includes("ACTIVE") || agent.status.includes("COMPLETED") ? "green" : "neutral"}`} style={{ fontSize: "7px" }}>
                     {agent.status}
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)" }}>
                     {agent.latency}
                   </span>
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-300 leading-snug">
+              <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
                 {agent.summary}
               </p>
 
               {/* Expand/Collapse details button */}
               {isRedAlert && !agent.status.includes("RESTRICTED") && (
-                <div className="mt-2 pt-2 border-t border-slate-800/80">
+                <div style={{ borderTop: "1px solid #282c2a", paddingTop: "8px", marginTop: "4px" }}>
                   <button
+                    type="button"
                     onClick={() => setExpandedAgent(isExpanded ? null : agent.id)}
-                    className="text-[10px] font-bold text-slate-400 hover:text-white flex items-center space-x-1 transition"
+                    className="quick"
+                    style={{ width: "100%", padding: "6px", fontSize: "9px" }}
                   >
-                    <span>{isExpanded ? "Hide Execution Payload" : "View Agent Output & Transcript"}</span>
-                    {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    <span>{isExpanded ? "HIDE EXECUTION PAYLOAD" : "VIEW AGENT OUTPUT & TRANSCRIPT"}</span>
+                    {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800/80 text-[11px] font-mono space-y-1.5 animate-in fade-in duration-150">
+                    <div style={{ marginTop: "8px", padding: "10px", background: "#0c1012", border: "1px solid #3c403d", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px" }}>
                       {Object.entries(agent.details).map(([key, val]) => {
                         if (key === "transcript" && Array.isArray(val)) {
                           return (
-                            <div key={key} className="pt-1">
-                              <span className="text-amber-400 font-bold block mb-1">
-                                [Live WhatsApp Recon Transcript]:
+                            <div key={key} style={{ marginTop: "6px" }}>
+                              <span style={{ color: "var(--amber)", fontWeight: 700, fontSize: "9px", display: "block", marginBottom: "4px" }}>
+                                [LIVE WHATSAPP RECON TRANSCRIPT]:
                               </span>
-                              <div className="space-y-1 bg-slate-900 p-2 rounded border border-slate-800">
+                              <div style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#06201b", border: "1px solid #078e76", padding: "8px" }}>
                                 {val.map((msg, idx) => (
-                                  <div key={idx} className="text-[10px]">
-                                    <span className="font-bold text-cyan-300">{msg.sender}: </span>
-                                    <span className="text-slate-300">{msg.text}</span>
+                                  <div key={idx} style={{ fontSize: "9px", color: "#eee" }}>
+                                    <b style={{ color: "var(--cyan)" }}>{msg.sender}:&nbsp;</b>
+                                    <span>{msg.text}</span>
                                   </div>
                                 ))}
                               </div>
@@ -199,16 +207,16 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
                         }
                         if (Array.isArray(val)) {
                           return (
-                            <div key={key}>
-                              <span className="text-slate-500 uppercase">{key}: </span>
-                              <span className="text-slate-300">{val.join(", ")}</span>
+                            <div key={key} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #222", padding: "2px 0" }}>
+                              <span style={{ color: "var(--muted)" }}>{key}:</span>
+                              <span style={{ color: "#fff" }}>{val.join(", ")}</span>
                             </div>
                           );
                         }
                         return (
-                          <div key={key}>
-                            <span className="text-slate-500 uppercase">{key}: </span>
-                            <span className="text-slate-200">{String(val)}</span>
+                          <div key={key} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #222", padding: "2px 0" }}>
+                            <span style={{ color: "var(--muted)" }}>{key}:</span>
+                            <span style={{ color: "#fff" }}>{String(val)}</span>
                           </div>
                         );
                       })}
@@ -220,6 +228,6 @@ export const SwarmMatrix: React.FC<SwarmMatrixProps> = ({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };

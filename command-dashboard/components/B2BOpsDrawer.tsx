@@ -42,132 +42,132 @@ export const B2BOpsDrawer: React.FC<B2BOpsDrawerProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-2xl flex flex-col select-none">
+    <section className="panel" style={{ width: "100%" }}>
       {/* Top Header & Tabs */}
-      <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-800 gap-3">
-        <div className="flex items-center space-x-2">
+      <div className="panel-header" style={{ padding: "10px 16px", flexWrap: "wrap", height: "auto", minHeight: "58px", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
+            type="button"
             onClick={() => setActiveTab("B2B_RUNNER")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-2 ${
-              activeTab === "B2B_RUNNER"
-                ? "bg-slate-800 text-white border border-slate-700"
-                : "text-slate-400 hover:text-white"
-            }`}
+            className="quick"
+            style={{
+              padding: "6px 12px",
+              fontSize: "10px",
+              borderColor: activeTab === "B2B_RUNNER" ? "var(--amber)" : "#555750",
+              color: activeTab === "B2B_RUNNER" ? "var(--amber)" : "var(--muted)",
+            }}
           >
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            <span>Commercial B2B Operations Runner</span>
+            <Zap size={13} />
+            <span>COMMERCIAL B2B RUNNER</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("POPIA_LEDGER")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-2 ${
-              activeTab === "POPIA_LEDGER"
-                ? "bg-slate-800 text-white border border-slate-700"
-                : "text-slate-400 hover:text-white"
-            }`}
+            className="quick"
+            style={{
+              padding: "6px 12px",
+              fontSize: "10px",
+              borderColor: activeTab === "POPIA_LEDGER" ? "var(--cyan)" : "#555750",
+              color: activeTab === "POPIA_LEDGER" ? "var(--cyan)" : "var(--muted)",
+            }}
           >
-            <FileText className="w-3.5 h-3.5 text-cyan-400" />
-            <span>POPIA Cryptographic Audit Ledger</span>
+            <FileText size={13} />
+            <span>POPIA CRYPTOGRAPHIC AUDIT LEDGER</span>
           </button>
         </div>
 
         {/* Metered Voice Minutes Indicator */}
-        <div className="flex items-center space-x-3 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-          <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
-          <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400 font-medium">Metered Voice AI Billing</span>
-            <span className="font-mono font-bold text-slate-200">
-              {voiceMinutesUsed} / {voiceMinutesLimit} min ({usagePercent}%)
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", border: "1px solid #3c403d", padding: "6px 12px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace" }}>
+          <PhoneCall size={14} color="var(--green)" />
+          <div>
+            <span style={{ fontSize: "8px", color: "var(--muted)", display: "block" }}>VOICE AI BILLING</span>
+            <span style={{ fontSize: "10px", fontWeight: 700, color: "#eee" }}>
+              {voiceMinutesUsed} / {voiceMinutesLimit} MIN ({usagePercent}%)
             </span>
-          </div>
-          <div className="w-16 bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
-              style={{ width: `${usagePercent}%` }}
-            />
           </div>
         </div>
       </div>
 
       {/* Tab 1: Commercial B2B Runner */}
       {activeTab === "B2B_RUNNER" && (
-        <div className="mt-4 flex flex-col space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div style={{ padding: "16px", background: "var(--panel-2)", display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
             {/* Task 1: Alarm Verification */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div style={{ border: "1px solid #3c403d", padding: "14px", background: "#101415", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold text-white">Alarm Verification</h4>
-                  <span className="text-[9px] font-bold bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-600/30">
-                    +2.0 min
-                  </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h4 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "12px", fontWeight: 700, color: "#fff", margin: 0 }}>Alarm Verification</h4>
+                  <span className="status-pill orange">+2.0 MIN</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
+                <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", lineHeight: 1.5, margin: 0 }}>
                   Automated audio check &amp; property contact call on perimeter alarm trip.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => handleRun("ALARM_VERIFICATION", "42 Voortrekker Road, Alberton")}
                 disabled={loadingTask !== null}
-                className="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-xs font-bold text-slate-200 rounded-lg transition"
+                className="quick danger"
+                style={{ marginTop: "12px", width: "100%", padding: "8px", fontSize: "10px" }}
               >
-                {loadingTask === "ALARM_VERIFICATION" ? "Executing Call..." : "Execute Verification"}
+                {loadingTask === "ALARM_VERIFICATION" ? "EXECUTING CALL..." : "EXECUTE VERIFICATION"}
               </button>
             </div>
 
             {/* Task 2: Client Welfare Check */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div style={{ border: "1px solid #3c403d", padding: "14px", background: "#101415", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold text-white">Client Welfare Check</h4>
-                  <span className="text-[9px] font-bold bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-600/30">
-                    +2.0 min
-                  </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h4 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "12px", fontWeight: 700, color: "#fff", margin: 0 }}>Client Welfare Check</h4>
+                  <span className="status-pill orange">+2.0 MIN</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
+                <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", lineHeight: 1.5, margin: 0 }}>
                   Scheduled safety check-in call with high-value VIP residential client.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => handleRun("CLIENT_WELFARE_CHECK", "Client: Sipho Mthembu (Stand 104)")}
                 disabled={loadingTask !== null}
-                className="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-xs font-bold text-slate-200 rounded-lg transition"
+                className="quick"
+                style={{ marginTop: "12px", width: "100%", padding: "8px", fontSize: "10px", borderColor: "var(--cyan)", color: "var(--cyan)" }}
               >
-                {loadingTask === "CLIENT_WELFARE_CHECK" ? "Checking Welfare..." : "Execute Welfare Check"}
+                {loadingTask === "CLIENT_WELFARE_CHECK" ? "CHECKING WELFARE..." : "EXECUTE WELFARE CHECK"}
               </button>
             </div>
 
             {/* Task 3: Guard Check-In */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div style={{ border: "1px solid #3c403d", padding: "14px", background: "#101415", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold text-white">Guard Patrol Check-In</h4>
-                  <span className="text-[9px] font-bold bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-600/30">
-                    +1.0 min
-                  </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h4 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "12px", fontWeight: 700, color: "#fff", margin: 0 }}>Guard Patrol Check-In</h4>
+                  <span className="status-pill orange">+1.0 MIN</span>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
+                <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", lineHeight: 1.5, margin: 0 }}>
                   Heartbeat patrol verification on stationary guard posts and boom gates.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => handleRun("GUARD_CHECKIN", "Post 3: Alberton Sector Boom Gate")}
                 disabled={loadingTask !== null}
-                className="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-xs font-bold text-slate-200 rounded-lg transition"
+                className="quick"
+                style={{ marginTop: "12px", width: "100%", padding: "8px", fontSize: "10px", borderColor: "var(--amber)", color: "var(--amber)" }}
               >
-                {loadingTask === "GUARD_CHECKIN" ? "Verifying..." : "Execute Guard Ping"}
+                {loadingTask === "GUARD_CHECKIN" ? "VERIFYING..." : "EXECUTE GUARD PING"}
               </button>
             </div>
           </div>
 
           {/* Execution Result Log */}
           {taskOutput && (
-            <div className="p-3 bg-slate-950 rounded-xl border border-emerald-500/30 text-xs font-mono">
-              <div className="flex items-center justify-between text-emerald-400 font-bold mb-1">
-                <span>✓ Task {taskOutput.task_category} Completed in {taskOutput.latency_ms}ms</span>
-                <span>Billed: +{taskOutput.voice_minutes_billed} Voice Mins</span>
+            <div style={{ border: "1px solid #078e76", padding: "12px 14px", background: "#06201b", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", color: "#20cbb0", fontWeight: 700, marginBottom: "4px" }}>
+                <span>✓ TASK {taskOutput.task_category} COMPLETED IN {taskOutput.latency_ms}MS</span>
+                <span>BILLED: +{taskOutput.voice_minutes_billed} VOICE MINS</span>
               </div>
-              <p className="text-slate-300">{taskOutput.details}</p>
+              <p style={{ color: "#eee", margin: 0 }}>{taskOutput.details}</p>
             </div>
           )}
         </div>
@@ -175,39 +175,36 @@ export const B2BOpsDrawer: React.FC<B2BOpsDrawerProps> = ({
 
       {/* Tab 2: POPIA Cryptographic Ledger */}
       {activeTab === "POPIA_LEDGER" && (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-[10px] text-slate-400 uppercase font-mono">
-                <th className="pb-2">Timestamp (UTC)</th>
-                <th className="pb-2">Audit Action</th>
-                <th className="pb-2">Responder CallSign</th>
-                <th className="pb-2">Legal Statutory Justification</th>
-                <th className="pb-2">IP Hash</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
+        <div style={{ padding: "16px", background: "var(--panel-2)", overflowX: "auto" }}>
+          <div style={{ border: "1px solid #3c403d" }}>
+            <div className="agent-table">
+              <div className="table-head">
+                <span>TIMESTAMP (UTC)</span>
+                <span>AUDIT ACTION</span>
+                <span>RESPONDER</span>
+                <span>JUSTIFICATION</span>
+                <span>IP HASH</span>
+              </div>
+
               {auditLogs.length > 0 ? (
                 auditLogs.map((log) => (
-                  <tr key={log.audit_id} className="hover:bg-slate-950/40">
-                    <td className="py-2 text-slate-400">{log.accessed_at?.slice(0, 19).replace("T", " ")}</td>
-                    <td className="py-2 text-amber-400 font-bold">{log.action}</td>
-                    <td className="py-2 text-slate-300">{log.responder_id || "SYSTEM_DISPATCH"}</td>
-                    <td className="py-2 text-slate-400">{log.justification}</td>
-                    <td className="py-2 text-slate-500">{log.ip_address}</td>
-                  </tr>
+                  <div key={log.audit_id} className="agent-row" style={{ fontSize: "10px" }}>
+                    <span>{log.accessed_at?.slice(0, 19).replace("T", " ")}</span>
+                    <span style={{ color: "var(--amber)" }}>{log.action}</span>
+                    <span>{log.responder_id || "SYSTEM_DISPATCH"}</span>
+                    <span style={{ color: "var(--muted)" }}>{log.justification}</span>
+                    <span style={{ color: "var(--cyan)" }}>{log.ip_address}</span>
+                  </div>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={5} className="py-4 text-center text-slate-500 font-sans">
-                    No active POPIA decryptions logged during idle green monitoring. Decryptions occur strictly upon Code Red distress trigger.
-                  </td>
-                </tr>
+                <div style={{ padding: "16px", textAlign: "center", color: "var(--muted)", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px" }}>
+                  No active POPIA decryptions logged during idle green monitoring.
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

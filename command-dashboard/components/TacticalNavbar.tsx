@@ -27,109 +27,109 @@ export const TacticalNavbar: React.FC<TacticalNavbarProps> = ({
   onReset,
 }) => {
   return (
-    <header className="w-full bg-slate-900 border-b border-slate-800 px-6 py-3 select-none flex flex-wrap items-center justify-between gap-4">
+    <header className="topbar">
       {/* Brand & Control Room Badge */}
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-lg shadow-emerald-900/30">
-          <Shield className="w-6 h-6" />
+      <div className="brand">
+        <div className="brand-mark">
+          <Shield size={28} />
+          <span />
         </div>
-        <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-base font-black text-white tracking-wider uppercase font-sans">
-              Waypoint Secure
-            </h1>
-            <span className="text-[10px] bg-slate-800 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/30">
-              TACTICAL C4i
-            </span>
+        <div className="brand-name">
+          <h1>WAYPOINT SECURE</h1>
+          <div>
+            TACTICAL C4i
+            <span className="divider">|</span>
+            {currentOrgName}
           </div>
-          <p className="text-xs text-slate-400 flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Control Room: {currentOrgName}</span>
-          </p>
         </div>
       </div>
 
       {/* Tenant Context / Subscription Tier Switcher */}
-      <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
-        <span className="text-[11px] font-semibold text-slate-400 px-2.5">
-          Tenant Context:
-        </span>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", borderLeft: "2px solid var(--ink)", paddingLeft: "18px" }}>
         <button
+          type="button"
           onClick={() => onTierChange("TIER_1_STARTER")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-            currentTier === "TIER_1_STARTER"
-              ? "bg-slate-800 text-cyan-400 shadow-sm border border-cyan-500/30"
-              : "text-slate-400 hover:text-white"
-          }`}
+          className="quick"
+          style={{
+            padding: "4px 8px",
+            fontSize: "9px",
+            borderColor: currentTier === "TIER_1_STARTER" ? "var(--teal)" : "#555750",
+            color: currentTier === "TIER_1_STARTER" ? "var(--teal)" : "var(--muted)",
+          }}
         >
-          Tier 1: CPF
+          TIER 1: CPF
         </button>
         <button
+          type="button"
           onClick={() => onTierChange("TIER_2_PRO")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-            currentTier === "TIER_2_PRO"
-              ? "bg-slate-800 text-amber-400 shadow-sm border border-amber-500/30"
-              : "text-slate-400 hover:text-white"
-          }`}
+          className="quick"
+          style={{
+            padding: "4px 8px",
+            fontSize: "9px",
+            borderColor: currentTier === "TIER_2_PRO" ? "var(--orange)" : "#555750",
+            color: currentTier === "TIER_2_PRO" ? "var(--orange)" : "var(--muted)",
+          }}
         >
-          Tier 2: Fox Tactical
+          TIER 2: FOX
         </button>
         <button
+          type="button"
           onClick={() => onTierChange("TIER_3_GOV")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-            currentTier === "TIER_3_GOV"
-              ? "bg-slate-800 text-red-400 shadow-sm border border-red-500/30"
-              : "text-slate-400 hover:text-white"
-          }`}
+          className="quick"
+          style={{
+            padding: "4px 8px",
+            fontSize: "9px",
+            borderColor: currentTier === "TIER_3_GOV" ? "var(--amber)" : "#555750",
+            color: currentTier === "TIER_3_GOV" ? "var(--amber)" : "var(--muted)",
+          }}
         >
-          Tier 3: SAPS
+          TIER 3: SAPS
         </button>
       </div>
 
       {/* Emergency Simulation Bar & System Health */}
-      <div className="flex items-center space-x-2">
-        {/* Test Vectors */}
-        <div className="hidden xl:flex items-center space-x-1.5 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 text-[11px]">
-          <span className="text-slate-500 font-medium mr-1">Simulate:</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <button
+            type="button"
             onClick={onTriggerSos}
-            className="px-2 py-0.5 rounded bg-red-950/80 hover:bg-red-900 border border-red-600/40 text-red-300 font-semibold transition"
+            className="quick danger"
+            style={{ padding: "4px 8px", fontSize: "9px" }}
           >
-            2nd-Tap SOS
+            SOS
           </button>
           <button
+            type="button"
             onClick={onTriggerDuress}
-            className="px-2 py-0.5 rounded bg-amber-950/80 hover:bg-amber-900 border border-amber-600/40 text-amber-300 font-semibold transition"
+            className="quick"
+            style={{ padding: "4px 8px", fontSize: "9px", borderColor: "var(--orange)", color: "var(--orange)" }}
           >
-            Duress 9999
+            DURESS
           </button>
           <button
+            type="button"
             onClick={onTriggerGForce}
-            className="px-2 py-0.5 rounded bg-purple-950/80 hover:bg-purple-900 border border-purple-600/40 text-purple-300 font-semibold transition"
+            className="quick"
+            style={{ padding: "4px 8px", fontSize: "9px", borderColor: "var(--amber)", color: "var(--amber)" }}
           >
-            3.8G Spike
+            3.8G
           </button>
           <button
-            onClick={onTriggerSms}
-            className="px-2 py-0.5 rounded bg-blue-950/80 hover:bg-blue-900 border border-blue-600/40 text-blue-300 font-semibold transition"
-          >
-            2G GSM-7
-          </button>
-          <button
+            type="button"
             onClick={onReset}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+            className="quick"
+            style={{ padding: "4px 6px", fontSize: "9px" }}
             title="Reset to Normal"
           >
-            <RefreshCw className="w-3 h-3" />
+            <RefreshCw size={11} />
           </button>
         </div>
 
-        {/* WebSocket Status */}
-        <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
-          <span className={`w-2 h-2 rounded-full ${isWsConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
-          <span className="font-semibold text-slate-300">
-            {isWsConnected ? "LIVE STREAM" : "OFFLINE"}
-          </span>
+        <div className="system-meta" style={{ margin: 0, paddingLeft: "16px" }}>
+          <div className="system-status">
+            <span />
+            {isWsConnected ? "ONLINE" : "STANDBY"}
+          </div>
         </div>
       </div>
     </header>

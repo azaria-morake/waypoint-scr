@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Shield, ShieldAlert, Radio, ArrowRight, Lock, CheckCircle2, Award } from "lucide-react";
+import { Shield, ShieldAlert, Radio, ArrowRight, Lock, CheckCircle2, Award, Crosshair } from "lucide-react";
 
 export interface OrganizationOption {
   orgId: string;
@@ -39,10 +39,10 @@ export const ORGANIZATIONS: OrganizationOption[] = [
     badgeNumber: "SAPS-7491-EKU",
     division: "Ekurhuleni Flying Squad • Sector 2 Rapid Response",
     tier: "TIER_3_GOV",
-    themeColor: "from-blue-600 to-indigo-900",
-    borderColor: "border-blue-500/40 hover:border-blue-400",
-    accentBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    textColor: "text-blue-400",
+    themeColor: "var(--amber)",
+    borderColor: "var(--amber)",
+    accentBg: "rgba(235, 168, 35, 0.1)",
+    textColor: "var(--amber)",
     icon: Shield,
     description: "Full statutory SAPS tactical jurisdiction, direct Flying Squad dispatch, POPIA Section 11(1)(d) vital-interest criminal intelligence access.",
     resourcesSummary: "Flying Squad Intercept Units 302 & 308, Air Wing Relay, SAPS Ekurhuleni Radio Mesh",
@@ -58,10 +58,10 @@ export const ORGANIZATIONS: OrganizationOption[] = [
     badgeNumber: "PSIRA-FOX-104",
     division: "Alberton North Armed Reaction & High-Risk Intercept",
     tier: "TIER_2_PRO",
-    themeColor: "from-amber-500 to-amber-800",
-    borderColor: "border-amber-500/40 hover:border-amber-400",
-    accentBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    textColor: "text-amber-400",
+    themeColor: "var(--orange)",
+    borderColor: "var(--orange)",
+    accentBg: "rgba(230, 104, 27, 0.1)",
+    textColor: "var(--orange)",
     icon: ShieldAlert,
     description: "Commercial armed response control room. B2B metered voice AI automation, multi-unit CAD routing, and high-frequency live GPS tracking.",
     resourcesSummary: "Fox Tactical Units 14 & 08 (Armed Reaction), Automated Twilio/WhatsApp Voice CAD Gateway",
@@ -77,125 +77,153 @@ export const ORGANIZATIONS: OrganizationOption[] = [
     badgeNumber: "CPF-SEC2-022",
     division: "Alberton North Community Safety & First Responder Relay",
     tier: "TIER_1_STARTER",
-    themeColor: "from-teal-500 to-emerald-800",
-    borderColor: "border-teal-500/40 hover:border-teal-400",
-    accentBg: "bg-teal-500/10 text-teal-400 border-teal-500/30",
-    textColor: "text-teal-400",
+    themeColor: "var(--teal)",
+    borderColor: "var(--teal)",
+    accentBg: "rgba(30, 94, 90, 0.1)",
+    textColor: "var(--teal)",
     icon: Radio,
-    description: "Neighborhood safety watch network. Direct 5km proximity broadcasting, citizen escalation listening, and volunteer patrol mesh.",
-    resourcesSummary: "CPF Patrol Units Alpha & Bravo, Local Community Repeater, Emergency First-Aid Response",
+    description: "Community first-responder relay, unverified observation ingestion, and neighbourhood alert broadcast.",
+    resourcesSummary: "CPF Patrol Unit 04, Volunteer Radio Net, Local WhatsApp Alert Group Integration",
   },
 ];
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onSelectOrg }) => {
   return (
-    <div className="w-full min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 select-none relative overflow-hidden">
-      {/* Background Subtle Gradient Blobs */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
-
+    <main className="console">
       {/* Top Header */}
-      <header className="relative z-10 max-w-5xl mx-auto w-full pt-8 flex flex-col items-center text-center">
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300 mb-4 shadow-sm">
-          <Award className="w-4 h-4 text-amber-400" />
-          <span className="font-semibold tracking-wide">FNB APP OF THE YEAR 2026 • COMPETITION JUDGE PORTAL</span>
-        </div>
-
-        <div className="flex items-center space-x-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-xl shadow-emerald-950/50">
-            <Shield className="w-7 h-7" />
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-mark">
+            <Crosshair size={39} strokeWidth={2.5} />
+            <span />
           </div>
-          <h1 className="text-3xl font-black tracking-wider uppercase font-sans text-white">
-            Waypoint Secure
-          </h1>
-          <span className="text-xs bg-slate-800 text-emerald-400 font-bold px-2.5 py-1 rounded-md border border-emerald-500/30">
-            TACTICAL C4i
-          </span>
+
+          <div className="brand-name">
+            <h1>BOLO CONSOLE</h1>
+            <div>
+              TACTICAL AGENCY AUTHENTICATION
+              <span className="divider">|</span>
+              OPERATOR TERMINAL SELECTOR
+            </div>
+          </div>
         </div>
 
-        <p className="text-sm text-slate-400 max-w-xl">
-          Select an authorized responder agency below to enter its specialized command terminal, view its assigned officer, and monitor live district safety.
-        </p>
+        <div className="system-meta">
+          <div className="system-status">
+            <span />
+            TERMINAL STANDBY
+          </div>
+          <div>OCT 26 2026&nbsp;&nbsp; 22:26</div>
+        </div>
+
+        <div className="hackathon">
+          FNB AOTY HACKATHON 2026
+          <br />
+          ARTIFICIAL STAR
+        </div>
       </header>
 
-      {/* Organization Options Grid */}
-      <main className="relative z-10 max-w-5xl mx-auto w-full my-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {ORGANIZATIONS.map((org) => {
-          const Icon = org.icon;
-          return (
-            <div
-              key={org.orgId}
-              onClick={() => onSelectOrg(org)}
-              className={`group bg-slate-900/90 hover:bg-slate-900 rounded-3xl border ${org.borderColor} p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] cursor-pointer hover:shadow-2xl`}
-            >
-              {/* Card Header */}
-              <div>
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${org.themeColor} flex items-center justify-center text-white shadow-lg`}>
-                    <Icon className="w-7 h-7" />
-                  </div>
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wider ${org.accentBg}`}>
-                    {org.tier.replace("_", " ")}
-                  </span>
-                </div>
+      {/* Main Selection Area */}
+      <div className="main-content" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
+        <div style={{ maxWidth: "1100px", width: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ textAlign: "center", marginBottom: "10px" }}>
+            <span className="status-pill green" style={{ marginBottom: "10px" }}>
+              ● MULTI-TENANT C4i ENCLAVE ACTIVE
+            </span>
+            <h2 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "28px", fontWeight: 700, color: "#fff", margin: "10px 0 4px" }}>
+              SELECT OPERATING LAW ENFORCEMENT AGENCY
+            </h2>
+            <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", color: "var(--muted)", margin: 0 }}>
+              Authenticate terminal session credentials for Sector 2 corridor monitoring and armed response dispatch.
+            </p>
+          </div>
 
-                <h3 className="text-lg font-black text-white group-hover:text-cyan-300 transition-colors">
-                  {org.name}
-                </h3>
-                <p className="text-xs font-semibold text-slate-400 mt-1">
-                  {org.role}
-                </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+            {ORGANIZATIONS.map((org) => {
+              const Icon = org.icon;
 
-                {/* Officer on Duty Badge */}
-                <div className="mt-4 p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 flex flex-col space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-medium">Officer on Duty:</span>
-                    <span className="font-bold text-white flex items-center space-x-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>{org.officerName}</span>
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    {org.officerRank} • <span className="font-mono text-slate-300">{org.badgeNumber}</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 truncate">
-                    {org.division}
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-400 mt-4 leading-relaxed">
-                  {org.description}
-                </p>
-              </div>
-
-              {/* Card Footer & Action */}
-              <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 font-medium truncate max-w-[180px]">
-                  {org.shortCode}
-                </span>
-                <button
-                  type="button"
-                  className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-800 group-hover:bg-cyan-500 group-hover:text-slate-950 text-slate-200 transition-all`}
+              return (
+                <section
+                  key={org.orgId}
+                  className="panel"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    transition: "border-color 0.2s",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => onSelectOrg(org)}
                 >
-                  <span>Launch C4i</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </main>
+                  <div className="panel-header" style={{ padding: "12px 16px" }}>
+                    <div className="panel-title">
+                      <div style={{ width: "28px", height: "28px", border: "1px solid var(--amber)", color: "var(--amber)", display: "grid", placeItems: "center" }}>
+                        <Icon size={16} />
+                      </div>
+                      <span style={{ fontSize: "11px" }}>{org.shortCode}</span>
+                    </div>
+                    <span className="status-pill orange">{org.tier.replace("_", " ")}</span>
+                  </div>
 
-      {/* Footer Info */}
-      <footer className="relative z-10 max-w-5xl mx-auto w-full pt-4 pb-2 border-t border-slate-900 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="flex items-center space-x-2">
-          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-          <span>POPIA Act No. 4 of 2013 Statutory Compliance • End-to-End Encrypted C4i Telemetry</span>
+                  <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--panel-2)", flex: 1 }}>
+                    <div>
+                      <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "15px", fontWeight: 700, color: "#fff" }}>
+                        {org.name}
+                      </div>
+                      <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", marginTop: "4px", lineHeight: 1.5 }}>
+                        {org.role}
+                      </div>
+                    </div>
+
+                    <div className="metrics" style={{ padding: 0 }}>
+                      <div className="metric">
+                        <span className="metric-label">ASSIGNED OFFICER</span>
+                        <span className="metric-value" style={{ fontSize: "11px" }}>{org.officerName}</span>
+                      </div>
+                      <div className="metric">
+                        <span className="metric-label">RANK / TITLE</span>
+                        <span className="metric-value" style={{ fontSize: "10px", color: "var(--cyan)" }}>{org.officerRank}</span>
+                      </div>
+                      <div className="metric">
+                        <span className="metric-label">BADGE NUMBER</span>
+                        <span className="metric-value" style={{ fontSize: "11px", color: "var(--amber)" }}>{org.badgeNumber}</span>
+                      </div>
+                      <div className="metric">
+                        <span className="metric-label">DIVISION</span>
+                        <span className="metric-value" style={{ fontSize: "9px", color: "#ddd" }}>{org.division}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ border: "1px solid #3c403d", padding: "10px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", lineHeight: 1.5 }}>
+                      <b style={{ color: "#fff" }}>RESOURCES:&nbsp;&nbsp;</b>{org.resourcesSummary}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "12px 16px", borderTop: "1px solid #444844", background: "var(--panel)" }}>
+                    <button
+                      type="button"
+                      className="quick"
+                      style={{ width: "100%", padding: "10px", fontSize: "10px", borderColor: "var(--orange)", color: "var(--orange)" }}
+                    >
+                      <span>AUTHENTICATE TERMINAL SESSION</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </section>
+              );
+            })}
+          </div>
         </div>
-        <div className="text-[11px] font-mono text-slate-400">
-          Alberton / Sandton Central Sector • Port 3000
-        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="console-footer">
+        <span>BOLO CONSOLE&nbsp;&nbsp;//&nbsp;&nbsp;OPERATOR AUTHENTICATION</span>
+        <span>
+          FNB AOTY HACKATHON 2026&nbsp;&nbsp;
+          <b>//</b>&nbsp;&nbsp;ARTIFICIAL STAR
+        </span>
       </footer>
-    </div>
+    </main>
   );
 };
