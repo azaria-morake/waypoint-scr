@@ -165,11 +165,11 @@ export default function CitizenMobileApp() {
   }
 
   return (
-    <main className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-[#081018] select-none">
+    <main className="relative w-full min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row bg-[#081018] select-none">
       {/* ========================================================= */}
-      {/* LEFT PANEL: Restored Original Image with Reference UI Text */}
+      {/* LEFT PANEL: Locked Fixed Hero Panel (Doesn't scroll)      */}
       {/* ========================================================= */}
-      <div className="relative w-full lg:w-1/2 min-h-[420px] lg:min-h-screen flex flex-col justify-end p-8 lg:p-14 overflow-hidden bg-[#081018]">
+      <div className="relative w-full lg:w-1/2 min-h-[420px] lg:h-full lg:sticky lg:top-0 flex flex-col justify-end p-8 lg:p-14 overflow-hidden bg-[#081018] flex-shrink-0">
         {/* Restored Original Background Hero Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -229,7 +229,7 @@ export default function CitizenMobileApp() {
       {/* ========================================================= */}
       {/* RIGHT PANEL: Citizen Safety Control & Onboarding Dashboard */}
       {/* ========================================================= */}
-      <div className="relative w-full lg:w-1/2 min-h-screen bg-[#081018] flex flex-col justify-between overflow-hidden border-t lg:border-t-0 lg:border-l border-slate-800/80 shadow-2xl">
+      <div className="relative w-full lg:w-1/2 min-h-screen lg:h-full lg:overflow-y-auto bg-[#081018] flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800/80 shadow-2xl">
         {currentView === "SETUP" && (
           <SetupView
             user={user}

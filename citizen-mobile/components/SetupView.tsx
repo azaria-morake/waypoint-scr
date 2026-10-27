@@ -110,7 +110,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
   ];
 
   return (
-    <div className="w-full min-h-screen bg-[#081018] text-slate-100 flex flex-col justify-between p-6 sm:p-10 xl:p-14 select-none overflow-y-auto">
+    <div className="w-full min-h-full bg-[#081018] text-slate-100 flex flex-col justify-between p-6 sm:p-10 xl:p-14 select-none">
       <div className="max-w-xl mx-auto w-full flex flex-col h-full justify-between gap-6">
         {/* Top Header: Logo + Profile Button */}
         <div>
