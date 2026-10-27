@@ -163,8 +163,10 @@ class TrafficControlAgent:
 - Attire Status: {app['attire_summary']}
 - Next of Kin Contact: {nok['name']} ({nok['relationship']} - {nok['phone']})
 - Operator Input: {operator_query or 'None (Initial emergency triage)'}
-
-Deliver a tactical briefing and 3 structured operator action chips. If appearance gap is detected, recommend deploying WhatsApp Recon with Next of Kin."""
+CRITICAL ANTI-REPETITION DIRECTIVE:
+1. Do NOT repeat or recommend the exact same directive/action chip the operator has already initiated.
+2. Advance the tactical mission dynamically (e.g. if monitoring is underway, propose checking perimeter, preparing intercept staging, or broadcasting CAD).
+3. Deliver a concise tactical briefing and 3 fresh action chips with unique action_ids."""
 
         try:
             res = await llm_client.generate_structured(

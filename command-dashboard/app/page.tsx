@@ -373,10 +373,36 @@ export default function CommandDashboardPage() {
                 ...prev,
               ]);
 
-              // Clear past emergency chat history
+              // Add Safe Arrival Announcement from BOLO Young to chat history
               try {
-                localStorage.removeItem("waypoint_bolo_chat_history");
-                window.dispatchEvent(new Event("waypoint_chat_updated"));
+                const raw = localStorage.getItem("waypoint_bolo_chat_history");
+                const msgs = raw ? JSON.parse(raw) : [];
+                const safeArrivalMsg = {
+                  id: "msg-safe-arrival-" + Date.now(),
+                  sender: "BOLO_YOUNG",
+                  senderName: "BOLO Young (Traffic Control)",
+                  text: "Constable Morake, Thandiwe Ndlovu has entered Standard PIN 1234 and arrived safely. Safe disarm protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
+                  timestamp: nowTime,
+                  threatLevel: "NOMINAL",
+                  suggestedActions: [
+                    {
+                      action_id: "SECTOR_SWEEP",
+                      label: "🔄 Sector Routine Patrol",
+                      rationale: "Return units to standard cruising circuits.",
+                      primary: true,
+                    },
+                    {
+                      action_id: "STATION_CHECK",
+                      label: "🛡️ Station Readiness Diagnostic",
+                      rationale: "Verify communication links with SAPS-302 and Fox-14.",
+                      primary: false,
+                    },
+                  ],
+                };
+                if (!msgs.some((m: any) => m.id.startsWith("msg-safe-arrival"))) {
+                  localStorage.setItem("waypoint_bolo_chat_history", JSON.stringify([...msgs, safeArrivalMsg]));
+                  window.dispatchEvent(new Event("waypoint_chat_updated"));
+                }
               } catch (e) {}
             }
 

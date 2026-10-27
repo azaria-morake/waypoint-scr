@@ -252,6 +252,40 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             } catch (e) {}
             return updated;
           });
+        } else if (!data.has_active_journey && (data.journey_status === "SAFE_COMPLETED" || data.status === "SAFE_COMPLETED")) {
+          setChatHistory((prev) => {
+            const hasSafeMsg = prev.some((m) => m.id.startsWith("msg-safe-arrival"));
+            if (!hasSafeMsg && prev.length > 0) {
+              const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              const safeMsg: ChatMessage = {
+                id: "msg-safe-arrival-" + Date.now(),
+                sender: "BOLO_YOUNG",
+                senderName: "BOLO Young (Traffic Control)",
+                text:
+                  data.liaison?.briefing ||
+                  "Constable Morake, Thandiwe Ndlovu has entered Standard PIN 1234 and arrived safely. Safe disarm protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
+                timestamp: nowTime,
+                threatLevel: "NOMINAL",
+                suggestedActions:
+                  data.liaison?.action_chips && data.liaison.action_chips.length > 0
+                    ? data.liaison.action_chips
+                    : [
+                        {
+                          action_id: "SECTOR_SWEEP",
+                          label: "🔄 Sector Routine Patrol",
+                          rationale: "Return units to standard cruising circuits.",
+                          primary: true,
+                        },
+                      ],
+              };
+              const updated = [...prev, safeMsg];
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+              } catch (e) {}
+              return updated;
+            }
+            return prev;
+          });
         }
       }
     } catch (e) {}
@@ -416,8 +450,8 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                 <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff", letterSpacing: "0.04em" }}>
                   BOLO YOUNG
                 </span>
-                <span className={`status-pill ${threatLevel === "CRITICAL" ? "red" : hasActiveJourney ? "green" : "neutral"}`}>
-                  {threatLevel === "CRITICAL" ? "CRITICAL RED" : hasActiveJourney ? "SAFE TRANSIT" : "STANDBY"}
+                <span className={`status-pill ${threatLevel === "CRITICAL" ? "red" : hasActiveJourney ? "green" : journeyStatus === "SAFE_COMPLETED" ? "green" : "neutral"}`}>
+                  {threatLevel === "CRITICAL" ? "CRITICAL RED" : hasActiveJourney ? "SAFE TRANSIT" : journeyStatus === "SAFE_COMPLETED" ? "SAFE ARRIVAL" : "STANDBY"}
                 </span>
               </div>
               <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", marginTop: "2px" }}>
@@ -651,7 +685,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                 <span>TELEMETRY RADAR</span>
               </div>
               <span className={`status-pill ${!hasActiveJourney ? "neutral" : isStagnant ? "red" : "green"}`}>
-                {!hasActiveJourney ? "STANDBY" : isStagnant ? "STAGNANT" : "TRANSIT"}
+                {!hasActiveJourney ? (journeyStatus === "SAFE_COMPLETED" ? "STAND DOWN" : "STANDBY") : isStagnant ? "STAGNANT" : "TRANSIT"}
               </span>
             </div>
 
@@ -659,19 +693,21 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
               <div className="metric">
                 <span className="metric-label">VELOCITY</span>
                 <span className="metric-value" style={{ fontSize: "12px" }}>
-                  {hasActiveJourney ? `${loc?.current_speed_kmh ?? 0} km/h` : "0 km/h"}
+                  {hasActiveJourney ? `${loc?.current_speed_kmh ?? 0} km/h` : "0 km/h (Standby)"}
                 </span>
               </div>
               <div className="metric">
                 <span className="metric-label">STREAM STATUS</span>
-                <span className="metric-value" style={{ fontSize: "12px", color: "var(--green)" }}>1Hz WSS Locked</span>
+                <span className="metric-value" style={{ fontSize: "12px", color: hasActiveJourney ? "var(--green)" : "var(--muted)" }}>
+                  {hasActiveJourney ? "1Hz WSS Locked" : "Watchdog Nominal"}
+                </span>
               </div>
               <div className="metric">
                 <span className="metric-label">COORDINATES</span>
                 <span className="metric-value" style={{ fontSize: "9px", color: "var(--cyan)" }}>
                   {hasActiveJourney && loc?.current_coordinates
                     ? `${loc.current_coordinates[0].toFixed(4)}°, ${loc.current_coordinates[1].toFixed(4)}°`
-                    : "-26.315°, 28.160°"}
+                    : "Sector 2 Grid Nominal"}
                 </span>
               </div>
               <div className="metric">
@@ -695,11 +731,19 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: "6px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--muted)" }}>TARGET:</span>
-                <b style={{ color: "#fff" }}>{hasActiveJourney ? target?.citizen_name || "Thandiwe Ndlovu" : "No Active Journey"}</b>
+                <b style={{ color: "#fff" }}>
+                  {hasActiveJourney
+                    ? target?.citizen_name || "Thandiwe Ndlovu"
+                    : journeyStatus === "SAFE_COMPLETED"
+                    ? "Thandiwe Ndlovu (Safe Arrival)"
+                    : "No Active Journey"}
+                </b>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--muted)" }}>BIO PROFILE:</span>
-                <span style={{ color: "#ccc" }}>28 yrs • 168cm • Athletic</span>
+                <span style={{ color: "var(--muted)" }}>STATUS:</span>
+                <b style={{ color: hasActiveJourney ? "var(--green)" : journeyStatus === "SAFE_COMPLETED" ? "var(--cyan)" : "var(--muted)" }}>
+                  {hasActiveJourney ? "ACTIVE TRANSIT" : journeyStatus === "SAFE_COMPLETED" ? "SAFE ARRIVAL (DISARMED)" : "STANDBY (IDLE)"}
+                </b>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--muted)" }}>NEXT OF KIN:</span>
@@ -719,8 +763,8 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                 <ShieldCheck size={14} />
                 <span>ATTIRE RECON INTEL</span>
               </div>
-              <span className={`status-pill ${currentAttire ? "green" : "orange"}`}>
-                {currentAttire ? "CONFIRMED" : "UNCONFIRMED"}
+              <span className={`status-pill ${currentAttire ? "green" : !hasActiveJourney ? "neutral" : "orange"}`}>
+                {currentAttire ? "CONFIRMED" : !hasActiveJourney ? "STAND DOWN" : "UNCONFIRMED"}
               </span>
             </div>
 
