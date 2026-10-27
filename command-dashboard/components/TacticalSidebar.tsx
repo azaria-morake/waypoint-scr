@@ -98,19 +98,20 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
           marginTop: "14px",
           background: "transparent",
           border: 0,
-          color: "#73766f",
+          color: "#9b9d96",
           fontFamily: "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace",
-          fontSize: "9px",
+          fontSize: "12px",
+          fontWeight: 600,
           cursor: "pointer",
           textAlign: "center",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: "6px",
-          padding: "4px",
+          gap: "8px",
+          padding: "6px",
         }}
       >
-        <LogOut size={12} />
+        <LogOut size={14} />
         <span>Switch Agency ({currentOrg.name})</span>
       </button>
     </aside>

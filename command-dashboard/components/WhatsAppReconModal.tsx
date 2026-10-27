@@ -199,23 +199,23 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span className="status-pill green" style={{ padding: "2px 6px", fontSize: "8px" }}>ONLINE</span>
+            <span className="status-pill green" style={{ padding: "3px 8px", fontSize: "11px" }}>ONLINE</span>
             <button
               type="button"
               onClick={handleRestart}
               className="quick"
               title="Reset conversation thread"
-              style={{ padding: "4px 8px", fontSize: "9px" }}
+              style={{ padding: "6px 10px", fontSize: "12px" }}
             >
-              <RotateCcw size={12} />
+              <RotateCcw size={14} />
             </button>
             <button
               type="button"
               onClick={onClose}
               className="quick"
-              style={{ padding: "4px 8px", fontSize: "9px" }}
+              style={{ padding: "6px 10px", fontSize: "12px" }}
             >
-              <X size={14} />
+              <X size={15} />
             </button>
           </div>
         </div>
@@ -223,21 +223,21 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
         {/* Legal & Contact Sub-bar */}
         <div
           style={{
-            padding: "8px 14px",
+            padding: "10px 16px",
             background: "#081c18",
             borderBottom: "1px solid #078e76",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             fontFamily: "var(--font-ibm-plex-mono), monospace",
-            fontSize: "9px",
+            fontSize: "12px",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#20cbb0" }}>
-            <ShieldCheck size={13} />
+            <ShieldCheck size={14} />
             <span>CONTACT: +27 82 555 0198 (Sister)</span>
           </div>
-          <span style={{ color: "var(--amber)" }}>POPIA SEC 11(1)(d) VITAL INTERESTS</span>
+          <span style={{ color: "var(--amber)", fontWeight: 600 }}>POPIA SEC 11(1)(d) VITAL INTERESTS</span>
         </div>
 
         {/* Message Thread Area */}
@@ -267,7 +267,7 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
                   alignSelf: isAgent ? "flex-end" : "flex-start",
                 }}
               >
-                <div style={{ display: "flex", gap: "8px", marginBottom: "2px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)" }}>
+                <div style={{ display: "flex", gap: "8px", marginBottom: "4px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", color: "var(--muted)" }}>
                   <b style={{ color: isAgent ? "#20cbb0" : "var(--amber)" }}>{msg.sender_name}</b>
                   <span>{msg.timestamp}</span>
                 </div>
@@ -279,7 +279,7 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
                     border: isAgent ? "1px solid #078e76" : "1px solid #3c403d",
                     color: "#fff",
                     fontFamily: "var(--font-ibm-plex-mono), monospace",
-                    fontSize: "10px",
+                    fontSize: "13px",
                     lineHeight: 1.5,
                   }}
                 >
@@ -295,7 +295,7 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
         {isComplete && extractedAttire && (
           <div
             style={{
-              padding: "10px 14px",
+              padding: "12px 16px",
               background: "#06201b",
               borderTop: "1px solid #078e76",
               borderBottom: "1px solid #078e76",
@@ -303,19 +303,19 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "9px", fontWeight: 700, color: "#20cbb0" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#20cbb0" }}>
                 ✓ EXTRACTED ATTIRE INTEL CONFIRMED:
               </span>
-              <span className="status-pill green" style={{ padding: "1px 6px", fontSize: "7px" }}>PUSHED TO CAD</span>
+              <span className="status-pill green" style={{ padding: "2px 8px", fontSize: "11px" }}>PUSHED TO CAD</span>
             </div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#fff", marginTop: "3px" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginTop: "4px" }}>
               &ldquo;{extractedAttire.attire_description}&rdquo;
             </div>
           </div>
         )}
 
         {/* Input Bar */}
-        <div style={{ padding: "10px 14px", borderTop: "1.5px solid #444844", background: "#101415", display: "flex", gap: "8px" }}>
+        <div style={{ padding: "12px 16px", borderTop: "1.5px solid #444844", background: "#101415", display: "flex", gap: "8px" }}>
           <input
             type="text"
             value={inputText}
@@ -326,9 +326,9 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
               flex: 1,
               background: "#0c1012",
               border: "1px solid #555750",
-              padding: "8px 12px",
+              padding: "10px 14px",
               fontFamily: "var(--font-ibm-plex-mono), monospace",
-              fontSize: "11px",
+              fontSize: "13px",
               color: "#fff",
               outline: "none",
             }}
@@ -338,10 +338,10 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
             onClick={handleSendMessage}
             disabled={!inputText.trim() || isLoading}
             className="quick"
-            style={{ borderColor: "#078e76", color: "#20cbb0", padding: "8px 14px" }}
+            style={{ borderColor: "#078e76", color: "#20cbb0", padding: "10px 16px", fontSize: "13px", fontWeight: 600 }}
           >
             <span>SEND</span>
-            <Send size={12} />
+            <Send size={14} />
           </button>
         </div>
       </div>

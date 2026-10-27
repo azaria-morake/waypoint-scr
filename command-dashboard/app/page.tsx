@@ -894,7 +894,7 @@ export default function CommandDashboardPage() {
                 ) : (
                   <Bot size={16} color="var(--orange)" />
                 )}
-                <span style={{ fontSize: "11px", letterSpacing: "0.08em" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, letterSpacing: "0.08em" }}>
                   {activeToast.title}
                 </span>
               </div>
@@ -911,14 +911,14 @@ export default function CommandDashboardPage() {
                   padding: "4px",
                 }}
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
 
-            <div style={{ padding: "14px 16px", background: "var(--panel-2)" }}>
+            <div style={{ padding: "16px 18px", background: "var(--panel-2)" }}>
               <p style={{
                 fontFamily: "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace",
-                fontSize: "11px",
+                fontSize: "13px",
                 lineHeight: 1.6,
                 color: "#e8e5dc",
                 margin: 0,
@@ -926,26 +926,27 @@ export default function CommandDashboardPage() {
                 {activeToast.message}
               </p>
 
-              <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "10px" }}>
                 <button
                   type="button"
                   onClick={() => handleDismissToast("BOLO_YOUNG")}
                   className={`quick ${activeToast.type === "CRITICAL" ? "danger" : ""}`}
                   style={{
-                    fontSize: "10px",
-                    padding: "6px 14px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    padding: "8px 16px",
                     borderColor: activeToast.type === "CRITICAL" ? "var(--red)" : "var(--orange)",
                     color: activeToast.type === "CRITICAL" ? "var(--red)" : "var(--orange)",
                   }}
                 >
                   <span>ENGAGE BOLO YOUNG</span>
-                  <ArrowRight size={13} />
+                  <ArrowRight size={14} />
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDismissToast()}
                   className="quick"
-                  style={{ fontSize: "10px", padding: "6px 12px", borderColor: "#555750", color: "var(--muted)" }}
+                  style={{ fontSize: "12px", padding: "8px 14px", borderColor: "#555750", color: "var(--muted)" }}
                 >
                   DISMISS
                 </button>

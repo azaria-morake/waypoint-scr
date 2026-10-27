@@ -614,9 +614,9 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
       L.marker(coords, { icon: carIcon })
         .bindPopup(`
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;padding:6px;">
             <b style="color:#25c9ad;">${unit.callsign}</b>
-            <div style="color:#aaa;">${unit.role}</div>
+            <div style="color:#ccc;font-size:12px;margin-top:2px;">${unit.role}</div>
           </div>
         `)
         .addTo(group);
@@ -647,24 +647,24 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
     // 1. Draw Origin Marker (Departure)
     const originIcon = L.divIcon({
-      html: `<div style="width:24px;height:24px;background:#0f172a;border:2px solid #38bdf8;border-radius:50%;color:#38bdf8;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(56,189,248,0.5);">A</div>`,
+      html: `<div style="width:26px;height:26px;background:#0f172a;border:2px solid #38bdf8;border-radius:50%;color:#38bdf8;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(56,189,248,0.5);">A</div>`,
       className: "corridor-origin-pin",
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
     });
     L.marker(corridorRoute[0], { icon: originIcon })
-      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Departure Point A</b><br/>14 8th Ave, Alberton North</div>`)
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:13px;padding:4px;"><b>Departure Point A</b><br/><span style="color:#555;font-size:12px;">14 8th Ave, Alberton North</span></div>`)
       .addTo(group);
 
     // 2. Draw Destination Marker (Sandton City Mall)
     const destIcon = L.divIcon({
-      html: `<div style="width:24px;height:24px;background:#0f172a;border:2px solid #10b981;border-radius:50%;color:#10b981;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(16,185,129,0.5);">B</div>`,
+      html: `<div style="width:26px;height:26px;background:#0f172a;border:2px solid #10b981;border-radius:50%;color:#10b981;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(16,185,129,0.5);">B</div>`,
       className: "corridor-dest-pin",
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
     });
     L.marker(corridorRoute[corridorRoute.length - 1], { icon: destIcon })
-      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Destination Point B</b><br/>${citizenLocation?.destinationName || "Sandton City Mall, Sandton"}</div>`)
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:13px;padding:4px;"><b>Destination Point B</b><br/><span style="color:#555;font-size:12px;">${citizenLocation?.destinationName || "Sandton City Mall, Sandton"}</span></div>`)
       .addTo(group);
 
     // 3. Draw Corridor Polyline (Green when safe transit, Red dashed when distressed)
@@ -678,10 +678,10 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
     // 4. Sector Town Labels along the corridor
     const createTownLabel = (name: string) =>
       L.divIcon({
-        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:#e5e4dd;text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;">${name}</div>`,
+        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#f3f2ed;text-shadow:0 1px 4px rgba(0,0,0,0.95);white-space:nowrap;">${name}</div>`,
         className: "tactical-town-marker",
-        iconSize: [110, 20],
-        iconAnchor: [55, 10],
+        iconSize: [120, 22],
+        iconAnchor: [60, 11],
       });
 
     L.marker([corridorRoute[0][0] - 0.003, corridorRoute[0][1] + 0.005], { icon: createTownLabel("Alberton North"), interactive: false }).addTo(group);
@@ -754,12 +754,12 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
       L.marker(coords, { icon: redDistressIcon, zIndexOffset: 2000 })
         .bindPopup(`
-          <div style="font-family:'IBM Plex Mono',monospace;padding:6px;font-size:11px;min-width:220px;">
-            <div style="font-weight:700;color:#d9381e;">🚨 CODE RED DISTRESS EVENT</div>
-            <div style="font-weight:700;margin-top:2px;color:#111;">${citizenTitle}</div>
-            <div style="color:#555;font-size:10px;margin-top:2px;">${coords[0].toFixed(5)}°, ${coords[1].toFixed(5)}° • ${citizenLocation?.speedKmh ?? 0} km/h</div>
-            <div style="color:#b91c1c;font-size:10px;margin-top:2px;font-weight:600;">Status: Struggle Anomaly / Panic Triggered</div>
-            ${currentAttire ? `<div style="margin-top:4px;padding:3px;background:#e6fffa;border:1px solid #38b2ac;color:#234e52;border-radius:3px;">Attire: ${currentAttire}</div>` : ""}
+          <div style="font-family:'IBM Plex Mono',monospace;padding:8px;font-size:13px;min-width:240px;">
+            <div style="font-weight:700;color:#d9381e;font-size:14px;">🚨 CODE RED DISTRESS EVENT</div>
+            <div style="font-weight:700;margin-top:3px;color:#111;font-size:14px;">${citizenTitle}</div>
+            <div style="color:#555;font-size:12px;margin-top:4px;">${coords[0].toFixed(5)}°, ${coords[1].toFixed(5)}° • ${citizenLocation?.speedKmh ?? 0} km/h</div>
+            <div style="color:#b91c1c;font-size:12px;margin-top:3px;font-weight:600;">Status: Struggle Anomaly / Panic Triggered</div>
+            ${currentAttire ? `<div style="margin-top:6px;padding:4px 6px;background:#e6fffa;border:1px solid #38b2ac;color:#234e52;border-radius:4px;font-size:12px;">Attire: ${currentAttire}</div>` : ""}
           </div>
         `)
         .addTo(group);
@@ -770,7 +770,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
           <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
             <div style="position:absolute;width:42px;height:42px;border-radius:50%;background:#10b981;opacity:0.35;animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
             <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:#059669;opacity:0.5;animation:pulse 2s ease-in-out infinite;"></div>
-            <div style="position:relative;width:24px;height:24px;border-radius:50%;background:#047857;border:2px solid #ffffff;color:#fff;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(16,185,129,0.85);">
+            <div style="position:relative;width:24px;height:24px;border-radius:50%;background:#047857;border:2px solid #ffffff;color:#fff;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(16,185,129,0.85);">
               ▲
             </div>
           </div>
@@ -784,11 +784,11 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
       L.marker(coords, { icon: greenTransitIcon, zIndexOffset: 2000 })
         .bindPopup(`
-          <div style="font-family:'IBM Plex Mono',monospace;padding:6px;font-size:11px;min-width:220px;">
-            <div style="font-weight:700;color:#059669;">🟢 SAFE JOURNEY ACTIVE</div>
-            <div style="font-weight:700;margin-top:2px;color:#111;">${citizenTitle}</div>
-            <div style="color:#555;font-size:10px;margin-top:2px;">${coords[0].toFixed(5)}°, ${coords[1].toFixed(5)}° • ${citizenLocation?.speedKmh ?? 68} km/h</div>
-            <div style="color:#047857;font-size:10px;margin-top:2px;font-weight:600;">Stream: 1Hz WSS Locked • Corridor Nominal</div>
+          <div style="font-family:'IBM Plex Mono',monospace;padding:8px;font-size:13px;min-width:240px;">
+            <div style="font-weight:700;color:#059669;font-size:14px;">🟢 SAFE JOURNEY ACTIVE</div>
+            <div style="font-weight:700;margin-top:3px;color:#111;font-size:14px;">${citizenTitle}</div>
+            <div style="color:#555;font-size:12px;margin-top:4px;">${coords[0].toFixed(5)}°, ${coords[1].toFixed(5)}° • ${citizenLocation?.speedKmh ?? 68} km/h</div>
+            <div style="color:#047857;font-size:12px;margin-top:3px;font-weight:600;">Stream: 1Hz WSS Locked • Corridor Nominal</div>
           </div>
         `)
         .addTo(group);

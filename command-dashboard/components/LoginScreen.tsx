@@ -133,7 +133,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSelectOrg }) => {
             <h2 style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "28px", fontWeight: 700, color: "#fff", margin: "10px 0 4px" }}>
               SELECT OPERATING LAW ENFORCEMENT AGENCY
             </h2>
-            <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", color: "var(--muted)", margin: 0 }}>
+            <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", color: "var(--muted)", margin: 0 }}>
               Authenticate terminal session credentials for Sector 2 corridor monitoring and armed response dispatch.
             </p>
           </div>
@@ -157,20 +157,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSelectOrg }) => {
                 >
                   <div className="panel-header" style={{ padding: "12px 16px" }}>
                     <div className="panel-title">
-                      <div style={{ width: "28px", height: "28px", border: "1px solid var(--amber)", color: "var(--amber)", display: "grid", placeItems: "center" }}>
-                        <Icon size={16} />
+                      <div style={{ width: "30px", height: "30px", border: "1px solid var(--amber)", color: "var(--amber)", display: "grid", placeItems: "center" }}>
+                        <Icon size={17} />
                       </div>
-                      <span style={{ fontSize: "11px" }}>{org.shortCode}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 700 }}>{org.shortCode}</span>
                     </div>
                     <span className="status-pill orange">{org.tier.replace("_", " ")}</span>
                   </div>
 
                   <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", background: "var(--panel-2)", flex: 1 }}>
                     <div>
-                      <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "15px", fontWeight: 700, color: "#fff" }}>
+                      <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "17px", fontWeight: 700, color: "#fff" }}>
                         {org.name}
                       </div>
-                      <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", marginTop: "4px", lineHeight: 1.5 }}>
+                      <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--muted)", marginTop: "4px", lineHeight: 1.5 }}>
                         {org.role}
                       </div>
                     </div>
@@ -178,23 +178,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSelectOrg }) => {
                     <div className="metrics" style={{ padding: 0 }}>
                       <div className="metric">
                         <span className="metric-label">ASSIGNED OFFICER</span>
-                        <span className="metric-value" style={{ fontSize: "11px" }}>{org.officerName}</span>
+                        <span className="metric-value" style={{ fontSize: "13px" }}>{org.officerName}</span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">RANK / TITLE</span>
-                        <span className="metric-value" style={{ fontSize: "10px", color: "var(--cyan)" }}>{org.officerRank}</span>
+                        <span className="metric-value" style={{ fontSize: "13px", color: "var(--cyan)" }}>{org.officerRank}</span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">BADGE NUMBER</span>
-                        <span className="metric-value" style={{ fontSize: "11px", color: "var(--amber)" }}>{org.badgeNumber}</span>
+                        <span className="metric-value" style={{ fontSize: "13px", color: "var(--amber)" }}>{org.badgeNumber}</span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">DIVISION</span>
-                        <span className="metric-value" style={{ fontSize: "9px", color: "#ddd" }}>{org.division}</span>
+                        <span className="metric-value" style={{ fontSize: "12px", color: "#ddd" }}>{org.division}</span>
                       </div>
                     </div>
 
-                    <div style={{ border: "1px solid #3c403d", padding: "10px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)", lineHeight: 1.5 }}>
+                    <div style={{ border: "1px solid #3c403d", padding: "12px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
                       <b style={{ color: "#fff" }}>RESOURCES:&nbsp;&nbsp;</b>{org.resourcesSummary}
                     </div>
                   </div>
@@ -203,10 +203,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSelectOrg }) => {
                     <button
                       type="button"
                       className="quick"
-                      style={{ width: "100%", padding: "10px", fontSize: "10px", borderColor: "var(--orange)", color: "var(--orange)" }}
+                      style={{ width: "100%", padding: "10px", fontSize: "13px", fontWeight: 700, borderColor: "var(--orange)", color: "var(--orange)" }}
                     >
                       <span>AUTHENTICATE TERMINAL SESSION</span>
-                      <ArrowRight size={13} />
+                      <ArrowRight size={14} />
                     </button>
                   </div>
                 </section>

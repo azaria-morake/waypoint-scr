@@ -197,7 +197,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                 onClick={handleRunSimulation}
                 disabled={isSimulating}
                 className="quick danger"
-                style={{ padding: "6px 14px", fontSize: "9px" }}
+                style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600 }}
               >
                 {isSimulating ? "AWAKENING SWARM..." : "SIMULATE CODE RED TRIGGER"}
               </button>
@@ -206,9 +206,9 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                 type="button"
                 onClick={handleResetSimulation}
                 className="quick"
-                style={{ padding: "6px 14px", fontSize: "9px" }}
+                style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600 }}
               >
-                <RotateCcw size={12} />
+                <RotateCcw size={14} />
                 RESET SWARM TO IDLE
               </button>
             )}
@@ -217,15 +217,15 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
 
         <div style={{ padding: "14px 20px", background: "var(--panel)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
           <div>
-            <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>
+            <div style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: "18px", fontWeight: 700, color: "#fff" }}>
               The Way Swarm Multi-Agent Engine
             </div>
-            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", marginTop: "2px" }}>
+            <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", color: "var(--muted)", marginTop: "2px" }}>
               Autonomous 4-tier tactical reasoning mesh supervised by Google Gemini
             </div>
           </div>
 
-          <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--cyan)" }}>
+          <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--cyan)" }}>
             MUTUAL-TLS SECURE&nbsp;&nbsp;|&nbsp;&nbsp;SECTOR 2 CORRIDOR MESH
           </div>
         </div>
@@ -241,7 +241,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
             </div>
             <div className="metric">
               <span className="metric-label">SWARM STATE</span>
-              <span className="metric-value" style={{ color: simulationActive ? "var(--red)" : "var(--green)", fontSize: "12px" }}>
+              <span className="metric-value" style={{ color: simulationActive ? "var(--red)" : "var(--green)", fontSize: "15px" }}>
                 {simulationActive ? "ENGAGED" : "STANDBY"}
               </span>
             </div>
@@ -256,7 +256,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
             </div>
             <div className="metric">
               <span className="metric-label">PIPELINE</span>
-              <span className="metric-value" style={{ fontSize: "11px" }}>Parallel Async</span>
+              <span className="metric-value" style={{ fontSize: "13px" }}>Parallel Async</span>
             </div>
           </div>
         </Panel>
@@ -265,11 +265,11 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
           <div className="metrics" style={{ padding: 0 }}>
             <div className="metric">
               <span className="metric-label">MODEL</span>
-              <span className="metric-value" style={{ fontSize: "12px" }}>Gemini 2.5 Flash</span>
+              <span className="metric-value" style={{ fontSize: "14px" }}>Gemini 2.5 Flash</span>
             </div>
             <div className="metric">
               <span className="metric-label">POPIA COMPLIANCE</span>
-              <span className="metric-value" style={{ color: "var(--green)", fontSize: "11px" }}>Sec 11(1)(d)</span>
+              <span className="metric-value" style={{ color: "var(--green)", fontSize: "13px" }}>Sec 11(1)(d)</span>
             </div>
           </div>
         </Panel>
@@ -290,10 +290,10 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                 style={{ cursor: "pointer", background: isExpanded ? "#101415" : "transparent" }}
               >
                 <div className="panel-title">
-                  <div style={{ width: "26px", height: "26px", border: "1px solid var(--amber)", color: "var(--amber)", display: "grid", placeItems: "center" }}>
-                    <IconComponent size={14} />
+                  <div style={{ width: "28px", height: "28px", border: "1px solid var(--amber)", color: "var(--amber)", display: "grid", placeItems: "center" }}>
+                    <IconComponent size={15} />
                   </div>
-                  <span>
+                  <span style={{ fontSize: "14px" }}>
                     AGENT {agent.number}&nbsp;&nbsp;//&nbsp;&nbsp;{agent.name}
                   </span>
                 </div>
@@ -302,11 +302,11 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                   <span className={`status-pill ${isDone ? "green" : "neutral"}`}>
                     {agent.status}
                   </span>
-                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--muted)" }}>
+                  <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--muted)" }}>
                     {agent.latency}
                   </span>
                   <div style={{ color: "var(--muted)" }}>
-                    {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </div>
                 </div>
               </div>
@@ -314,7 +314,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
               {isExpanded && (
                 <div style={{ padding: "16px", background: "#0e1213", borderTop: "1px solid #444844" }}>
                   {/* Summary */}
-                  <div style={{ border: "1px solid #555750", padding: "10px 14px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "#eee", lineHeight: 1.5, marginBottom: "14px" }}>
+                  <div style={{ border: "1px solid #555750", padding: "10px 14px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", color: "#eee", lineHeight: 1.5, marginBottom: "14px" }}>
                     <b style={{ color: "var(--amber)" }}>OPERATIONAL ACTION:&nbsp;&nbsp;</b>
                     {agent.summary}
                   </div>
@@ -324,7 +324,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                     {agent.specs.map((spec, i) => (
                       <div key={i} className="metric">
                         <span className="metric-label">{spec.label}</span>
-                        <span className="metric-value" style={{ fontSize: "11px", color: "#fff" }}>{spec.value}</span>
+                        <span className="metric-value" style={{ fontSize: "13px", color: "#fff" }}>{spec.value}</span>
                       </div>
                     ))}
                   </div>
@@ -332,7 +332,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                   {/* WhatsApp Transcript if present */}
                   {agent.transcript && (
                     <div style={{ border: "1px solid #078e76", padding: "12px", background: "#06201b", marginBottom: "14px" }}>
-                      <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", fontWeight: 700, color: "#20cbb0", textTransform: "uppercase", marginBottom: "8px" }}>
+                      <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", fontWeight: 700, color: "#20cbb0", textTransform: "uppercase", marginBottom: "8px" }}>
                         LIVE WHATSAPP RECON TRANSCRIPT (AUTO-CONTACT WITH SISTER)
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -340,20 +340,20 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
                           <div
                             key={idx}
                             style={{
-                              padding: "6px 10px",
+                              padding: "8px 12px",
                               background: msg.sender.includes("AGENT") ? "#073b30" : "#122622",
                               border: "1px solid #0c5647",
                               fontFamily: "var(--font-ibm-plex-mono), monospace",
-                              fontSize: "10px",
+                              fontSize: "13px",
                               color: "#fff",
                             }}
                           >
-                            <div style={{ fontSize: "8px", fontWeight: 700, color: "var(--cyan)", marginBottom: "2px" }}>{msg.sender}</div>
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--cyan)", marginBottom: "3px" }}>{msg.sender}</div>
                             <div>{msg.text}</div>
                           </div>
                         ))}
                       </div>
-                      <div style={{ marginTop: "8px", paddingTop: "6px", borderTop: "1px solid #078e76", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--amber)" }}>
+                      <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px solid #078e76", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--amber)" }}>
                         SYNTHESIZED ATTIRE:&nbsp;&nbsp;<b style={{ color: "#fff" }}>{agent.extracted_attire}</b>
                       </div>
                     </div>
@@ -361,7 +361,7 @@ export const SwarmMatrixView: React.FC<SwarmMatrixViewProps> = ({
 
                   {/* Payload Outputs */}
                   {agent.output && (
-                    <div style={{ border: "1px solid #3c403d", padding: "10px 14px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px" }}>
+                    <div style={{ border: "1px solid #3c403d", padding: "10px 14px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px" }}>
                       <div style={{ fontWeight: 700, color: "var(--cyan)", textTransform: "uppercase", marginBottom: "6px" }}>
                         STRUCTURED OUTPUT PAYLOAD:
                       </div>

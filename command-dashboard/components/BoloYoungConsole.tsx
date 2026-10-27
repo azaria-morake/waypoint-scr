@@ -521,19 +521,19 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "14px", paddingRight: "6px" }}
           >
             {chatHistory.length === 0 ? (
-              <div style={{ margin: "auto", textAlign: "center", padding: "40px 20px", maxWidth: "480px" }}>
-                <div style={{ width: "48px", height: "48px", border: "1.5px solid var(--amber)", margin: "0 auto 14px", display: "grid", placeItems: "center", color: "var(--amber)", background: "#18140e" }}>
-                  <Activity size={24} />
+              <div style={{ margin: "auto", textAlign: "center", padding: "40px 20px", maxWidth: "520px" }}>
+                <div style={{ width: "52px", height: "52px", border: "1.5px solid var(--amber)", margin: "0 auto 14px", display: "grid", placeItems: "center", color: "var(--amber)", background: "#18140e" }}>
+                  <Activity size={26} />
                 </div>
-                <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", fontWeight: 700, color: "#fff", letterSpacing: "0.08em" }}>
+                <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "16px", fontWeight: 700, color: "#fff", letterSpacing: "0.08em" }}>
                   BOLO YOUNG TACTICAL LIAISON
                 </div>
-                <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--muted)", marginTop: "8px", lineHeight: 1.6 }}>
+                <p style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", color: "var(--muted)", marginTop: "10px", lineHeight: 1.6 }}>
                   {hasActiveJourney
                     ? "Citizen journey beacon active. Connected to BOLO Young. Speak naturally or give directives to the traffic controller."
                     : "BOLO Young is standing by on Sector 2 corridor grid. Continuous kinematic audit active. He will alert you immediately once a citizen triggers transit."}
                 </p>
-                <div style={{ marginTop: "16px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", color: "var(--cyan)" }}>
+                <div style={{ marginTop: "18px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--cyan)", fontWeight: 600 }}>
                   ● DUAL-MONITOR READY&nbsp;&nbsp;|&nbsp;&nbsp;CONVERSATION PERSISTED
                 </div>
               </div>
@@ -551,11 +551,11 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                       width: "100%",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", padding: "0 4px" }}>
-                      <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px", fontWeight: 700, color: isAgent ? "var(--amber)" : "var(--cyan)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px", padding: "0 4px" }}>
+                      <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", fontWeight: 700, color: isAgent ? "var(--amber)" : "var(--cyan)" }}>
                         {msg.senderName}
                       </span>
-                      <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)" }}>
+                      <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "12px", color: "var(--muted)" }}>
                         {msg.timestamp}
                       </span>
                     </div>
@@ -563,28 +563,28 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                     <div
                       style={{
                         maxWidth: "80%",
-                        padding: "14px 16px",
+                        padding: "14px 18px",
                         background: isAgent ? "var(--panel-2)" : "#181d20",
                         border: isAgent ? "1.5px solid #75776f" : "1.5px solid #555750",
                         borderLeft: isAgent ? "5px solid var(--amber)" : "1.5px solid #555750",
                         borderRight: !isAgent ? "5px solid var(--cyan)" : undefined,
                         color: "#eee",
                         fontFamily: "var(--font-ibm-plex-mono), monospace",
-                        fontSize: "11px",
+                        fontSize: "14px",
                         lineHeight: 1.65,
                       }}
                     >
                       <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{msg.text}</p>
 
                       {isAgent && msg.suggestedActions && msg.suggestedActions.length > 0 && (
-                        <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid #444844", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                        <div style={{ marginTop: "14px", paddingTop: "10px", borderTop: "1px solid #444844", display: "flex", flexWrap: "wrap", gap: "8px" }}>
                           {msg.suggestedActions.map((action, idx) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={() => handleActionClick(action)}
                               className={`quick ${action.primary ? "danger" : ""}`}
-                              style={{ padding: "5px 10px", fontSize: "9px" }}
+                              style={{ padding: "6px 12px", fontSize: "12px" }}
                             >
                               <span>{action.label}</span>
                             </button>
@@ -598,8 +598,8 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             )}
 
             {isLiaising && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", color: "var(--amber)" }}>
-                <RefreshCw size={12} className="animate-spin" />
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", color: "var(--amber)" }}>
+                <RefreshCw size={14} className="animate-spin" />
                 <span>BOLO Young synthesizing tactical response with Gemini...</span>
               </div>
             )}
@@ -607,7 +607,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           </div>
 
           {/* Bottom Command Line Input */}
-          <div style={{ paddingTop: "12px", borderTop: "1.5px solid #444844", display: "flex", gap: "8px" }}>
+          <div style={{ paddingTop: "14px", borderTop: "1.5px solid #444844", display: "flex", gap: "10px" }}>
             <input
               type="text"
               value={operatorPrompt}
@@ -618,9 +618,9 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                 flex: 1,
                 background: "#101415",
                 border: "1.5px solid #75776f",
-                padding: "10px 14px",
+                padding: "12px 16px",
                 fontFamily: "var(--font-ibm-plex-mono), monospace",
-                fontSize: "11px",
+                fontSize: "14px",
                 color: "#fff",
                 outline: "none",
               }}
@@ -630,10 +630,10 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
               onClick={() => handleSendPrompt()}
               disabled={!operatorPrompt.trim() || isLiaising}
               className="quick"
-              style={{ padding: "10px 18px", borderColor: "var(--amber)", color: "var(--amber)" }}
+              style={{ padding: "12px 20px", borderColor: "var(--amber)", color: "var(--amber)", fontSize: "13px" }}
             >
               <span>TRANSMIT</span>
-              <Send size={13} />
+              <Send size={15} />
             </button>
           </div>
         </div>
@@ -656,7 +656,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Terminal size={14} />
+                <Terminal size={15} />
                 <span>OBSERVATION TRAIL</span>
               </div>
               <span className="status-pill green">AUTONOMOUS</span>
@@ -664,14 +664,14 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
 
             <div style={{ maxHeight: "170px", overflowY: "auto", padding: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
               {observationLogs.map((obs) => (
-                <div key={obs.id} style={{ border: "1px solid #3c403d", padding: "6px 8px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace" }}>
+                <div key={obs.id} style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", fontFamily: "var(--font-ibm-plex-mono), monospace" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span className={`status-pill ${obs.tag === "RED_ALERT" ? "red" : obs.tag === "BEACON_LOCKED" ? "green" : "neutral"}`} style={{ padding: "1px 5px", fontSize: "7px" }}>
+                    <span className={`status-pill ${obs.tag === "RED_ALERT" ? "red" : obs.tag === "BEACON_LOCKED" ? "green" : "neutral"}`} style={{ padding: "2px 6px", fontSize: "11px" }}>
                       {obs.tag}
                     </span>
-                    <span style={{ fontSize: "7px", color: "var(--muted)" }}>{obs.timestamp}</span>
+                    <span style={{ fontSize: "11px", color: "var(--muted)" }}>{obs.timestamp}</span>
                   </div>
-                  <p style={{ margin: "4px 0 0", fontSize: "8px", color: "#ccc", lineHeight: 1.4 }}>{obs.text}</p>
+                  <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#eee", lineHeight: 1.45 }}>{obs.text}</p>
                 </div>
               ))}
             </div>
@@ -681,7 +681,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Activity size={14} />
+                <Activity size={15} />
                 <span>TELEMETRY RADAR</span>
               </div>
               <span className={`status-pill ${!hasActiveJourney ? "neutral" : isStagnant ? "red" : "green"}`}>
@@ -692,19 +692,19 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             <div className="metrics" style={{ padding: "6px" }}>
               <div className="metric">
                 <span className="metric-label">VELOCITY</span>
-                <span className="metric-value" style={{ fontSize: "12px" }}>
+                <span className="metric-value" style={{ fontSize: "16px" }}>
                   {hasActiveJourney ? `${loc?.current_speed_kmh ?? 0} km/h` : "0 km/h (Standby)"}
                 </span>
               </div>
               <div className="metric">
                 <span className="metric-label">STREAM STATUS</span>
-                <span className="metric-value" style={{ fontSize: "12px", color: hasActiveJourney ? "var(--green)" : "var(--muted)" }}>
+                <span className="metric-value" style={{ fontSize: "14px", color: hasActiveJourney ? "var(--green)" : "var(--muted)" }}>
                   {hasActiveJourney ? "1Hz WSS Locked" : "Watchdog Nominal"}
                 </span>
               </div>
               <div className="metric">
                 <span className="metric-label">COORDINATES</span>
-                <span className="metric-value" style={{ fontSize: "9px", color: "var(--cyan)" }}>
+                <span className="metric-value" style={{ fontSize: "13px", color: "var(--cyan)" }}>
                   {hasActiveJourney && loc?.current_coordinates
                     ? `${loc.current_coordinates[0].toFixed(4)}°, ${loc.current_coordinates[1].toFixed(4)}°`
                     : "Sector 2 Grid Nominal"}
@@ -712,7 +712,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
               </div>
               <div className="metric">
                 <span className="metric-label">CORRIDOR</span>
-                <span className="metric-value" style={{ fontSize: "9px", color: "#ddd" }}>
+                <span className="metric-value" style={{ fontSize: "13px", color: "#ddd" }}>
                   {hasActiveJourney ? loc?.origin?.name || "N12 East Corridor" : "Sector 2 Clear"}
                 </span>
               </div>
@@ -723,12 +723,12 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title">
-                <UserCheck size={14} />
+                <UserCheck size={15} />
                 <span>TARGET CITIZEN PROFILE</span>
               </div>
             </div>
 
-            <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: "6px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "9px" }}>
+            <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: "8px", fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--muted)" }}>TARGET:</span>
                 <b style={{ color: "#fff" }}>
@@ -760,7 +760,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title">
-                <ShieldCheck size={14} />
+                <ShieldCheck size={15} />
                 <span>ATTIRE RECON INTEL</span>
               </div>
               <span className={`status-pill ${currentAttire ? "green" : !hasActiveJourney ? "neutral" : "orange"}`}>
@@ -771,29 +771,29 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             <div style={{ padding: "12px", fontFamily: "var(--font-ibm-plex-mono), monospace" }}>
               {currentAttire ? (
                 <div style={{ border: "1px solid #078e76", padding: "10px", background: "#06201b" }}>
-                  <div style={{ fontSize: "8px", fontWeight: 700, color: "#20cbb0", textTransform: "uppercase" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#20cbb0", textTransform: "uppercase" }}>
                     VERIFIED ATTIRE (NOK RECON):
                   </div>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#fff", marginTop: "4px" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginTop: "4px" }}>
                     &ldquo;{currentAttire}&rdquo;
                   </div>
-                  <div style={{ fontSize: "8px", color: "var(--muted)", marginTop: "4px" }}>
+                  <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
                     Confidence: 95% • Pushed to CAD vectors
                   </div>
                 </div>
               ) : (
-                <div style={{ border: "1px solid #555750", padding: "10px", background: "#101415" }}>
-                  <div style={{ fontSize: "8px", fontWeight: 700, color: "var(--amber)", textTransform: "uppercase" }}>
+                <div style={{ border: "1px solid #555750", padding: "12px", background: "#101415" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--amber)", textTransform: "uppercase" }}>
                     ATTIRE UNCONFIRMED
                   </div>
-                  <p style={{ margin: "4px 0 8px", fontSize: "9px", color: "var(--muted)", lineHeight: 1.4 }}>
+                  <p style={{ margin: "4px 0 10px", fontSize: "12px", color: "var(--muted)", lineHeight: 1.5 }}>
                     Deploy WhatsApp Recon to verify victim clothing description.
                   </p>
                   <button
                     type="button"
                     onClick={() => setIsWhatsAppOpen(true)}
                     className="quick"
-                    style={{ width: "100%", borderColor: "#078e76", color: "#20cbb0" }}
+                    style={{ width: "100%", borderColor: "#078e76", color: "#20cbb0", fontSize: "13px" }}
                   >
                     OPEN WHATSAPP RECON
                   </button>
@@ -806,27 +806,27 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title">
-                <Car size={14} />
+                <Car size={15} />
                 <span>SECTOR FLEET DISPATCH</span>
               </div>
               <span className="status-pill blue">{unitsConverged ? "CONVERGING" : "CRUISING"}</span>
             </div>
 
-            <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
-              <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ border: "1px solid #3c403d", padding: "10px 12px", background: "#101415", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", fontWeight: 700, color: "#fff" }}>Fox Tactical 14</div>
-                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)" }}>Armed Intercept Unit</div>
+                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", fontWeight: 700, color: "#fff" }}>Fox Tactical 14</div>
+                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>Armed Intercept Unit</div>
                 </div>
-                <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", fontWeight: 700, color: "var(--cyan)" }}>ETA 2.1m</span>
+                <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", fontWeight: 700, color: "var(--cyan)" }}>ETA 2.1m</span>
               </div>
 
-              <div style={{ border: "1px solid #3c403d", padding: "8px 10px", background: "#101415", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ border: "1px solid #3c403d", padding: "10px 12px", background: "#101415", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "10px", fontWeight: 700, color: "#fff" }}>SAPS Flying Squad 302</div>
-                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "8px", color: "var(--muted)" }}>Highway Patrol Intercept</div>
+                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", fontWeight: 700, color: "#fff" }}>SAPS Flying Squad 302</div>
+                  <div style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>Highway Patrol Intercept</div>
                 </div>
-                <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "11px", fontWeight: 700, color: "var(--cyan)" }}>ETA 4.3m</span>
+                <span style={{ fontFamily: "var(--font-ibm-plex-mono), monospace", fontSize: "13px", fontWeight: 700, color: "var(--cyan)" }}>ETA 4.3m</span>
               </div>
             </div>
           </section>
