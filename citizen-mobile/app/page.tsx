@@ -8,6 +8,7 @@ import { ActiveJourneyView } from "../components/ActiveJourneyView";
 import { HelpDispatchedView } from "../components/HelpDispatchedView";
 import { CompletionScreen } from "../components/CompletionScreens";
 import { PinModal } from "../components/PinModal";
+import { MapPin, Users, Shield } from "lucide-react";
 
 export default function CitizenMobileApp() {
   const [user, setUser] = useState<{
@@ -166,18 +167,62 @@ export default function CitizenMobileApp() {
   return (
     <main className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-[#081018] select-none">
       {/* ========================================================= */}
-      {/* LEFT PANEL: Exact Runner Hero Matching Reference UI       */}
+      {/* LEFT PANEL: Restored Original Image with Reference UI Text */}
       {/* ========================================================= */}
-      <div className="relative w-full lg:w-1/2 min-h-[360px] lg:min-h-screen flex flex-col justify-end overflow-hidden bg-[#081018]">
-        {/* Background Image: Pixel-Perfect Onboarding Left Pane */}
+      <div className="relative w-full lg:w-1/2 min-h-[420px] lg:min-h-screen flex flex-col justify-end p-8 lg:p-14 overflow-hidden bg-[#081018]">
+        {/* Restored Original Background Hero Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/onboarding_left_pane.png"
-            alt="You can run, as far as you like. Waypoint keeps a last known location, so your people know where to look if something goes wrong."
+            src="/Waypoint_login_bg.png"
+            alt="Waypoint Runner Background"
             fill
             priority
-            className="object-cover object-center"
+            className="object-cover object-center filter brightness-[0.88] contrast-[1.08] scale-[1.02]"
           />
+          {/* Atmospheric gradient overlays for contrast and readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#081018] via-[#081018]/60 to-[#081018]/30 lg:bg-gradient-to-r lg:from-transparent lg:via-[#081018]/30 lg:to-[#081018]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#081018]/90" />
+        </div>
+
+        {/* Text and Icons on top of original image matching reference */}
+        <div className="relative z-10 max-w-xl w-full">
+          {/* Amber Accent Pill */}
+          <div className="w-12 h-1 bg-[#f5a94b] rounded-full mb-6" />
+
+          {/* Headline */}
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.12] mb-4 drop-shadow-md">
+            You can run,<br />
+            <span className="text-[#f5a94b]">as far as you like.</span>
+          </h2>
+
+          {/* Subtitle Paragraph */}
+          <p className="text-slate-300 text-sm sm:text-base font-normal max-w-md leading-relaxed mb-8 drop-shadow">
+            Waypoint keeps a last known location, so your people know where to look if something goes wrong.
+          </p>
+
+          {/* 3 Column Feature Badges with Icons */}
+          <div className="grid grid-cols-3 pt-6 border-t border-white/15 max-w-md w-full">
+            <div className="flex flex-col items-start pr-3 border-r border-white/15">
+              <MapPin className="w-5 h-5 text-slate-300 mb-2 stroke-[1.8]" />
+              <span className="text-[11px] sm:text-xs text-slate-300 font-medium leading-tight">
+                Last known location
+              </span>
+            </div>
+
+            <div className="flex flex-col items-start px-3 border-r border-white/15">
+              <Users className="w-5 h-5 text-slate-300 mb-2 stroke-[1.8]" />
+              <span className="text-[11px] sm:text-xs text-slate-300 font-medium leading-tight">
+                Your trusted contacts
+              </span>
+            </div>
+
+            <div className="flex flex-col items-start pl-3">
+              <Shield className="w-5 h-5 text-slate-300 mb-2 stroke-[1.8]" />
+              <span className="text-[11px] sm:text-xs text-slate-300 font-medium leading-tight">
+                Simple and discreet
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
