@@ -40,9 +40,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
     # Distributed Models per Swarm Agent (bypasses per-model rate limits)
-    MODEL_TELEMETRY: str = os.getenv("MODEL_TELEMETRY", "gemini-3.5-flash-lite")
-    MODEL_NOK_RECON: str = os.getenv("MODEL_NOK_RECON", "gemini-3-flash-preview")
-    MODEL_DISPATCH: str = os.getenv("MODEL_DISPATCH", "gemini-flash-lite-latest")
+    MODEL_TELEMETRY: str = os.getenv("MODEL_TELEMETRY", "gemini-3.1-flash-lite")
+    MODEL_NOK_RECON: str = os.getenv("MODEL_NOK_RECON", "gemini-3.1-flash-lite")
+    MODEL_DISPATCH: str = os.getenv("MODEL_DISPATCH", "gemini-3.1-flash-lite")
     MODEL_CUSTOM_OPS: str = os.getenv("MODEL_CUSTOM_OPS", "gemini-3.1-flash-lite")
 
     class Config:

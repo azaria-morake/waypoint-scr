@@ -121,7 +121,6 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
-        window.dispatchEvent(new Event("waypoint_chat_updated"));
       } catch (e) {}
     }
   }, [chatHistory]);
@@ -130,14 +129,24 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
-          setChatHistory(JSON.parse(e.newValue));
+          const parsed: ChatMessage[] = JSON.parse(e.newValue);
+          setChatHistory((prev) => {
+            if (JSON.stringify(prev) === e.newValue) return prev;
+            return parsed;
+          });
         } catch (err) {}
       }
     };
     const handleLocalUpdate = () => {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) setChatHistory(JSON.parse(saved));
+        if (saved) {
+          const parsed: ChatMessage[] = JSON.parse(saved);
+          setChatHistory((prev) => {
+            if (JSON.stringify(prev) === saved) return prev;
+            return parsed;
+          });
+        }
       } catch (err) {}
     };
 
@@ -176,6 +185,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
           const destName = data.audit?.location_audit?.destination?.name || "Sandton City Mall, Sandton";
 
           setChatHistory((prev) => {
+            let modified = false;
             let updated = [...prev];
 
             const hasStart = updated.some((m) => m.id === "msg-journey-start");
@@ -189,6 +199,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                 threatLevel: "NOMINAL",
               };
               updated = [startMsg, ...updated];
+              modified = true;
             }
 
             if (data.journey_status === "RED") {
@@ -228,7 +239,12 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                         ],
                 };
                 updated = [...updated, redMsg];
+                modified = true;
               }
+            }
+
+            if (!modified) {
+              return prev;
             }
 
             try {

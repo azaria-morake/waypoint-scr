@@ -53,9 +53,11 @@ class WaypointLLMClient:
             # Multi-model fallback sequence to eliminate any transient 503 / 404 / spike
             models_to_try = [
                 target_model,
+                "gemini-3.1-flash-lite",
+                "gemini-3.1-flash-lite-preview",
+                "gemini-flash-latest",
                 "gemini-flash-lite-latest",
                 "gemini-3.5-flash-lite",
-                "gemini-3-flash-preview"
             ]
             seen = set()
             candidate_models = [m for m in models_to_try if m and not (m in seen or seen.add(m))]
