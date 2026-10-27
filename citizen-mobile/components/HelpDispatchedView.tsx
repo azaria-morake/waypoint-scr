@@ -28,9 +28,9 @@ export const HelpDispatchedView: React.FC<HelpDispatchedViewProps> = ({
       setResponderProgress((prev) => (prev < 0.9 ? prev + 0.05 : 0.9));
 
       driftCounter++;
-      // Citizen distress coordinate near N12 on-ramp corridor with micro-drift
-      const lat = -26.2678 + (Math.sin(driftCounter) * 0.0001);
-      const lng = 28.1245 + (Math.cos(driftCounter) * 0.0001);
+      // Citizen distress coordinate halted along N12 corridor with micro-drift
+      const lat = -26.2550 + (Math.sin(driftCounter) * 0.00005);
+      const lng = 28.1150 + (Math.cos(driftCounter) * 0.00005);
 
       fetch(`${apiUrl}/api/v1/telemetry/ping`, {
         method: "POST",
@@ -56,9 +56,9 @@ export const HelpDispatchedView: React.FC<HelpDispatchedViewProps> = ({
       <div className="absolute inset-0 z-0">
         <MapCanvas
           mode="RED"
-          progress={0.42}
+          progress={0.25}
           responderProgress={responderProgress}
-          telemetrySpeed={82}
+          telemetrySpeed={0}
         />
       </div>
 

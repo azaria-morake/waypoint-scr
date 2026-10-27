@@ -5,7 +5,7 @@ import { Bot, ShieldAlert, ArrowRight, X } from "lucide-react";
 import { LoginScreen, OrganizationOption, ORGANIZATIONS } from "../components/LoginScreen";
 import { TacticalSidebar, NavTab } from "../components/TacticalSidebar";
 import { StationOverviewView } from "../components/StationOverviewView";
-import { LiveMapView, LiveAlertItem, CitizenLiveLocation } from "../components/LiveMapView";
+import { LiveMapView, LiveAlertItem, CitizenLiveLocation, REAL_ALBERTON_TO_SANDTON_ROUTE, getCoordinatesAtProgress } from "../components/LiveMapView";
 import { SwarmMatrixView } from "../components/SwarmMatrixView";
 import { PopiaVaultView } from "../components/PopiaVaultView";
 import { B2BOpsView } from "../components/B2BOpsView";
@@ -40,6 +40,8 @@ export default function CommandDashboardPage() {
   } | null>(null);
 
   const dismissedToastsRef = useRef<Set<string>>(new Set());
+  const lastTelemetryPingAtRef = useRef<number>(0);
+  const journeyStartTimeRef = useRef<number>(0);
 
   const handleDismissToast = (targetTab?: NavTab) => {
     if (activeToast) {
@@ -235,6 +237,7 @@ export default function CommandDashboardPage() {
 
             // 0. Live Telemetry Ping Stream (Green or Red)
             if (data.type === "TELEMETRY_PING") {
+              lastTelemetryPingAtRef.current = Date.now();
               const isRed = incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED";
               const curLat = Number(data.lat);
               const curLng = Number(data.lng);
@@ -353,6 +356,7 @@ export default function CommandDashboardPage() {
 
             // 1b. Citizen Journey Activated (1st Tap Start)
             else if (data.type === "JOURNEY_STARTED") {
+              journeyStartTimeRef.current = Date.now();
               setHasActiveJourney(true);
               setCitizenLocation({
                 journeyId: data.journey_id || "active_journey",
@@ -688,28 +692,46 @@ export default function CommandDashboardPage() {
     return () => clearInterval(interval);
   }, [currentOrg, apiUrl]);
 
-  // Real-time Corridor Progression Simulation (Advances coordinates every 2.5s when journey is active)
+  // Real-time Corridor Progression (Advances smoothly along 25-minute Alberton -> Sandton highway corridor)
   useEffect(() => {
     if (!hasActiveJourney) return;
-    const CORRIDOR_POINTS: [number, number][] = [
-      [-26.2585, 28.1215],
-      [-26.2602, 28.1220],
-      [-26.2625, 28.1228],
-      [-26.2650, 28.1235],
-      [-26.2678, 28.1245],
-    ];
-    let step = 0;
+
+    if (journeyStartTimeRef.current === 0) {
+      journeyStartTimeRef.current = Date.now();
+    }
+
     const interval = setInterval(() => {
+      // If live telemetry pings are actively arriving from citizen mobile (< 4500ms ago), let live stream dictate position
+      if (Date.now() - lastTelemetryPingAtRef.current < 4500) {
+        return;
+      }
+
       setCitizenLocation((prev) => {
         const isRed = prev?.status === "RED" || incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED";
-        step = (step + 1) % CORRIDOR_POINTS.length;
-        const pt = CORRIDOR_POINTS[step];
-        const newLat = isRed ? -26.2678 : pt[0];
-        const newLng = isRed ? 28.1245 : pt[1];
-        const newSpeed = isRed ? 0 : 58 + (step * 4);
+
+        // Monotonic progression across 25 minutes (1500 seconds)
+        const elapsedSec = Math.max(0, (Date.now() - journeyStartTimeRef.current) / 1000);
+        const progress = Math.min(elapsedSec / 1500, 1.0);
+
+        const pt = getCoordinatesAtProgress(REAL_ALBERTON_TO_SANDTON_ROUTE, progress);
+        const newLat = isRed ? (prev?.lat || -26.2380) : pt[0];
+        const newLng = isRed ? (prev?.lng || 28.0920) : pt[1];
+
+        let newSpeed = 0;
+        if (!isRed) {
+          if (progress >= 1.0) {
+            newSpeed = 0; // Safely arrived at destination
+          } else if (progress < 0.08 || progress > 0.92) {
+            newSpeed = 42; // Local residential / Sandton mall approach
+          } else {
+            newSpeed = 76 + Math.floor(Math.sin(elapsedSec / 12) * 6); // Cruising highway corridor
+          }
+        }
+
         if (selectedAlert && selectedAlert.status === "RED") {
           setSelectedAlert((a) => a ? { ...a, lat: newLat, lng: newLng, speedKmh: newSpeed } : null);
         }
+
         return {
           journeyId: prev?.journeyId || "active_journey",
           lat: newLat,
@@ -717,12 +739,13 @@ export default function CommandDashboardPage() {
           speedKmh: newSpeed,
           headingDeg: 140,
           status: isRed ? "RED" : "GREEN",
-          citizenName: "Thandiwe Ndlovu",
+          citizenName: prev?.citizenName || "Thandiwe Ndlovu",
           destinationName: prev?.destinationName || "Sandton City Mall, Sandton",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
       });
-    }, 2500);
+    }, 2000);
+
     return () => clearInterval(interval);
   }, [hasActiveJourney, incomingAlerts, selectedAlert]);
 

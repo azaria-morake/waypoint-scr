@@ -54,6 +54,51 @@ export interface CitizenLiveLocation {
   timestamp: string;
 }
 
+export const REAL_ALBERTON_TO_SANDTON_ROUTE: [number, number][] = [
+  [-26.2585, 28.1215], // Departure Point A: 14 8th Ave, Alberton North
+  [-26.2602, 28.1220], // Hendrik Potgieter St / Ring Rd
+  [-26.2625, 28.1228], // Voortrekker Rd
+  [-26.2550, 28.1150], // N12 Reading Interchange
+  [-26.2380, 28.0920], // N12 Alberton Interchange
+  [-26.2200, 28.0650], // M2 Highway East/West
+  [-26.2080, 28.0450], // M2 Crown Interchange / Joburg CBD
+  [-26.1920, 28.0380], // M1 North (Johannesburg Central)
+  [-26.1680, 28.0400], // M1 North (Houghton / Killarney)
+  [-26.1450, 28.0430], // M1 North (Rosebank / Melrose Arch)
+  [-26.1250, 28.0510], // M1 North (Bramley / Innesfree)
+  [-26.1120, 28.0550], // Grayston Dr Off-ramp
+  [-26.1076, 28.0567], // Destination Point B: Sandton City Mall, Sandton
+];
+
+export function getCoordinatesAtProgress(route: [number, number][], progress: number): [number, number] {
+  if (!route || route.length === 0) return [-26.2585, 28.1215];
+  if (route.length === 1 || progress <= 0) return route[0];
+  if (progress >= 1) return route[route.length - 1];
+
+  const distances: number[] = [0];
+  let totalDist = 0;
+  for (let i = 0; i < route.length - 1; i++) {
+    const dLat = route[i + 1][0] - route[i][0];
+    const dLng = route[i + 1][1] - route[i][1];
+    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    totalDist += dist;
+    distances.push(totalDist);
+  }
+
+  const targetDist = progress * totalDist;
+  for (let i = 0; i < distances.length - 1; i++) {
+    if (targetDist >= distances[i] && targetDist <= distances[i + 1]) {
+      const segDist = distances[i + 1] - distances[i];
+      const frac = segDist > 0 ? (targetDist - distances[i]) / segDist : 0;
+      const lat = route[i][0] + (route[i + 1][0] - route[i][0]) * frac;
+      const lng = route[i][1] + (route[i + 1][1] - route[i][1]) * frac;
+      return [lat, lng];
+    }
+  }
+
+  return route[route.length - 1];
+}
+
 interface LiveMapViewProps {
   currentOrg: OrganizationOption;
   isWsConnected: boolean;
@@ -138,6 +183,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   const userGpsLayerRef = useRef<any>(null);
   const watchIdRef = useRef<number | null>(null);
   const queryIntervalRef = useRef<any>(null);
+  const initialCenteredRef = useRef<boolean>(false);
 
   // Real Device Geolocation State
   const [deviceLocation, setDeviceLocation] = useState<DeviceLocation | null>(null);
@@ -596,14 +642,8 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       ? [selectedAlert.lat, selectedAlert.lng]
       : [-26.2585, 28.1215];
 
-    // Real Gauteng Alberton -> Sandton Transit Corridor Waypoints
-    const corridorRoute: [number, number][] = [
-      [-26.2585, 28.1215], // 14 8th Ave, Alberton North (Departure)
-      [-26.2602, 28.1220], // Hendrik Potgieter St
-      [-26.2625, 28.1228], // Voortrekker Rd
-      [-26.2650, 28.1235], // Approach
-      [-26.2678, 28.1245], // N12 on-ramp corridor (Distress Anomaly site)
-    ];
+    // Real Gauteng Alberton -> Sandton Transit Corridor Waypoints (22km, 25-minute route)
+    const corridorRoute: [number, number][] = REAL_ALBERTON_TO_SANDTON_ROUTE;
 
     // 1. Draw Origin Marker (Departure)
     const originIcon = L.divIcon({
@@ -613,7 +653,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       iconAnchor: [12, 12],
     });
     L.marker(corridorRoute[0], { icon: originIcon })
-      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Departure Point</b><br/>14 8th Ave, Alberton North</div>`)
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Departure Point A</b><br/>14 8th Ave, Alberton North</div>`)
       .addTo(group);
 
     // 2. Draw Destination Marker (Sandton City Mall)
@@ -624,7 +664,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       iconAnchor: [12, 12],
     });
     L.marker(corridorRoute[corridorRoute.length - 1], { icon: destIcon })
-      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Target Destination</b><br/>${citizenLocation?.destinationName || "Sandton City Mall, Sandton"}</div>`)
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Destination Point B</b><br/>${citizenLocation?.destinationName || "Sandton City Mall, Sandton"}</div>`)
       .addTo(group);
 
     // 3. Draw Corridor Polyline (Green when safe transit, Red dashed when distressed)
@@ -635,19 +675,20 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       dashArray: isRed ? "8, 6" : undefined,
     }).addTo(group);
 
-    // 4. Sector Town Labels
+    // 4. Sector Town Labels along the corridor
     const createTownLabel = (name: string) =>
       L.divIcon({
-        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#e5e4dd;text-shadow:0 1px 3px rgba(0,0,0,0.9);">${name}</div>`,
+        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:#e5e4dd;text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;">${name}</div>`,
         className: "tactical-town-marker",
-        iconSize: [90, 20],
-        iconAnchor: [45, 10],
+        iconSize: [110, 20],
+        iconAnchor: [55, 10],
       });
 
     L.marker([corridorRoute[0][0] - 0.003, corridorRoute[0][1] + 0.005], { icon: createTownLabel("Alberton North"), interactive: false }).addTo(group);
+    L.marker([-26.2080, 28.0450], { icon: createTownLabel("Joburg CBD / M2"), interactive: false }).addTo(group);
+    L.marker([-26.1450, 28.0430], { icon: createTownLabel("Rosebank / M1"), interactive: false }).addTo(group);
+    L.marker([corridorRoute[corridorRoute.length - 1][0] - 0.003, corridorRoute[corridorRoute.length - 1][1] + 0.005], { icon: createTownLabel("Sandton"), interactive: false }).addTo(group);
     L.marker([-26.315 + 0.003, 28.16], { icon: createTownLabel("Katlehong"), interactive: false }).addTo(group);
-    L.marker([-26.315 + 0.024, 28.16 + 0.045], { icon: createTownLabel("Vosloorus"), interactive: false }).addTo(group);
-    L.marker([-26.315 - 0.016, 28.16 - 0.04], { icon: createTownLabel("Thokoza"), interactive: false }).addTo(group);
 
     // 5. Citizen Live Movement Pin (Green or Red)
     if (isRed) {
@@ -754,7 +795,15 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
     }
 
     if (isJourneyActive) {
-      map.panTo(coords, { animate: true, duration: 0.8 });
+      if (!initialCenteredRef.current) {
+        const bounds = L.polyline(corridorRoute).getBounds();
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        initialCenteredRef.current = true;
+      } else if (!map.getBounds().contains(coords)) {
+        map.panTo(coords, { animate: true, duration: 1.0 });
+      }
+    } else {
+      initialCenteredRef.current = false;
     }
   }, [citizenLocation, selectedAlert, currentAttire]);
 
@@ -797,7 +846,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
               {isRed
                 ? `Alberton / N12 Corridor • ${(citizenLocation?.lat || selectedAlert?.lat || -26.2678).toFixed(4)}°, ${(citizenLocation?.lng || selectedAlert?.lng || 28.1245).toFixed(4)}° • ${citizenLocation?.speedKmh ?? 0} km/h ${currentAttire ? `• Attire: ${currentAttire}` : ""}`
                 : isSafeActive
-                ? `Alberton Corridor • ${(citizenLocation?.lat || -26.2585).toFixed(4)}°, ${(citizenLocation?.lng || 28.1215).toFixed(4)}° • ${citizenLocation?.speedKmh ?? 68} km/h • 1Hz WSS Nominal`
+                ? `Alberton → Sandton Corridor • ${(citizenLocation?.lat || -26.2585).toFixed(4)}°, ${(citizenLocation?.lng || 28.1215).toFixed(4)}° • ${citizenLocation?.speedKmh ?? 68} km/h • 1Hz WSS Nominal`
                 : "Katlehong / Vosloorus / Thokoza Sector • 4 Reaction Units Cruising"}
             </small>
           </div>

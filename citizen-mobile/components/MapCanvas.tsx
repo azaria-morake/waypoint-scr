@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import { Navigation, ShieldAlert, Car, Radio } from "lucide-react";
+import { REAL_ALBERTON_TO_SANDTON_ROUTE, getCoordinatesAtProgress } from "./ActiveJourneyView";
 
 interface MapCanvasProps {
   mode: "SETUP" | "ACTIVE" | "RED";
@@ -13,7 +14,7 @@ interface MapCanvasProps {
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({
   mode,
-  progress = 0.4,
+  progress = 0,
   responderProgress = 0.65,
   telemetrySpeed = 78,
 }) => {
@@ -21,24 +22,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const mapInstanceRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
 
-  // Real Gauteng corridor: 14 8th Ave, Alberton North -> Alberton City Mall, Voortrekker Rd
-  const originCoords: [number, number] = [-26.2585, 28.1215];
-  const destCoords: [number, number] = [-26.2625, 28.1228];
+  // Real Gauteng corridor: 14 8th Ave, Alberton North -> Sandton City Mall, Sandton (25-min route)
+  const originCoords: [number, number] = REAL_ALBERTON_TO_SANDTON_ROUTE[0];
+  const destCoords: [number, number] = REAL_ALBERTON_TO_SANDTON_ROUTE[REAL_ALBERTON_TO_SANDTON_ROUTE.length - 1];
+  const corridorRoute: [number, number][] = REAL_ALBERTON_TO_SANDTON_ROUTE;
 
-  const corridorRoute: [number, number][] = [
-    [-26.2585, 28.1215], // Departure: 8th Ave
-    [-26.2602, 28.1220], // Hendrik Potgieter St
-    [-26.2625, 28.1228], // Voortrekker Rd
-    [-26.2650, 28.1235], // Approach
-    [-26.2678, 28.1245], // N12 on-ramp
-  ];
-
-  // Interpolate user current GPS point along the real corridor
-  const currentIndex = Math.min(
-    Math.floor(progress * corridorRoute.length),
-    corridorRoute.length - 1
-  );
-  const currentCoords = corridorRoute[currentIndex];
+  // Smooth continuous interpolation along corridor
+  const currentCoords = getCoordinatesAtProgress(REAL_ALBERTON_TO_SANDTON_ROUTE, progress);
 
   useEffect(() => {
     let isMounted = true;
@@ -129,7 +119,9 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     import("leaflet").then((L) => {
       renderMarkers(L, mapInstanceRef.current, markersLayerRef.current);
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.panTo(currentCoords, { animate: true });
+        if (!mapInstanceRef.current.getBounds().contains(currentCoords)) {
+          mapInstanceRef.current.panTo(currentCoords, { animate: true });
+        }
       }
     });
   }, [mode, progress, currentCoords]);
@@ -160,7 +152,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       iconAnchor: [12, 12],
     });
     L.marker(destCoords, { icon: destIcon })
-      .bindPopup("<b>Destination</b><br/>Alberton City Mall, Voortrekker Rd")
+      .bindPopup("<b>Destination</b><br/>Sandton City Mall, Sandton")
       .addTo(group);
 
     // 3. User Live Marker

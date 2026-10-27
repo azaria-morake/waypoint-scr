@@ -13,6 +13,51 @@ interface ActiveJourneyViewProps {
   onSimulateSmsFallback: () => Promise<void>;
 }
 
+export const REAL_ALBERTON_TO_SANDTON_ROUTE: [number, number][] = [
+  [-26.2585, 28.1215], // Departure Point A: 14 8th Ave, Alberton North
+  [-26.2602, 28.1220], // Hendrik Potgieter St
+  [-26.2625, 28.1228], // Voortrekker Rd
+  [-26.2550, 28.1150], // N12 Reading Interchange
+  [-26.2380, 28.0920], // N12 Alberton Interchange
+  [-26.2200, 28.0650], // M2 Highway East/West
+  [-26.2080, 28.0450], // M2 Crown Interchange / Joburg CBD
+  [-26.1920, 28.0380], // M1 North (Johannesburg Central)
+  [-26.1680, 28.0400], // M1 North (Houghton / Killarney)
+  [-26.1450, 28.0430], // M1 North (Rosebank / Melrose Arch)
+  [-26.1250, 28.0510], // M1 North (Bramley / Innesfree)
+  [-26.1120, 28.0550], // Grayston Dr Off-ramp
+  [-26.1076, 28.0567], // Destination Point B: Sandton City Mall, Sandton
+];
+
+export function getCoordinatesAtProgress(route: [number, number][], progress: number): [number, number] {
+  if (!route || route.length === 0) return [-26.2585, 28.1215];
+  if (route.length === 1 || progress <= 0) return route[0];
+  if (progress >= 1) return route[route.length - 1];
+
+  const distances: number[] = [0];
+  let totalDist = 0;
+  for (let i = 0; i < route.length - 1; i++) {
+    const dLat = route[i + 1][0] - route[i][0];
+    const dLng = route[i + 1][1] - route[i][1];
+    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    totalDist += dist;
+    distances.push(totalDist);
+  }
+
+  const targetDist = progress * totalDist;
+  for (let i = 0; i < distances.length - 1; i++) {
+    if (targetDist >= distances[i] && targetDist <= distances[i + 1]) {
+      const segDist = distances[i + 1] - distances[i];
+      const frac = segDist > 0 ? (targetDist - distances[i]) / segDist : 0;
+      const lat = route[i][0] + (route[i + 1][0] - route[i][0]) * frac;
+      const lng = route[i][1] + (route[i + 1][1] - route[i][1]) * frac;
+      return [lat, lng];
+    }
+  }
+
+  return route[route.length - 1];
+}
+
 export const ActiveJourneyView: React.FC<ActiveJourneyViewProps> = ({
   journeyId,
   destination,
@@ -21,61 +66,63 @@ export const ActiveJourneyView: React.FC<ActiveJourneyViewProps> = ({
   onSimulateGForceStruggle,
   onSimulateSmsFallback,
 }) => {
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(24 * 60 + 32);
-  const [speed, setSpeed] = useState<number>(78);
-  const [gForce, setGForce] = useState<number>(1.1);
-  const [progress, setProgress] = useState<number>(0.32);
+  const TOTAL_DURATION_SEC = 25 * 60; // 1500 seconds for 25-minute journey
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(TOTAL_DURATION_SEC);
+  const [speed, setSpeed] = useState<number>(42);
+  const [gForce, setGForce] = useState<number>(1.05);
+  const [progress, setProgress] = useState<number>(0);
   const [panicLoading, setPanicLoading] = useState<boolean>(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-  const CORRIDOR_ROUTE: [number, number][] = [
-    [-26.2585, 28.1215],
-    [-26.2602, 28.1220],
-    [-26.2625, 28.1228],
-    [-26.2650, 28.1235],
-    [-26.2678, 28.1245],
-  ];
 
   // Countdown timer for Dead-Man's Switch and live telemetry streaming
   useEffect(() => {
     let pingCounter = 0;
     const timer = setInterval(() => {
-      setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-      let currentProg = 0.32;
-      setProgress((prev) => {
-        const next = prev < 0.95 ? prev + 0.003 : 0.95;
-        currentProg = next;
-        return next;
+      setSecondsRemaining((prev) => {
+        const nextSec = prev > 0 ? prev - 1 : 0;
+        const elapsed = TOTAL_DURATION_SEC - nextSec;
+        const currentProg = Math.min(elapsed / TOTAL_DURATION_SEC, 1.0);
+        setProgress(currentProg);
+
+        // Realistic vehicle velocity:
+        // Alberton local streets: 40-48 km/h
+        // N12 / M2 / M1 highways: 74-88 km/h
+        // Sandton approach: 35-45 km/h
+        let currentSpeed = 76;
+        if (elapsed < 120) {
+          currentSpeed = 42 + Math.floor(Math.sin(elapsed / 8) * 4);
+        } else if (elapsed > 1350) {
+          currentSpeed = 38 + Math.floor(Math.sin(elapsed / 6) * 4);
+        } else {
+          currentSpeed = 76 + Math.floor(Math.sin(elapsed / 12) * 8);
+        }
+        setSpeed(currentSpeed);
+
+        pingCounter++;
+        if (pingCounter % 2 === 0) {
+          const [curLat, curLng] = getCoordinatesAtProgress(REAL_ALBERTON_TO_SANDTON_ROUTE, currentProg);
+
+          fetch(`${apiUrl}/api/v1/telemetry/ping`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              journey_id: journeyId,
+              lat: curLat,
+              lng: curLng,
+              speed_kmh: currentSpeed,
+              heading_deg: 140,
+              g_force: 1.05,
+              battery: 92,
+              citizen_name: "Thandiwe Ndlovu",
+            }),
+          }).catch(() => {});
+        }
+
+        return nextSec;
       });
-
-      const currentSpeed = 74 + Math.floor(Math.sin(Date.now() / 2000) * 6);
-      setSpeed(currentSpeed);
-
-      pingCounter++;
-      if (pingCounter % 2 === 0) {
-        const curIdx = Math.min(Math.floor(currentProg * (CORRIDOR_ROUTE.length - 1)), CORRIDOR_ROUTE.length - 1);
-        const nextIdx = Math.min(curIdx + 1, CORRIDOR_ROUTE.length - 1);
-        const frac = (currentProg * (CORRIDOR_ROUTE.length - 1)) - curIdx;
-        const curLat = CORRIDOR_ROUTE[curIdx][0] + (CORRIDOR_ROUTE[nextIdx][0] - CORRIDOR_ROUTE[curIdx][0]) * frac;
-        const curLng = CORRIDOR_ROUTE[curIdx][1] + (CORRIDOR_ROUTE[nextIdx][1] - CORRIDOR_ROUTE[curIdx][1]) * frac;
-
-        fetch(`${apiUrl}/api/v1/telemetry/ping`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            journey_id: journeyId,
-            lat: curLat,
-            lng: curLng,
-            speed_kmh: currentSpeed,
-            heading_deg: 140,
-            g_force: 1.1,
-            battery: 92,
-            citizen_name: "Thandiwe Ndlovu",
-          }),
-        }).catch(() => {});
-      }
     }, 1000);
+
     return () => clearInterval(timer);
   }, [journeyId, apiUrl]);
 
