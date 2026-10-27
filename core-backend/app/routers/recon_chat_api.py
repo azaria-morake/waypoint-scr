@@ -99,7 +99,7 @@ async def get_traffic_control_audit(operator_name: str = "Constable Morake", db:
                 "destination_name": dest_name,
                 "audit": None,
                 "liaison": {
-                    "briefing": f"{operator_name}, {citizen_name} has arrived safely at {dest_name} and entered Standard PIN 1234. Journey disarmed safely. All tactical reaction units are standing down to baseline patrols.",
+                    "briefing": f"{operator_name}, {citizen_name} has arrived safely at {dest_name} and entered verified safe disarm PIN. Safe arrival protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
                     "threat_level": "NOMINAL",
                     "stagnation_assessment": "Safe arrival completed. 0 active beacons.",
                     "appearance_assessment": "Safe stand-down.",
@@ -124,7 +124,7 @@ async def get_traffic_control_audit(operator_name: str = "Constable Morake", db:
                         "id": f"obs-{int(time.time())}-1",
                         "timestamp": now_str,
                         "tag": "SAFE_ARRIVAL",
-                        "text": f"✅ Journey #{last_journey.journey_id[:8]} disarmed with Standard PIN 1234. {citizen_name} arrived safely."
+                        "text": f"✅ Journey #{last_journey.journey_id[:8]} disarmed with verified safe PIN. {citizen_name} arrived safely."
                     },
                     {
                         "id": f"obs-{int(time.time())}-2",
@@ -275,18 +275,19 @@ async def prompt_traffic_control(req: TrafficControlPromptRequest, db: AsyncSess
         user_prompt = f"""OPERATIONAL CONTEXT:
 - Human Operator: {req.operator_name}
 - Citizen Name: {citizen_name}
-- Current State: {'SAFE ARRIVAL COMPLETED (Citizen ' + citizen_name + ' arrived safely at ' + dest_name + ' and disarmed with Standard PIN 1234. Journey is concluded)' if is_safe_arrival else 'STANDBY (No active citizen journeys)'}
+- Current State: {'SAFE ARRIVAL COMPLETED (Citizen ' + citizen_name + ' arrived safely at ' + dest_name + ' and disarmed with verified safe PIN. Journey is concluded)' if is_safe_arrival else 'STANDBY (No active citizen journeys)'}
 - Sector 2 Corridor Status: QUIET AND SECURE. Zero active distress beacons. All reaction units (Fox-14, SAPS-302) stood down to routine cruising patrols.
 - Operator Query / Directive: {req.operator_query}
 
-CRITICAL OPERATIONAL RULES:
-1. The citizen journey is OVER. {citizen_name} has already arrived safely at {dest_name} and entered their safe PIN.
-2. Under NO circumstances should you state that the citizen is still on an active journey, in transit, stationary at coordinates, or that you are maintaining a lock on active telemetry.
-3. If the operator mentions passive monitoring, taking an action, or asks about the citizen: explicitly confirm that {citizen_name} has arrived safely, the journey is concluded, and that passive monitoring on this citizen is no longer active because the destination has been reached.
-4. Provide constructive next steps for general station standby (e.g. routine patrol sweeps, station readiness checks, radar diagnostics).
-5. Never repeat old action chips from an active journey (e.g. do NOT output 'Maintain Passive Monitor' or 'Broadcast to CAD').
-6. Output valid RFC-8259 JSON with keys:
-   - briefing: Clear tactical response acknowledging safe arrival and current standby status
+CRITICAL OPERATIONAL & SECURITY RULES:
+1. The citizen journey is OVER. {citizen_name} has already arrived safely at {dest_name} and entered their verified safe disarm PIN.
+2. ZERO-KNOWLEDGE CREDENTIAL PRIVACY: Under NO circumstances should you ever disclose, quote, or display the citizen's actual PIN digits (e.g. '1234', '9999'). Refer strictly to 'verified safe disarm PIN' or 'safe disarm code'. Never leak raw authentication credentials to the police or dispatch log.
+3. Under NO circumstances should you state that the citizen is still on an active journey, in transit, stationary at coordinates, or that you are maintaining a lock on active telemetry.
+4. If the operator mentions passive monitoring, taking an action, or asks about the citizen: explicitly confirm that {citizen_name} has arrived safely, the journey is concluded, and that passive monitoring on this citizen is no longer active because the destination has been reached.
+5. Provide constructive next steps for general station standby (e.g. routine patrol sweeps, station readiness checks, radar diagnostics).
+6. Never repeat old action chips from an active journey (e.g. do NOT output 'Maintain Passive Monitor' or 'Broadcast to CAD').
+7. Output valid RFC-8259 JSON with keys:
+   - briefing: Clear tactical response acknowledging safe arrival and current standby status (WITHOUT disclosing PIN digits)
    - threat_level: "NOMINAL"
    - stagnation_assessment: "Standby: Citizen arrived safely."
    - appearance_assessment: "Stand-down nominal."
@@ -308,7 +309,7 @@ CRITICAL OPERATIONAL RULES:
             logger.warning(f"Standby LLM fallback: {e}")
 
         standby_briefing = (
-            f"{req.operator_name}, citizen {citizen_name} has already arrived safely at {dest_name} and entered Standard PIN 1234. Journey is concluded. Sector 2 corridor is secure with zero active distress beacons."
+            f"{req.operator_name}, citizen {citizen_name} has already arrived safely at {dest_name} and entered verified safe disarm PIN. Journey is concluded. Sector 2 corridor is secure with zero active distress beacons."
             if is_safe_arrival
             else f"{req.operator_name}, BOLO Young standing by. Sector 2 corridor is quiet with zero active distress beacons. All reaction units are cruising and available for dispatch."
         )

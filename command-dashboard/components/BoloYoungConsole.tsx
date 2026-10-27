@@ -263,7 +263,7 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
                 senderName: "BOLO Young (Traffic Control)",
                 text:
                   data.liaison?.briefing ||
-                  "Constable Morake, Thandiwe Ndlovu has entered Standard PIN 1234 and arrived safely. Safe disarm protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
+                  "Constable Morake, Thandiwe Ndlovu has verified safe disarm PIN and arrived safely. Safe disarm protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
                 timestamp: nowTime,
                 threatLevel: "NOMINAL",
                 suggestedActions:

@@ -331,7 +331,7 @@ export default function CommandDashboardPage() {
               ]);
             }
 
-            // 2. Citizen Safely Disarmed (Entered 1234)
+            // 2. Citizen Safely Disarmed (Verified Safe PIN)
             else if (data.type === "JOURNEY_DISARMED") {
               setHasActiveJourney(false);
               dismissedToastsRef.current.clear();
@@ -355,7 +355,7 @@ export default function CommandDashboardPage() {
                   timestamp: nowTime,
                   type: "SUCCESS",
                   title: "✅ Safe Arrival Disarm Protocol",
-                  description: "Citizen entered Standard PIN 1234. Journey disarmed safely, alert stood down.",
+                  description: "Citizen verified safe disarm PIN. Journey disarmed safely, alert stood down.",
                 },
                 ...prev,
               ]);
@@ -366,7 +366,7 @@ export default function CommandDashboardPage() {
                   timestamp: nowTime,
                   type: "SUCCESS",
                   title: "Journey Disarmed (Safe Arrival)",
-                  message: "Citizen entered Standard PIN. Journey ended safely. BOLO Young standing down.",
+                  message: "Citizen verified safe disarm PIN. Journey ended safely. BOLO Young standing down.",
                   source: "BOLO Young",
                   actionType: "OPEN_BOLO",
                 },
@@ -381,7 +381,7 @@ export default function CommandDashboardPage() {
                   id: "msg-safe-arrival-" + Date.now(),
                   sender: "BOLO_YOUNG",
                   senderName: "BOLO Young (Traffic Control)",
-                  text: "Constable Morake, Thandiwe Ndlovu has entered Standard PIN 1234 and arrived safely. Safe disarm protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
+                  text: "Constable Morake, Thandiwe Ndlovu has entered verified safe disarm PIN and arrived safely. Safe disarm protocol confirmed. All tactical reaction units are standing down to baseline patrols.",
                   timestamp: nowTime,
                   threatLevel: "NOMINAL",
                   suggestedActions: [
