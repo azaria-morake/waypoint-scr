@@ -18,15 +18,37 @@ export const HelpDispatchedView: React.FC<HelpDispatchedViewProps> = ({
   const [responderDistanceKm, setResponderDistanceKm] = useState<number>(3.2);
   const [etaMinutes, setEtaMinutes] = useState<number>(4);
   const [responderProgress, setResponderProgress] = useState<number>(0.2);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  // Simulate responder vehicle converging
+  // Simulate responder vehicle converging and stream live distress coordinates
   useEffect(() => {
+    let driftCounter = 0;
     const interval = setInterval(() => {
       setResponderDistanceKm((prev) => (prev > 0.3 ? Number((prev - 0.1).toFixed(1)) : 0.2));
       setResponderProgress((prev) => (prev < 0.9 ? prev + 0.05 : 0.9));
+
+      driftCounter++;
+      // Citizen distress coordinate near N12 on-ramp corridor with micro-drift
+      const lat = -26.2678 + (Math.sin(driftCounter) * 0.0001);
+      const lng = 28.1245 + (Math.cos(driftCounter) * 0.0001);
+
+      fetch(`${apiUrl}/api/v1/telemetry/ping`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          journey_id: journeyId,
+          lat,
+          lng,
+          speed_kmh: 0.0,
+          heading_deg: 140,
+          g_force: 3.2,
+          battery: 88,
+          citizen_name: "Thandiwe Ndlovu",
+        }),
+      }).catch(() => {});
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [journeyId, apiUrl]);
 
   return (
     <div className="relative w-full min-h-screen bg-slate-900 flex flex-col justify-between overflow-hidden select-none">

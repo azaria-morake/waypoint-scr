@@ -5,7 +5,7 @@ import { Bot, ShieldAlert, ArrowRight, X } from "lucide-react";
 import { LoginScreen, OrganizationOption, ORGANIZATIONS } from "../components/LoginScreen";
 import { TacticalSidebar, NavTab } from "../components/TacticalSidebar";
 import { StationOverviewView } from "../components/StationOverviewView";
-import { LiveMapView, LiveAlertItem } from "../components/LiveMapView";
+import { LiveMapView, LiveAlertItem, CitizenLiveLocation } from "../components/LiveMapView";
 import { SwarmMatrixView } from "../components/SwarmMatrixView";
 import { PopiaVaultView } from "../components/PopiaVaultView";
 import { B2BOpsView } from "../components/B2BOpsView";
@@ -31,6 +31,7 @@ export default function CommandDashboardPage() {
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [extractedAttire, setExtractedAttire] = useState<string | null>(null);
   const [hasActiveJourney, setHasActiveJourney] = useState<boolean>(false);
+  const [citizenLocation, setCitizenLocation] = useState<CitizenLiveLocation | null>(null);
   const [activeToast, setActiveToast] = useState<{
     id: string;
     type: "INFO" | "CRITICAL";
@@ -232,8 +233,56 @@ export default function CommandDashboardPage() {
               second: "2-digit",
             });
 
+            // 0. Live Telemetry Ping Stream (Green or Red)
+            if (data.type === "TELEMETRY_PING") {
+              const isRed = incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED";
+              const curLat = Number(data.lat);
+              const curLng = Number(data.lng);
+              const curSpeed = Number(data.speed_kmh ?? 78);
+              const curHeading = Number(data.heading_deg ?? 140);
+              const newLoc: CitizenLiveLocation = {
+                journeyId: data.journey_id || "active_journey",
+                lat: curLat,
+                lng: curLng,
+                speedKmh: curSpeed,
+                headingDeg: curHeading,
+                gForce: Number(data.g_force ?? 1.1),
+                battery: Number(data.battery ?? 90),
+                status: isRed ? "RED" : "GREEN",
+                citizenName: data.citizen_name || "Thandiwe Ndlovu",
+                destinationName: "Sandton City Mall, Sandton",
+                timestamp: nowTime,
+              };
+              setCitizenLocation(newLoc);
+              setHasActiveJourney(true);
+              if (selectedAlert && selectedAlert.status === "RED") {
+                setSelectedAlert((prev) =>
+                  prev ? { ...prev, lat: curLat, lng: curLng, speedKmh: curSpeed, headingDeg: curHeading } : null
+                );
+              }
+            }
+
+            // 0b. Initial State Snapshot from Command Hub
+            else if (data.type === "SNAPSHOT") {
+              if (data.journey && ["GREEN", "AMBER", "RED"].includes(data.journey.status)) {
+                const isRed = data.journey.status === "RED";
+                setHasActiveJourney(true);
+                setCitizenLocation({
+                  journeyId: data.journey.journey_id || "active_journey",
+                  lat: isRed ? -26.2678 : (data.journey.origin_lat || -26.2585),
+                  lng: isRed ? 28.1245 : (data.journey.origin_lng || 28.1215),
+                  speedKmh: isRed ? 0 : 64,
+                  headingDeg: 140,
+                  status: isRed ? "RED" : "GREEN",
+                  citizenName: "Thandiwe Ndlovu",
+                  destinationName: data.journey.destination_name || "Sandton City Mall, Sandton",
+                  timestamp: nowTime,
+                });
+              }
+            }
+
             // 1. Live Distress Alert Triggered from Mobile
-            if (data.type === "JOURNEY_RED_ALERT" || data.type === "SWARM_AWAKENED") {
+            else if (data.type === "JOURNEY_RED_ALERT" || data.type === "SWARM_AWAKENED") {
               const alertItem: LiveAlertItem = {
                 id: data.incident_id || data.journey_id || String(Date.now()),
                 journeyId: data.journey_id || "active_journey",
@@ -253,6 +302,17 @@ export default function CommandDashboardPage() {
               setIncomingAlerts((prev) => [alertItem, ...prev.filter((a) => a.id !== alertItem.id)]);
               setSelectedAlert(alertItem);
               setHasActiveJourney(true);
+              setCitizenLocation({
+                journeyId: data.journey_id || "active_journey",
+                lat: data.lat || -26.2678,
+                lng: data.lng || 28.1245,
+                speedKmh: data.speed_kmh || 78,
+                headingDeg: data.heading_deg || 140,
+                status: "RED",
+                citizenName: "Thandiwe Ndlovu",
+                destinationName: "Sandton City Mall, Sandton",
+                timestamp: nowTime,
+              });
               ensureBoloJourneyStartMessage();
               ensureBoloRedAlertMessage(data.message);
 
@@ -294,6 +354,17 @@ export default function CommandDashboardPage() {
             // 1b. Citizen Journey Activated (1st Tap Start)
             else if (data.type === "JOURNEY_STARTED") {
               setHasActiveJourney(true);
+              setCitizenLocation({
+                journeyId: data.journey_id || "active_journey",
+                lat: data.lat || -26.2585,
+                lng: data.lng || 28.1215,
+                speedKmh: data.speed_kmh || 45,
+                headingDeg: data.heading_deg || 140,
+                status: "GREEN",
+                citizenName: data.citizen_name || "Thandiwe Ndlovu",
+                destinationName: data.destination || "Sandton City Mall, Sandton",
+                timestamp: nowTime,
+              });
               ensureBoloJourneyStartMessage(data.destination);
 
               if (!dismissedToastsRef.current.has("start")) {
@@ -334,6 +405,7 @@ export default function CommandDashboardPage() {
             // 2. Citizen Safely Disarmed (Verified Safe PIN)
             else if (data.type === "JOURNEY_DISARMED") {
               setHasActiveJourney(false);
+              setCitizenLocation(null);
               dismissedToastsRef.current.clear();
               setActiveToast(null);
 
@@ -454,6 +526,7 @@ export default function CommandDashboardPage() {
             // 5. Demo Loop Reset
             else if (data.type === "JOURNEY_RESET") {
               setHasActiveJourney(false);
+              setCitizenLocation(null);
               dismissedToastsRef.current.clear();
               setActiveToast(null);
               setIncomingAlerts([]);
@@ -602,6 +675,7 @@ export default function CommandDashboardPage() {
             ensureBoloJourneyStartMessage(data.audit?.location_audit?.destination?.name);
             ensureBoloRedAlertMessage(data.liaison?.briefing, data.liaison?.action_chips);
           } else if (!active) {
+            setCitizenLocation(null);
             dismissedToastsRef.current.clear();
             setActiveToast(null);
           }
@@ -613,6 +687,44 @@ export default function CommandDashboardPage() {
     const interval = setInterval(pollAudit, 2000);
     return () => clearInterval(interval);
   }, [currentOrg, apiUrl]);
+
+  // Real-time Corridor Progression Simulation (Advances coordinates every 2.5s when journey is active)
+  useEffect(() => {
+    if (!hasActiveJourney) return;
+    const CORRIDOR_POINTS: [number, number][] = [
+      [-26.2585, 28.1215],
+      [-26.2602, 28.1220],
+      [-26.2625, 28.1228],
+      [-26.2650, 28.1235],
+      [-26.2678, 28.1245],
+    ];
+    let step = 0;
+    const interval = setInterval(() => {
+      setCitizenLocation((prev) => {
+        const isRed = prev?.status === "RED" || incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED";
+        step = (step + 1) % CORRIDOR_POINTS.length;
+        const pt = CORRIDOR_POINTS[step];
+        const newLat = isRed ? -26.2678 : pt[0];
+        const newLng = isRed ? 28.1245 : pt[1];
+        const newSpeed = isRed ? 0 : 58 + (step * 4);
+        if (selectedAlert && selectedAlert.status === "RED") {
+          setSelectedAlert((a) => a ? { ...a, lat: newLat, lng: newLng, speedKmh: newSpeed } : null);
+        }
+        return {
+          journeyId: prev?.journeyId || "active_journey",
+          lat: newLat,
+          lng: newLng,
+          speedKmh: newSpeed,
+          headingDeg: 140,
+          status: isRed ? "RED" : "GREEN",
+          citizenName: "Thandiwe Ndlovu",
+          destinationName: prev?.destinationName || "Sandton City Mall, Sandton",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+      });
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [hasActiveJourney, incomingAlerts, selectedAlert]);
 
   // Acknowledge Alert Handler
   const handleAcknowledgeAlert = async (alertId: string) => {
@@ -683,6 +795,7 @@ export default function CommandDashboardPage() {
             notifications={notifications}
             onClearNotification={handleClearNotification}
             onClearAllNotifications={handleClearAllNotifications}
+            citizenLocation={citizenLocation}
           />
         ) : activeTab === "BOLO_YOUNG" ? (
           <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex", overflow: "hidden" }}>

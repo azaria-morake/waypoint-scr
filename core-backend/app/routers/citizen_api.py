@@ -113,6 +113,10 @@ async def start_green_journey(req: JourneyStartRequest, db: AsyncSession = Depen
             "journey_id": journey.journey_id,
             "citizen_name": user.full_name if user else "Thandiwe Ndlovu",
             "status": "GREEN",
+            "lat": journey.origin_lat or -26.2585,
+            "lng": journey.origin_lng or 28.1215,
+            "speed_kmh": 45.0,
+            "heading_deg": 140.0,
             "destination": journey.destination_name,
             "message": "Thandiwe has activated a journey. Currently safe. Open chat interface if you want me to run any tasks on the journey."
         })
@@ -141,6 +145,10 @@ async def trigger_panic_tap_two(journey_id: str, db: AsyncSession = Depends(get_
             "incident_id": incident.incident_id,
             "trigger_source": "SECOND_TAP",
             "status": "RED",
+            "lat": getattr(incident, "lat", -26.2678) or -26.2678,
+            "lng": getattr(incident, "lng", 28.1245) or 28.1245,
+            "speed_kmh": 78.0,
+            "heading_deg": 140.0,
             "citizen_name": "Thandiwe Ndlovu",
             "message": "🚨 Emergency: Thandiwe has triggered a Red Alert! Immediate operator intervention required. Click to engage BOLO Young."
         })

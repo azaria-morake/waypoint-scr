@@ -40,6 +40,20 @@ export interface LiveAlertItem {
   message: string;
 }
 
+export interface CitizenLiveLocation {
+  journeyId: string;
+  lat: number;
+  lng: number;
+  speedKmh: number;
+  headingDeg: number;
+  gForce?: number;
+  battery?: number;
+  status: "GREEN" | "RED";
+  citizenName: string;
+  destinationName?: string;
+  timestamp: string;
+}
+
 interface LiveMapViewProps {
   currentOrg: OrganizationOption;
   isWsConnected: boolean;
@@ -53,6 +67,7 @@ interface LiveMapViewProps {
   notifications?: NotificationItem[];
   onClearNotification?: (id: string) => void;
   onClearAllNotifications?: () => void;
+  citizenLocation?: CitizenLiveLocation | null;
 }
 
 interface DeviceLocation {
@@ -113,6 +128,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
   extractedAttire,
   onAttireExtracted,
   onNavigateToBolo,
+  citizenLocation,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -561,7 +577,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
     });
   }, [patrolUnits]);
 
-  // Render Active Emergency Triggers & Tactical Geofence
+  // Render Dynamic Citizen Movement & Tactical Corridor Layer (Green or Red)
   useEffect(() => {
     const L = leafletRef.current;
     const map = mapInstanceRef.current;
@@ -571,121 +587,218 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
 
     group.clearLayers();
 
-    const coords: [number, number] =
-      selectedAlert && selectedAlert.status === "RED"
-        ? [selectedAlert.lat, selectedAlert.lng]
-        : [-26.315, 28.16];
+    const isJourneyActive = Boolean(citizenLocation || selectedAlert);
+    const isRed = (citizenLocation && citizenLocation.status === "RED") || (selectedAlert && selectedAlert.status === "RED");
 
-    // Tactical Geofence Outer (Red translucent ring with solid border)
-    L.circle(coords, {
-      radius: 4600,
-      color: "#ff3e24",
-      fillColor: "#c22b1b",
-      fillOpacity: 0.18,
-      weight: 2,
-    }).addTo(group);
+    const coords: [number, number] = citizenLocation
+      ? [citizenLocation.lat, citizenLocation.lng]
+      : selectedAlert
+      ? [selectedAlert.lat, selectedAlert.lng]
+      : [-26.2585, 28.1215];
 
-    // Tactical Geofence Inner Ring
-    L.circle(coords, {
-      radius: 2200,
-      color: "#ff3e24",
-      fillColor: "rgba(95, 22, 17, 0.2)",
-      fillOpacity: 0.2,
-      weight: 2,
-      dashArray: "6, 6",
-    }).addTo(group);
-
-    // Agent Route (Amber dotted line approaching target)
-    const routeCoords: [number, number][] = [
-      [coords[0] + 0.018, coords[1] - 0.028],
-      [coords[0] + 0.009, coords[1] - 0.012],
-      coords,
+    // Real Gauteng Alberton -> Sandton Transit Corridor Waypoints
+    const corridorRoute: [number, number][] = [
+      [-26.2585, 28.1215], // 14 8th Ave, Alberton North (Departure)
+      [-26.2602, 28.1220], // Hendrik Potgieter St
+      [-26.2625, 28.1228], // Voortrekker Rd
+      [-26.2650, 28.1235], // Approach
+      [-26.2678, 28.1245], // N12 on-ramp corridor (Distress Anomaly site)
     ];
-    L.polyline(routeCoords, {
-      color: "#eba823",
-      weight: 2.5,
-      dashArray: "9, 5",
-    }).addTo(group);
 
-    // BOLO Young Waypoint Triangle Marker
-    const boloMarkerIcon = L.divIcon({
-      html: `
-        <div style="color:#eba823;font-size:16px;">
-          ▲
-        </div>
-      `,
-      className: "bolo-route-icon",
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
+    // 1. Draw Origin Marker (Departure)
+    const originIcon = L.divIcon({
+      html: `<div style="width:24px;height:24px;background:#0f172a;border:2px solid #38bdf8;border-radius:50%;color:#38bdf8;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(56,189,248,0.5);">A</div>`,
+      className: "corridor-origin-pin",
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
     });
-    L.marker(routeCoords[0], { icon: boloMarkerIcon })
-      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-bold;color:#eba823;">BOLO Young Route Intercept</div>`)
+    L.marker(corridorRoute[0], { icon: originIcon })
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Departure Point</b><br/>14 8th Ave, Alberton North</div>`)
       .addTo(group);
 
-    // Town Labels
+    // 2. Draw Destination Marker (Sandton City Mall)
+    const destIcon = L.divIcon({
+      html: `<div style="width:24px;height:24px;background:#0f172a;border:2px solid #10b981;border-radius:50%;color:#10b981;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(16,185,129,0.5);">B</div>`,
+      className: "corridor-dest-pin",
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+    L.marker(corridorRoute[corridorRoute.length - 1], { icon: destIcon })
+      .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;"><b>Target Destination</b><br/>${citizenLocation?.destinationName || "Sandton City Mall, Sandton"}</div>`)
+      .addTo(group);
+
+    // 3. Draw Corridor Polyline (Green when safe transit, Red dashed when distressed)
+    L.polyline(corridorRoute, {
+      color: isRed ? "#ef4444" : "#10b981",
+      weight: 4,
+      opacity: 0.85,
+      dashArray: isRed ? "8, 6" : undefined,
+    }).addTo(group);
+
+    // 4. Sector Town Labels
     const createTownLabel = (name: string) =>
       L.divIcon({
-        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#e5e4dd;text-shadow:0 1px 3px rgba(0,0,0,0.9);">${name}</div>`,
+        html: `<div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#e5e4dd;text-shadow:0 1px 3px rgba(0,0,0,0.9);">${name}</div>`,
         className: "tactical-town-marker",
         iconSize: [90, 20],
         iconAnchor: [45, 10],
       });
 
-    L.marker([coords[0] + 0.003, coords[1]], { icon: createTownLabel("Katlehong"), interactive: false }).addTo(group);
-    L.marker([coords[0] + 0.024, coords[1] + 0.045], { icon: createTownLabel("Vosloorus"), interactive: false }).addTo(group);
-    L.marker([coords[0] - 0.016, coords[1] - 0.04], { icon: createTownLabel("Thokoza"), interactive: false }).addTo(group);
+    L.marker([corridorRoute[0][0] - 0.003, corridorRoute[0][1] + 0.005], { icon: createTownLabel("Alberton North"), interactive: false }).addTo(group);
+    L.marker([-26.315 + 0.003, 28.16], { icon: createTownLabel("Katlehong"), interactive: false }).addTo(group);
+    L.marker([-26.315 + 0.024, 28.16 + 0.045], { icon: createTownLabel("Vosloorus"), interactive: false }).addTo(group);
+    L.marker([-26.315 - 0.016, 28.16 - 0.04], { icon: createTownLabel("Thokoza"), interactive: false }).addTo(group);
 
-    // Center Incident Core Dot
-    const distressIcon = L.divIcon({
-      html: `
-        <div style="width:20px;height:20px;border-radius:50%;background:#f5f2e9;border:6px solid #d9381e;box-shadow:0 0 18px rgba(255,67,41,0.8);"></div>
-      `,
-      className: "crisis-marker-live",
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
-    });
+    // 5. Citizen Live Movement Pin (Green or Red)
+    if (isRed) {
+      // Tactical Geofence Outer (Red translucent ring with solid border)
+      L.circle(coords, {
+        radius: 4600,
+        color: "#ff3e24",
+        fillColor: "#c22b1b",
+        fillOpacity: 0.18,
+        weight: 2,
+      }).addTo(group);
 
-    const citizenTitle = selectedAlert?.citizenName || "POSSIBLE GBV - DISTRESS SIGNAL";
+      // Tactical Geofence Inner Ring
+      L.circle(coords, {
+        radius: 2200,
+        color: "#ff3e24",
+        fillColor: "rgba(95, 22, 17, 0.2)",
+        fillOpacity: 0.2,
+        weight: 2,
+        dashArray: "6, 6",
+      }).addTo(group);
 
-    L.marker(coords, { icon: distressIcon })
-      .bindPopup(`
-        <div style="font-family:'IBM Plex Mono',monospace;padding:6px;font-size:11px;min-width:210px;">
-          <div style="font-weight:700;color:#d9381e;">ACTIVE INCIDENT</div>
-          <div style="font-weight:700;margin-top:2px;color:#111;">${citizenTitle}</div>
-          <div style="color:#555;font-size:10px;margin-top:2px;">${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}</div>
-          ${currentAttire ? `<div style="margin-top:4px;padding:3px;background:#e6fffa;border:1px solid #38b2ac;color:#234e52;border-radius:3px;">Attire: ${currentAttire}</div>` : ""}
-        </div>
-      `)
-      .addTo(group);
+      // Intercept route vector
+      const routeCoords: [number, number][] = [
+        [coords[0] + 0.018, coords[1] - 0.028],
+        [coords[0] + 0.009, coords[1] - 0.012],
+        coords,
+      ];
+      L.polyline(routeCoords, {
+        color: "#eba823",
+        weight: 2.5,
+        dashArray: "9, 5",
+      }).addTo(group);
 
-    if (selectedAlert) {
-      map.flyTo(coords, 14, { animate: true });
+      // BOLO Young Intercept Marker
+      const boloMarkerIcon = L.divIcon({
+        html: `<div style="color:#eba823;font-size:16px;">▲</div>`,
+        className: "bolo-route-icon",
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+      L.marker(routeCoords[0], { icon: boloMarkerIcon })
+        .bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;color:#eba823;">BOLO Young Intercept Vector</div>`)
+        .addTo(group);
+
+      // Pulsing RED Distress Marker
+      const redDistressIcon = L.divIcon({
+        html: `
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <div style="position:absolute;width:46px;height:46px;border-radius:50%;background:#ef4444;opacity:0.4;animation:ping 1.2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+            <div style="position:absolute;width:32px;height:32px;border-radius:50%;background:#dc2626;opacity:0.6;animation:pulse 1.8s ease-in-out infinite;"></div>
+            <div style="position:relative;width:26px;height:26px;border-radius:50%;background:#b91c1c;border:2.5px solid #ffffff;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(239,68,68,0.95);">
+              SOS
+            </div>
+          </div>
+        `,
+        className: "crisis-marker-live",
+        iconSize: [46, 46],
+        iconAnchor: [23, 23],
+      });
+
+      const citizenTitle = citizenLocation?.citizenName || selectedAlert?.citizenName || "Thandiwe Ndlovu";
+
+      L.marker(coords, { icon: redDistressIcon, zIndexOffset: 2000 })
+        .bindPopup(`
+          <div style="font-family:'IBM Plex Mono',monospace;padding:6px;font-size:11px;min-width:220px;">
+            <div style="font-weight:700;color:#d9381e;">🚨 CODE RED DISTRESS EVENT</div>
+            <div style="font-weight:700;margin-top:2px;color:#111;">${citizenTitle}</div>
+            <div style="color:#555;font-size:10px;margin-top:2px;">${coords[0].toFixed(5)}°, ${coords[1].toFixed(5)}° • ${citizenLocation?.speedKmh ?? 0} km/h</div>
+            <div style="color:#b91c1c;font-size:10px;margin-top:2px;font-weight:600;">Status: Struggle Anomaly / Panic Triggered</div>
+            ${currentAttire ? `<div style="margin-top:4px;padding:3px;background:#e6fffa;border:1px solid #38b2ac;color:#234e52;border-radius:3px;">Attire: ${currentAttire}</div>` : ""}
+          </div>
+        `)
+        .addTo(group);
+    } else {
+      // Pulsing GREEN Safe Transit Beacon Marker
+      const greenTransitIcon = L.divIcon({
+        html: `
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <div style="position:absolute;width:42px;height:42px;border-radius:50%;background:#10b981;opacity:0.35;animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+            <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:#059669;opacity:0.5;animation:pulse 2s ease-in-out infinite;"></div>
+            <div style="position:relative;width:24px;height:24px;border-radius:50%;background:#047857;border:2px solid #ffffff;color:#fff;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(16,185,129,0.85);">
+              ▲
+            </div>
+          </div>
+        `,
+        className: "green-transit-marker-live",
+        iconSize: [42, 42],
+        iconAnchor: [21, 21],
+      });
+
+      const citizenTitle = citizenLocation?.citizenName || "Thandiwe Ndlovu";
+
+      L.marker(coords, { icon: greenTransitIcon, zIndexOffset: 2000 })
+        .bindPopup(`
+          <div style="font-family:'IBM Plex Mono',monospace;padding:6px;font-size:11px;min-width:220px;">
+            <div style="font-weight:700;color:#059669;">🟢 SAFE JOURNEY ACTIVE</div>
+            <div style="font-weight:700;margin-top:2px;color:#111;">${citizenTitle}</div>
+            <div style="color:#555;font-size:10px;margin-top:2px;">${coords[0].toFixed(5)}°, ${coords[1].toFixed(5)}° • ${citizenLocation?.speedKmh ?? 68} km/h</div>
+            <div style="color:#047857;font-size:10px;margin-top:2px;font-weight:600;">Stream: 1Hz WSS Locked • Corridor Nominal</div>
+          </div>
+        `)
+        .addTo(group);
     }
-  }, [selectedAlert, currentAttire]);
+
+    if (isJourneyActive) {
+      map.panTo(coords, { animate: true, duration: 0.8 });
+    }
+  }, [citizenLocation, selectedAlert, currentAttire]);
 
   const handleRecenter = () => {
-    if (deviceLocation) {
+    if (citizenLocation) {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.flyTo([citizenLocation.lat, citizenLocation.lng], 15, { animate: true });
+      }
+    } else if (deviceLocation) {
       renderOfficerPin(deviceLocation, true);
     } else {
       startContinuousGpsQuery();
     }
   };
 
+  const isRed = (citizenLocation && citizenLocation.status === "RED") || (selectedAlert && selectedAlert.status === "RED");
+  const isSafeActive = citizenLocation && citizenLocation.status === "GREEN";
+
   return (
     <div className="main-content">
-      {/* INCIDENT STRIP */}
+      {/* INCIDENT / JOURNEY STRIP */}
       {incidentOpen && (
-        <div className="incident-strip">
-          <div className="incident-symbol">
-            <AlertTriangle size={26} />
+        <div className={`incident-strip ${isSafeActive ? "safe-journey-strip" : ""}`} style={{ borderColor: isSafeActive ? "rgba(16,185,129,0.4)" : undefined, background: isSafeActive ? "linear-gradient(90deg, rgba(6,78,59,0.25) 0%, rgba(15,23,42,0.9) 100%)" : undefined }}>
+          <div className="incident-symbol" style={{ color: isSafeActive ? "#10b981" : "#ff3e24" }}>
+            {isSafeActive ? <Navigation size={26} /> : <AlertTriangle size={26} />}
           </div>
 
           <div className="incident-copy">
-            <span>ACTIVE INCIDENT</span>
-            <strong>{selectedAlert ? selectedAlert.message : "POSSIBLE GBV - DISTRESS SIGNAL"}</strong>
-            <small>
-              Katlehong, Gauteng&nbsp;&nbsp;•&nbsp;&nbsp;4.2 km&nbsp;&nbsp;•&nbsp;&nbsp;{selectedAlert ? selectedAlert.timestamp : "3 min ago"}
-              {currentAttire && `  •  Attire: ${currentAttire}`}
+            <span style={{ color: isSafeActive ? "#10b981" : "#ff3e24" }}>
+              {isRed ? "ACTIVE INCIDENT" : isSafeActive ? "SAFE TRANSIT ACTIVE" : "SECTOR PATROL STANDBY"}
+            </span>
+            <strong style={{ color: isSafeActive ? "#e6fffa" : "#fff" }}>
+              {isRed
+                ? (selectedAlert ? selectedAlert.message : "🚨 CODE RED DISTRESS SIGNAL • Rapid Response Intercept Deployed")
+                : isSafeActive
+                ? `🟢 ${citizenLocation?.citizenName || "Thandiwe Ndlovu"} en route to ${citizenLocation?.destinationName || "Sandton City Mall"}`
+                : "Sector 2 Corridor Watchdog Active • Zero Active Distress Beacons"}
+            </strong>
+            <small style={{ color: isSafeActive ? "#94a3b8" : undefined }}>
+              {isRed
+                ? `Alberton / N12 Corridor • ${(citizenLocation?.lat || selectedAlert?.lat || -26.2678).toFixed(4)}°, ${(citizenLocation?.lng || selectedAlert?.lng || 28.1245).toFixed(4)}° • ${citizenLocation?.speedKmh ?? 0} km/h ${currentAttire ? `• Attire: ${currentAttire}` : ""}`
+                : isSafeActive
+                ? `Alberton Corridor • ${(citizenLocation?.lat || -26.2585).toFixed(4)}°, ${(citizenLocation?.lng || 28.1215).toFixed(4)}° • ${citizenLocation?.speedKmh ?? 68} km/h • 1Hz WSS Nominal`
+                : "Katlehong / Vosloorus / Thokoza Sector • 4 Reaction Units Cruising"}
             </small>
           </div>
 
@@ -766,16 +879,20 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
             {/* Tactical Legend Box */}
             <div className="map-legend">
               <div>
+                <span className="legend-dot green-dot" style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                Safe Transit
+              </div>
+              <div>
                 <span className="legend-dot red-dot" />
-                Incident Location
+                Distress (SOS)
               </div>
               <div>
                 <span className="legend-ring" />
-                Geofence (20km)
+                Geofence Ring
               </div>
               <div>
                 <span className="legend-route" />
-                Agent Route
+                Corridor Vector
               </div>
               <div>
                 <Car size={14} />

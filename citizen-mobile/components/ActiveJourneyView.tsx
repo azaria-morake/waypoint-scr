@@ -27,16 +27,57 @@ export const ActiveJourneyView: React.FC<ActiveJourneyViewProps> = ({
   const [progress, setProgress] = useState<number>(0.32);
   const [panicLoading, setPanicLoading] = useState<boolean>(false);
 
-  // Countdown timer for Dead-Man's Switch
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  const CORRIDOR_ROUTE: [number, number][] = [
+    [-26.2585, 28.1215],
+    [-26.2602, 28.1220],
+    [-26.2625, 28.1228],
+    [-26.2650, 28.1235],
+    [-26.2678, 28.1245],
+  ];
+
+  // Countdown timer for Dead-Man's Switch and live telemetry streaming
   useEffect(() => {
+    let pingCounter = 0;
     const timer = setInterval(() => {
       setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-      setProgress((prev) => (prev < 0.95 ? prev + 0.002 : 0.95));
-      // subtle speed variation
-      setSpeed(74 + Math.floor(Math.sin(Date.now() / 2000) * 6));
+      let currentProg = 0.32;
+      setProgress((prev) => {
+        const next = prev < 0.95 ? prev + 0.003 : 0.95;
+        currentProg = next;
+        return next;
+      });
+
+      const currentSpeed = 74 + Math.floor(Math.sin(Date.now() / 2000) * 6);
+      setSpeed(currentSpeed);
+
+      pingCounter++;
+      if (pingCounter % 2 === 0) {
+        const curIdx = Math.min(Math.floor(currentProg * (CORRIDOR_ROUTE.length - 1)), CORRIDOR_ROUTE.length - 1);
+        const nextIdx = Math.min(curIdx + 1, CORRIDOR_ROUTE.length - 1);
+        const frac = (currentProg * (CORRIDOR_ROUTE.length - 1)) - curIdx;
+        const curLat = CORRIDOR_ROUTE[curIdx][0] + (CORRIDOR_ROUTE[nextIdx][0] - CORRIDOR_ROUTE[curIdx][0]) * frac;
+        const curLng = CORRIDOR_ROUTE[curIdx][1] + (CORRIDOR_ROUTE[nextIdx][1] - CORRIDOR_ROUTE[curIdx][1]) * frac;
+
+        fetch(`${apiUrl}/api/v1/telemetry/ping`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            journey_id: journeyId,
+            lat: curLat,
+            lng: curLng,
+            speed_kmh: currentSpeed,
+            heading_deg: 140,
+            g_force: 1.1,
+            battery: 92,
+            citizen_name: "Thandiwe Ndlovu",
+          }),
+        }).catch(() => {});
+      }
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [journeyId, apiUrl]);
 
   const formatTimer = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
