@@ -14,7 +14,11 @@ export default function CitizenMobileApp() {
     user_id: string;
     full_name: string;
     phone_number: string;
-  } | null>(null);
+  } | null>({
+    user_id: "usr_thandiwe_001",
+    full_name: "Thandiwe Ndlovu",
+    phone_number: "+27 82 555 0199",
+  });
 
   const [currentView, setCurrentView] = useState<"SETUP" | "ACTIVE" | "RED" | "COMPLETED">("SETUP");
   const [journeyId, setJourneyId] = useState<string>("active_journey");
@@ -160,38 +164,27 @@ export default function CitizenMobileApp() {
   }
 
   return (
-    <main className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-slate-950 select-none">
+    <main className="relative w-full min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-[#081018] select-none">
       {/* ========================================================= */}
-      {/* LEFT PANEL: [IMAGE] - Clean Desktop Hero                   */}
+      {/* LEFT PANEL: Exact Runner Hero Matching Reference UI       */}
       {/* ========================================================= */}
-      <div className="relative w-full lg:w-1/2 min-h-[300px] lg:min-h-screen flex flex-col justify-end p-8 lg:p-14 overflow-hidden">
-        {/* Background Hero Image */}
+      <div className="relative w-full lg:w-1/2 min-h-[360px] lg:min-h-screen flex flex-col justify-end overflow-hidden bg-[#081018]">
+        {/* Background Image: Pixel-Perfect Onboarding Left Pane */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/Waypoint_login_bg.png"
-            alt="Waypoint Runner Background"
+            src="/onboarding_left_pane.png"
+            alt="You can run, as far as you like. Waypoint keeps a last known location, so your people know where to look if something goes wrong."
             fill
             priority
-            className="object-cover object-center filter brightness-[0.92] contrast-[1.08] scale-[1.02]"
+            className="object-cover object-center"
           />
-          {/* Subtle atmospheric gradients for clean contrast */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/60 lg:bg-gradient-to-r lg:from-transparent lg:via-slate-950/20 lg:to-slate-950" />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-slate-950/80" />
-        </div>
-
-        {/* User requested: Avoid adding unnecessary things to the left panel like pills or text. Just a simple, You can run, as far as you like. */}
-        <div className="relative z-10 max-w-xl mb-4">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-            You can run,<br />
-            <span className="text-emerald-400 font-extrabold">as far as you like.</span>
-          </h2>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* RIGHT PANEL: Main Activity (Desktop view no narrow mobile) */}
+      {/* RIGHT PANEL: Citizen Safety Control & Onboarding Dashboard */}
       {/* ========================================================= */}
-      <div className="relative w-full lg:w-1/2 min-h-screen bg-[#15202b] flex flex-col justify-between overflow-hidden border-t lg:border-t-0 lg:border-l border-white/10 shadow-2xl">
+      <div className="relative w-full lg:w-1/2 min-h-screen bg-[#081018] flex flex-col justify-between overflow-hidden border-t lg:border-t-0 lg:border-l border-slate-800/80 shadow-2xl">
         {currentView === "SETUP" && (
           <SetupView
             user={user}
