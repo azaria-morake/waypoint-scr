@@ -34,7 +34,9 @@ button {
 }
 
 .console {
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   background: var(--paper);
   color: var(--paper);
   display: flex;

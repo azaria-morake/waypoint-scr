@@ -113,6 +113,8 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
   const [unitsConverged, setUnitsConverged] = useState<boolean>(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef<boolean>(true);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
@@ -234,16 +236,6 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
             } catch (e) {}
             return updated;
           });
-        } else {
-          setChatHistory((prev) => {
-            if (prev.length > 0) {
-              try {
-                localStorage.removeItem(STORAGE_KEY);
-              } catch (e) {}
-              return [];
-            }
-            return prev;
-          });
         }
       }
     } catch (e) {}
@@ -255,8 +247,27 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
     return () => clearInterval(timer);
   }, [currentOrg]);
 
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTo({
+        top: chatScrollContainerRef.current.scrollHeight,
+        behavior,
+      });
+    }
+  };
+
+  const handleChatScroll = () => {
+    if (chatScrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatScrollContainerRef.current;
+      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+      isNearBottomRef.current = distanceFromBottom < 80;
+    }
+  };
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isNearBottomRef.current) {
+      scrollToBottom("smooth");
+    }
   }, [chatHistory, isLiaising]);
 
   const handleSendPrompt = async (textToSend?: string) => {
@@ -275,42 +286,53 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
     setChatHistory((prev) => [...prev, userMsg]);
     if (!textToSend) setOperatorPrompt("");
     setIsLiaising(true);
+    isNearBottomRef.current = true;
+    setTimeout(() => scrollToBottom("smooth"), 50);
 
     try {
-      const res = await fetch(`${apiUrl}/api/v1/traffic-control/chat`, {
+      const res = await fetch(`${apiUrl}/api/v1/traffic-control/liaise`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           operator_name: currentOrg.officerName,
-          operator_rank: currentOrg.officerRank,
-          message: prompt,
+          operator_query: prompt,
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
+        const replyText = data.briefing || data.reply || "Directive received. Sector parameters updated.";
+        const chips: ActionChip[] = (data.action_chips || data.suggested_actions || []).map((c: any) => ({
+          action_id: c.action_id || c.id || "ACTION",
+          label: c.label || c.title,
+          rationale: c.rationale || c.description || "",
+          primary: !!c.primary,
+        }));
         const agentMsg: ChatMessage = {
           id: "bolo-" + Date.now(),
           sender: "BOLO_YOUNG",
           senderName: "BOLO Young (Traffic Control)",
-          text: data.reply || "Directive received. Updating sector parameters.",
+          text: replyText,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           threatLevel: data.threat_level || "NOMINAL",
-          suggestedActions: data.suggested_actions,
+          suggestedActions: chips.length > 0 ? chips : undefined,
         };
         setChatHistory((prev) => [...prev, agentMsg]);
+      } else {
+        throw new Error(`API returned ${res.status}`);
       }
     } catch (e) {
       const fallbackMsg: ChatMessage = {
         id: "bolo-err-" + Date.now(),
         sender: "BOLO_YOUNG",
         senderName: "BOLO Young (Traffic Control)",
-        text: `Affirmative, ${currentOrg.officerName}. Monitoring Sector 2 corridor grid. Fox-14 and SAPS-302 patrolling designated checkpoints. Ready for tactical dispatch.`,
+        text: `Affirmative, ${currentOrg.officerName}. Monitoring Sector 2 corridor grid. All patrol units active and ready for tactical dispatch.`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setChatHistory((prev) => [...prev, fallbackMsg]);
     } finally {
       setIsLiaising(false);
+      setTimeout(() => scrollToBottom("smooth"), 50);
     }
   };
 
@@ -443,7 +465,11 @@ export const BoloYoungConsole: React.FC<BoloYoungConsoleProps> = ({
         {/* LEFT / CENTER: Interactive Natural Dialogue Stream */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#0e1213", padding: "16px", minWidth: 0, overflow: "hidden" }}>
           {/* Conversation Feed */}
-          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "14px", paddingRight: "6px" }}>
+          <div
+            ref={chatScrollContainerRef}
+            onScroll={handleChatScroll}
+            style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "14px", paddingRight: "6px" }}
+          >
             {chatHistory.length === 0 ? (
               <div style={{ margin: "auto", textAlign: "center", padding: "40px 20px", maxWidth: "480px" }}>
                 <div style={{ width: "48px", height: "48px", border: "1.5px solid var(--amber)", margin: "0 auto 14px", display: "grid", placeItems: "center", color: "var(--amber)", background: "#18140e" }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Bot, ShieldAlert, ArrowRight, X } from "lucide-react";
 import { LoginScreen, OrganizationOption, ORGANIZATIONS } from "../components/LoginScreen";
 import { TacticalSidebar, NavTab } from "../components/TacticalSidebar";
@@ -37,6 +37,22 @@ export default function CommandDashboardPage() {
     title: string;
     message: string;
   } | null>(null);
+
+  const dismissedToastsRef = useRef<Set<string>>(new Set());
+
+  const handleDismissToast = (targetTab?: NavTab) => {
+    if (activeToast) {
+      if (activeToast.type === "CRITICAL") {
+        dismissedToastsRef.current.add("red");
+      } else {
+        dismissedToastsRef.current.add("start");
+      }
+    }
+    setActiveToast(null);
+    if (targetTab) {
+      setActiveTab(targetTab);
+    }
+  };
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: "notif-init-1",
@@ -240,6 +256,7 @@ export default function CommandDashboardPage() {
               ensureBoloJourneyStartMessage();
               ensureBoloRedAlertMessage(data.message);
 
+              dismissedToastsRef.current.delete("red");
               setActiveToast({
                 id: "toast-red-" + Date.now(),
                 type: "CRITICAL",
@@ -279,12 +296,14 @@ export default function CommandDashboardPage() {
               setHasActiveJourney(true);
               ensureBoloJourneyStartMessage(data.destination);
 
-              setActiveToast({
-                id: "toast-start-" + Date.now(),
-                type: "INFO",
-                title: "🟢 BOLO Young AI: Active Journey Monitored",
-                message: "Thandiwe has activated a journey. Currently safe. Open chat interface if you want me to run any tasks on the journey.",
-              });
+              if (!dismissedToastsRef.current.has("start")) {
+                setActiveToast({
+                  id: "toast-start-" + Date.now(),
+                  type: "INFO",
+                  title: "🟢 BOLO Young AI: Active Journey Monitored",
+                  message: "Thandiwe has activated a journey. Currently safe. Open chat interface if you want me to run any tasks on the journey.",
+                });
+              }
 
               setRecentActivities((prev) => [
                 {
@@ -315,6 +334,7 @@ export default function CommandDashboardPage() {
             // 2. Citizen Safely Disarmed (Entered 1234)
             else if (data.type === "JOURNEY_DISARMED") {
               setHasActiveJourney(false);
+              dismissedToastsRef.current.clear();
               setActiveToast(null);
 
               setIncomingAlerts((prev) =>
@@ -408,6 +428,7 @@ export default function CommandDashboardPage() {
             // 5. Demo Loop Reset
             else if (data.type === "JOURNEY_RESET") {
               setHasActiveJourney(false);
+              dismissedToastsRef.current.clear();
               setActiveToast(null);
               setIncomingAlerts([]);
               setSelectedAlert(null);
@@ -484,17 +505,19 @@ export default function CommandDashboardPage() {
               return prev;
             });
 
-            setActiveToast((prev) => {
-              if (!prev || prev.type !== "CRITICAL") {
-                return {
-                  id: "toast-start",
-                  type: "INFO",
-                  title: "🟢 BOLO Young AI: Active Journey Monitored",
-                  message: "Thandiwe has activated a journey. Currently safe. Open chat interface if you want me to run any tasks on the journey.",
-                };
-              }
-              return prev;
-            });
+            if (!dismissedToastsRef.current.has("start")) {
+              setActiveToast((prev) => {
+                if (!prev || prev.type !== "CRITICAL") {
+                  return {
+                    id: "toast-start",
+                    type: "INFO",
+                    title: "🟢 BOLO Young AI: Active Journey Monitored",
+                    message: "Thandiwe has activated a journey. Currently safe. Open chat interface if you want me to run any tasks on the journey.",
+                  };
+                }
+                return prev;
+              });
+            }
 
             ensureBoloJourneyStartMessage(data.audit?.location_audit?.destination?.name);
           } else if (active && data.journey_status === "RED") {
@@ -517,12 +540,14 @@ export default function CommandDashboardPage() {
               return prev;
             });
 
-            setActiveToast({
-              id: "toast-red",
-              type: "CRITICAL",
-              title: "🚨 RED ALERT: Citizen Distress Signal",
-              message: "🚨 Emergency: Thandiwe has triggered a Red Alert! Immediate operator intervention required.",
-            });
+            if (!dismissedToastsRef.current.has("red")) {
+              setActiveToast({
+                id: "toast-red",
+                type: "CRITICAL",
+                title: "🚨 RED ALERT: Citizen Distress Signal",
+                message: "🚨 Emergency: Thandiwe has triggered a Red Alert! Immediate operator intervention required.",
+              });
+            }
 
             setIncomingAlerts((prev) => {
               if (prev.length === 0 || !prev.some((a) => a.status === "RED")) {
@@ -551,6 +576,7 @@ export default function CommandDashboardPage() {
             ensureBoloJourneyStartMessage(data.audit?.location_audit?.destination?.name);
             ensureBoloRedAlertMessage(data.liaison?.briefing, data.liaison?.action_chips);
           } else if (!active) {
+            dismissedToastsRef.current.clear();
             setActiveToast(null);
           }
         }
@@ -632,6 +658,16 @@ export default function CommandDashboardPage() {
             onClearNotification={handleClearNotification}
             onClearAllNotifications={handleClearAllNotifications}
           />
+        ) : activeTab === "BOLO_YOUNG" ? (
+          <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex", overflow: "hidden" }}>
+            <BoloYoungConsole
+              currentOrg={currentOrg}
+              hasActiveEmergency={incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED"}
+              extractedAttire={extractedAttire}
+              onAttireExtracted={setExtractedAttire}
+              onNavigateToMap={() => setActiveTab("LIVE_MAP")}
+            />
+          </div>
         ) : (
           <div className="main-content" style={{ display: "flex", flexDirection: "column" }}>
             {activeTab === "OVERVIEW" && (
@@ -639,16 +675,6 @@ export default function CommandDashboardPage() {
                 currentOrg={currentOrg}
                 recentActivities={recentActivities}
                 isWsConnected={isWsConnected}
-                onNavigateToMap={() => setActiveTab("LIVE_MAP")}
-              />
-            )}
-
-            {activeTab === "BOLO_YOUNG" && (
-              <BoloYoungConsole
-                currentOrg={currentOrg}
-                hasActiveEmergency={incomingAlerts.some((a) => a.status === "RED") || selectedAlert?.status === "RED"}
-                extractedAttire={extractedAttire}
-                onAttireExtracted={setExtractedAttire}
                 onNavigateToMap={() => setActiveTab("LIVE_MAP")}
               />
             )}
@@ -712,7 +738,7 @@ export default function CommandDashboardPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setActiveToast(null)}
+                onClick={() => handleDismissToast()}
                 style={{
                   background: "transparent",
                   border: 0,
@@ -741,10 +767,7 @@ export default function CommandDashboardPage() {
               <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveTab("BOLO_YOUNG");
-                    setActiveToast(null);
-                  }}
+                  onClick={() => handleDismissToast("BOLO_YOUNG")}
                   className={`quick ${activeToast.type === "CRITICAL" ? "danger" : ""}`}
                   style={{
                     fontSize: "10px",
@@ -758,7 +781,7 @@ export default function CommandDashboardPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveToast(null)}
+                  onClick={() => handleDismissToast()}
                   className="quick"
                   style={{ fontSize: "10px", padding: "6px 12px", borderColor: "#555750", color: "var(--muted)" }}
                 >

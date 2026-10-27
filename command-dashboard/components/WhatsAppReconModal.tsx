@@ -42,6 +42,7 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const [extractedAttire, setExtractedAttire] = useState<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -93,7 +94,12 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
   const handleSendMessage = async () => {
@@ -236,6 +242,7 @@ export const WhatsAppReconModal: React.FC<WhatsAppReconModalProps> = ({
 
         {/* Message Thread Area */}
         <div
+          ref={messagesContainerRef}
           style={{
             flex: 1,
             overflowY: "auto",
