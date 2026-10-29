@@ -9,6 +9,7 @@ import 'views/auth_screen.dart';
 import 'views/completion_screen.dart';
 import 'views/help_dispatched_screen.dart';
 import 'views/setup_screen.dart';
+import 'views/splash_screen.dart';
 import 'widgets/pin_modal.dart';
 
 void main() {
@@ -46,11 +47,18 @@ class MainAppController extends StatefulWidget {
 }
 
 class _MainAppControllerState extends State<MainAppController> {
-  UserProfile? _user = UserProfile.defaultDemoUser();
+  bool _showSplash = true;
+  UserProfile? _user;
   JourneyStatus _status = JourneyStatus.setup;
   String _journeyId = 'active_journey';
   String _destination = 'Sandton City Mall, Sandton';
   bool _isDeceptiveDuress = false;
+
+  void _handleSplashConnected() {
+    setState(() {
+      _showSplash = false;
+    });
+  }
 
   void _handleAuthSuccess(UserProfile user) {
     setState(() {
@@ -151,10 +159,17 @@ class _MainAppControllerState extends State<MainAppController> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Splash Screen: Opened & connecting with runner image backdrop & narrative
+    if (_showSplash) {
+      return SplashScreen(onConnected: _handleSplashConnected);
+    }
+
+    // 2. Login Screen: Runner backdrop with sliding card below midpoint
     if (_user == null) {
       return AuthScreen(onSuccess: _handleAuthSuccess);
     }
 
+    // 3. Main Interface: Clean mobile UI (no images)
     switch (_status) {
       case JourneyStatus.setup:
         return SetupScreen(

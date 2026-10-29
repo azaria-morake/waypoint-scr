@@ -3,7 +3,6 @@ import '../models/contact_model.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/left_hero_panel.dart';
 
 class SetupScreen extends StatefulWidget {
   final UserProfile user;
@@ -240,39 +239,19 @@ class _SetupScreenState extends State<SetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width > 900;
-
     return Scaffold(
       backgroundColor: AppTheme.bgDark,
-      body: isWide
-          ? Row(
-              children: [
-                const Expanded(flex: 5, child: LeftHeroPanel(isCompact: false)),
-                Expanded(
-                  flex: 5,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      border: Border(left: BorderSide(color: Color(0xFF1E2938))),
-                    ),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 36),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 580),
-                          child: _buildDashboardContent(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                child: _buildDashboardContent(),
-              ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: _buildDashboardContent(),
             ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -286,14 +265,20 @@ class _SetupScreenState extends State<SetupScreen> {
           children: [
             Row(
               children: [
-                Image.asset(
-                  'assets/images/waypoint_logo_icon.png',
-                  width: 28,
-                  height: 28,
-                  errorBuilder: (_, __, ___) => const Icon(
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentAmber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppTheme.accentAmber.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: const Icon(
                     Icons.shield_outlined,
-                    size: 28,
                     color: AppTheme.accentAmber,
+                    size: 20,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -533,18 +518,11 @@ class _SetupScreenState extends State<SetupScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: const Color(0xFF243345)),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: _outfitAdded
-                            ? Image.asset(
-                                'assets/images/runner_portrait.png',
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.person,
-                                  color: AppTheme.safeGreen,
-                                  size: 24,
-                                ),
-                              )
-                            : const Icon(Icons.camera_alt_outlined, color: AppTheme.textSlate400, size: 22),
+                        child: Icon(
+                          _outfitAdded ? Icons.check_circle_outline_rounded : Icons.camera_alt_outlined,
+                          color: _outfitAdded ? AppTheme.safeGreen : AppTheme.textSlate400,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
