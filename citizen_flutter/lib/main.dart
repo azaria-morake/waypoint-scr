@@ -1,3 +1,4 @@
+import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/journey_model.dart';
@@ -12,7 +13,10 @@ import 'views/setup_screen.dart';
 import 'views/splash_screen.dart';
 import 'widgets/pin_modal.dart';
 
-void main() {
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -22,6 +26,15 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+
+  if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+    try {
+      await DesktopWindow.setWindowSize(const Size(390, 844));
+      await DesktopWindow.setMinWindowSize(const Size(390, 844));
+      await DesktopWindow.setMaxWindowSize(const Size(390, 844));
+    } catch (_) {}
+  }
+
   runApp(const WaypointCitizenApp());
 }
 

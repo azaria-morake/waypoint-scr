@@ -79,14 +79,17 @@ cd citizen_flutter
 flutter run -d linux
 ```
 
-### 2. Run on Android Emulator or Device
+### 2. Run on Android Emulator (Optimized for 8GB RAM)
 ```bash
-# Launch Android emulator (if available)
+# Option A: Launch emulator with lowest graphics (SwiftShader) & capped memory (1.5GB RAM)
+./citizen_flutter/start_emulator_low_graphics.sh
+
+# Option B: Run via standard flutter launch (pre-configured for swiftshader in config.ini)
 flutter emulators --launch ditiro_drone
 
-# Run on Android
+# Run the Flutter App on the connected emulator
 cd citizen_flutter
-flutter run -d android
+flutter run -d emulator-5554 --no-enable-impeller
 ```
 
 ### 3. Run Automated Tests
