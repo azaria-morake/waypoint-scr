@@ -79,13 +79,13 @@ cd citizen_flutter
 flutter run -d linux
 ```
 
-### 2. Run on Android Emulator (Optimized for 8GB RAM)
+### 2. Run on Android Emulator (Ultra Low-Spec / 8GB RAM Mode)
 ```bash
-# Option A: Launch emulator with lowest graphics (SwiftShader) & capped memory (1.5GB RAM)
+# Launch the emulator in 360x800 pixelated low-spec mode (89% fewer pixels, CPU < 15%):
 ./citizen_flutter/start_emulator_low_graphics.sh
 
-# Option B: Run via standard flutter launch (pre-configured for swiftshader in config.ini)
-flutter emulators --launch ditiro_drone
+# If the emulator is already running, downscale on the fly via adb:
+adb shell wm size 360x800 && adb shell wm density 160
 
 # Run the Flutter App on the connected emulator
 cd citizen_flutter
